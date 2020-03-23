@@ -369,6 +369,9 @@ class ScreenShot:
         im_th = cv2.bitwise_not(img_num)
         h, w = im_th.shape[:2]
 
+        #情報ウィンドウが数字とかぶった部分を除去する
+        for y in range(h):
+            im_th[y, 0] = 255
         # 物体検出
         contours = cv2.findContours(im_th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
         item_pts = []
@@ -376,7 +379,6 @@ class ScreenShot:
             ret = cv2.boundingRect(cnt)
 
             pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-    ##        print(pt)
             if ret[2] < int(w/2):
                 flag = False
                 for p in item_pts:
@@ -404,7 +406,7 @@ class ScreenShot:
         res = ""    
         for pt in item_pts:
             test = []
-     
+    
             tmpimg = im_th[pt[1]:pt[3], pt[0]:pt[2]]
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
