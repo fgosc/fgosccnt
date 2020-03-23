@@ -9,11 +9,11 @@ from collections import Counter
 import csv
 
 progname = "FGOスクショカウント"
-version = "0.1.0"
+version = "0.1.1"
 
 Item_dir = Path(__file__).resolve().parent / Path("item/")
-training = Path(__file__).resolve().parent / Path("training.xml") #アイテム下部
-training2 = Path(__file__).resolve().parent / Path("training2.xml") #ドロップ数
+train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
+train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -1066,8 +1066,8 @@ def get_output(filenames):
     出力内容を作成
     """
     calc_dist_local()
-    svm = cv2.ml.SVM_load(str(training))
-    svm_chest = cv2.ml.SVM_load(str(training2))
+    svm = cv2.ml.SVM_load(str(train_item))
+    svm_chest = cv2.ml.SVM_load(str(train_chest))
 
     csvfieldnames = { 'filename' : "合計", 'ドロ数': "" } #CSVフィールド名用 key しか使わない
     wholelist = []
