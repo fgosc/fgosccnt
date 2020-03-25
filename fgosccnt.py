@@ -1098,9 +1098,10 @@ def get_output(filenames):
                 prev_pages = sc.pages
                 prev_pagenum = sc.pagenum
 
-                #戦利品順番ルールに則った対応による出力処理                
+                #戦利品順番ルールに則った対応による出力処理
                 wholelist = wholelist + sc.itemlist
-                rewardlist = rewardlist + [sc.reward]
+                if sc.reward != "":
+                    rewardlist = rewardlist + [sc.reward]
                 output = { 'filename': filename, 'ドロ数':len(sc.itemlist) }
                 output.update(sc.allitemdic)
                 if sc.chestnum >= 21 and sc.lines >= 4 and sc.pagenum == 1 \
