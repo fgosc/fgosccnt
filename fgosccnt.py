@@ -576,7 +576,7 @@ class Item:
         pt が ptsのどれかと衝突していたら面積に応じて入れ替える
         """
         flag = False
-        for p in pts:
+        for p in list(pts):
             if has_intersect(p, pt) == True:
             # どちらかを消す
                 p_area = (p[2]-p[0])*(p[3]-p[1])
@@ -611,8 +611,8 @@ class Item:
         """
         Y軸を最大値にそろえつつ文字エリアを1pixcel微修正
         """
-        base_top = 999
-        base_bottom = 0
+        base_top = 6 #強制的に高さを確保
+        base_bottom = 10
         for pt in pts:
             if base_top > pt[1]:
                 base_top = pt[1]
@@ -701,7 +701,7 @@ class Item:
             area = cv2.contourArea(cnt)
             pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
             if ret[1] + ret[3] > int(h/2) and ret[1] < int(h/2) and area > 1:
-                item_pts_lower_white.append(pt)
+                item_pts_lower_white = self.conflictcheck(item_pts_lower_white, pt)
 
         item_pts_lower_white.sort()
 
@@ -774,6 +774,11 @@ class Item:
         """
         h, w = img_hsv_upper.shape[:2]
         digitimg = self.img2digitimg(img_hsv_upper, im_th_upper)
+        #物体検出を成功させるために右端を黒に染める
+        for y in range(h):
+            for x in range(3):
+                digitimg[y, w-x-1] = 0
+        #情報ウィンドウが数字とかぶった部分を除去する
         contours = cv2.findContours(digitimg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
 
         item_pts_upper = []
@@ -782,7 +787,7 @@ class Item:
             area = cv2.contourArea(cnt)
             pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
             if ret[1] + ret[3] > int(h/2) and ret[1] < int(h*0.7) and ret[2] < 35 and area > 15 and ret[2] > 5: 
-                item_pts_upper.append(pt)
+                item_pts_upper = self.conflictcheck(item_pts_upper, pt)
 
         item_pts_upper.sort()
 
@@ -799,8 +804,8 @@ class Item:
         block_stride = (4, 4)
         cell_size = (4, 4)
         bins = 9
-
         lines = ""
+
         for pt in pts:
             char = []
             tmpimg = img_gray[pt[1]:pt[3], pt[0]:pt[2]]
