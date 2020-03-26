@@ -1105,48 +1105,27 @@ def get_output(filenames):
         else:            
             img_rgb = imread(filename)
 
-##            try:
-##                sc = ScreenShot(img_rgb, svm, svm_chest)
-##
-##                #2頁目以降のスクショが無い場合に migging と出力                
-##                if prev_pages - prev_pagenum > 0 and sc.pagenum == 1:
-##                    outputcsv.append({'filename': 'missing'})
-##                prev_pages = sc.pages
-##                prev_pagenum = sc.pagenum
-##
-##                #戦利品順番ルールに則った対応による出力処理
-##                wholelist = wholelist + sc.itemlist
-##                if sc.reward != "":
-##                    rewardlist = rewardlist + [sc.reward]
-##                output = { 'filename': filename, 'ドロ数':len(sc.itemlist) }
-##                output.update(sc.allitemdic)
-##                if sc.chestnum >= 21 and sc.lines >= 4 and sc.pagenum == 1 \
-##                   or sc.chestnum >= 42 and sc.lines >= 7 and sc.pagenum == 2:
-##                    output["ドロ数"] = str(output["ドロ数"]) + "+"
-##                output.update(sc.allitemdic)
-##            except:
-##                output = ({'filename': filename + ': not valid'})
-##            try:
-            sc = ScreenShot(img_rgb, svm, svm_chest)
+            try:
+                sc = ScreenShot(img_rgb, svm, svm_chest)
 
-            #2頁目以降のスクショが無い場合に migging と出力                
-            if prev_pages - prev_pagenum > 0 and sc.pagenum == 1:
-                outputcsv.append({'filename': 'missing'})
-            prev_pages = sc.pages
-            prev_pagenum = sc.pagenum
+                #2頁目以降のスクショが無い場合に migging と出力                
+                if prev_pages - prev_pagenum > 0 and sc.pagenum == 1:
+                    outputcsv.append({'filename': 'missing'})
+                prev_pages = sc.pages
+                prev_pagenum = sc.pagenum
 
-            #戦利品順番ルールに則った対応による出力処理
-            wholelist = wholelist + sc.itemlist
-            if sc.reward != "":
-                rewardlist = rewardlist + [sc.reward]
-            output = { 'filename': filename, 'ドロ数':len(sc.itemlist) }
-            output.update(sc.allitemdic)
-            if sc.chestnum >= 21 and sc.lines >= 4 and sc.pagenum == 1 \
-               or sc.chestnum >= 42 and sc.lines >= 7 and sc.pagenum == 2:
-                output["ドロ数"] = str(output["ドロ数"]) + "+"
-            output.update(sc.allitemdic)
-##            except:
-##                output = ({'filename': filename + ': not valid'})
+                #戦利品順番ルールに則った対応による出力処理
+                wholelist = wholelist + sc.itemlist
+                if sc.reward != "":
+                    rewardlist = rewardlist + [sc.reward]
+                output = { 'filename': filename, 'ドロ数':len(sc.itemlist) }
+                output.update(sc.allitemdic)
+                if sc.chestnum >= 21 and sc.lines >= 4 and sc.pagenum == 1 \
+                   or sc.chestnum >= 42 and sc.lines >= 7 and sc.pagenum == 2:
+                    output["ドロ数"] = str(output["ドロ数"]) + "+"
+                output.update(sc.allitemdic)
+            except:
+                output = ({'filename': filename + ': not valid'})
         outputcsv.append(output)
 
     csvfieldnames.update(dict(Counter(rewardlist)))
