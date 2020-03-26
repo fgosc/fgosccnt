@@ -335,9 +335,13 @@ class ScreenShot:
         itemlist = []
         for i, item in enumerate(self.items):
             if i != 0:
-                itemlist.append(item.name + item.dropnum)
+                if item.name[-1].isdigit():
+                    name = item.name + '_'
+                else:
+                    name = item.name
+                itemlist.append(name + item.dropnum)
             elif self.pagenum != 1:
-                itemlist.append(item.name + item.dropnum)                
+                itemlist.append(name + item.dropnum)                
         return itemlist
 
     def makelallist(self):
@@ -346,7 +350,11 @@ class ScreenShot:
         """
         itemlist = []
         for i, item in enumerate(self.items):
-            itemlist.append(item.name + item.dropnum)
+            if item.name[-1].isdigit():
+                name = item.name + '_'
+            else:
+                name = item.name
+            itemlist.append(name + item.dropnum)
         return itemlist
 
     def makereward(self):
@@ -619,18 +627,16 @@ class Item:
             if base_bottom < pt[3]:
                 base_bottom = pt[3]
 
+        # 5桁目がおかしくなる対策
         new_pts = []
-        for pt in pts:
-            if pt[0] == 0 and base_top == 0:
-                pt = [pt[0], base_top, pt[2]+1, base_bottom +1]
-            elif pt[0] == 0 and base_top != 0:
-                pt = [pt[0], base_top -1, pt[2]+1, base_bottom +1]            
-            elif pt[0] != 0 and base_top == 0:
-                pt = [pt[0], base_top, pt[2]+1, base_bottom +1]            
+        pts.reverse()
+        for i, pt in enumerate(pts):
+            if len(pts) > 6 and i == 4:
+                pt = [pts[5][2], base_top, pts[3][0], base_bottom]
             else:
-                pt = [pt[0]-1, base_top -1, pt[2]+1, base_bottom +1]
+                pt = [pt[0], base_top, pt[2], base_bottom]
             new_pts.append(pt)
-
+        new_pts.reverse()
         return new_pts
         
     def detect_lower_yellow_char(self):
@@ -745,19 +751,22 @@ class Item:
                 if innerflag == False:
                     im_th_lower2[y, x] = 255
         im_th_lower_rev = cv2.cv2.bitwise_not(im_th_lower2)
+        kernel1 = np.ones((3,1),np.uint8)
+        dilation = cv2.dilate(im_th_lower_rev,kernel1,iterations = 1)
 
         #オブジェクト検出(2回目)
-        contours = cv2.findContours(im_th_lower_rev, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
         h, w = im_th_lower.shape[:2]
         item_pts_lower_white = []
         for cnt in contours:
             ret = cv2.boundingRect(cnt)
             area = cv2.contourArea(cnt)
             if ret[2] < int(w/2) and ret[2] > 5 and area > 1 and ret[1] + ret[3] > int(h/2)  and ret[1] < int(h*5/3):
+##            if ret[2] < int(w/2) and ret[2] > 5 and area > 1 and ret[1] + ret[3] > int(h/2)  and ret[1] < int(h*5/3):
             ## ret[2]の幅制限をいれると + や 1 を認識しなくなる問題
     ##        if ret[2] < int(w/2) and area > 1  and ret[1] + ret[3] > int(h/2) and ret[1] < int(h*5/3):
                 pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-                if len(item_pts_lower_yellow) > 0:                
+                if len(item_pts_lower_yellow) > 0:
                     if ret[0] + ret[2] > item_pts_lower_yellow[0][0]:
                         continue
                 item_pts_lower_white = self.conflictcheck(item_pts_lower_white, pt)
@@ -809,6 +818,11 @@ class Item:
         for pt in pts:
             char = []
             tmpimg = img_gray[pt[1]:pt[3], pt[0]:pt[2]]
+##            cv2.imshow('img',tmpimg)
+##            ##cv2.imshow('res',res)
+##            cv2.waitKey(0)
+##            cv2.destroyAllWindows()
+##            cv2.imwrite("tmp.png", tmpimg)
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
             char.append(hog.compute(tmpimg))
