@@ -334,11 +334,11 @@ class ScreenShot:
         """
         itemlist = []
         for i, item in enumerate(self.items):
+            if item.name[-1].isdigit():
+                name = item.name + '_'
+            else:
+                name = item.name
             if i != 0:
-                if item.name[-1].isdigit():
-                    name = item.name + '_'
-                else:
-                    name = item.name
                 itemlist.append(name + item.dropnum)
             elif self.pagenum != 1:
                 itemlist.append(name + item.dropnum)                
