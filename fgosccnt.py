@@ -917,6 +917,8 @@ class Item:
 
         drop = line_upper + line_lower_white+line_lower_yellow
         drop =re.sub("\([^\(\)]*\)$", "", drop) #括弧除去
+        if drop != "":
+            drop = "(" + drop + ")"
         return drop
 
     def classify_standard_item(self, img):
