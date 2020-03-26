@@ -9,7 +9,7 @@ from collections import Counter
 import csv
 
 progname = "FGOスクショカウント"
-version = "0.1.1"
+version = "0.1.2"
 
 Item_dir = Path(__file__).resolve().parent / Path("item/")
 train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
@@ -318,10 +318,13 @@ class ScreenShot:
             item_pts = self.img2points()
 
         self.items = []
-        for pt in item_pts:
+        for i, pt in enumerate(item_pts):
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
-            self.items.append(Item(item_img_rgb, item_img_gray, svm))
+            if i >= 14:
+                self.items.append(Item(item_img_rgb, item_img_gray, svm, bottom=True))
+            else:
+                self.items.append(Item(item_img_rgb, item_img_gray, svm))
         self.itemlist = self.makelist()
         self.itemdic = dict(Counter(self.itemlist))
         self.reward = self.makereward()
@@ -553,7 +556,7 @@ class ScreenShot:
         return pts
 
 class Item:
-    def __init__(self, img_rgb, img_gray, svm):
+    def __init__(self, img_rgb, img_gray, svm, bottom=False):
         self.img_rgb = img_rgb
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
@@ -561,7 +564,7 @@ class Item:
         self.name = self.classify_item(img_gray)
         self.svm = svm
         if self.name not in std_item:
-            self.dropnum = self.ocr_digit()
+            self.dropnum = self.ocr_digit(bottom)
         else:
             self.dropnum = ""
 
@@ -713,7 +716,7 @@ class Item:
 
         return self.extension_straighten(item_pts_lower_white)
 
-    def detect_lower_white_char4silver(self, im_th_lower,item_pts_lower_yellow):
+    def detect_lower_white_char4silver(self, im_th_lower,item_pts_lower_yellow, bottom):
         """
         戦利品数OCRで銀枠の下段白文字の座標を抽出する
 
@@ -754,6 +757,12 @@ class Item:
         kernel1 = np.ones((3,1),np.uint8)
         dilation = cv2.dilate(im_th_lower_rev,kernel1,iterations = 1)
 
+         #物体検出を成功させるために下端を黒に染める
+        if bottom == True:
+            for x in range(w):
+                for y in range(int(7/23*h)):
+                    dilation[h - y -1, x] = 0
+
         #オブジェクト検出(2回目)
         contours = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
         h, w = im_th_lower.shape[:2]
@@ -762,10 +771,12 @@ class Item:
             ret = cv2.boundingRect(cnt)
             area = cv2.contourArea(cnt)
             if ret[2] < int(w/2) and ret[2] > 5 and area > 1 and ret[1] + ret[3] > int(h/2)  and ret[1] < int(h*5/3):
-##            if ret[2] < int(w/2) and ret[2] > 5 and area > 1 and ret[1] + ret[3] > int(h/2)  and ret[1] < int(h*5/3):
             ## ret[2]の幅制限をいれると + や 1 を認識しなくなる問題
     ##        if ret[2] < int(w/2) and area > 1  and ret[1] + ret[3] > int(h/2) and ret[1] < int(h*5/3):
-                pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
+                if bottom == True:
+                    pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] + int(4/23*h)]
+                else:
+                    pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
                 if len(item_pts_lower_yellow) > 0:
                     if ret[0] + ret[2] > item_pts_lower_yellow[0][0]:
                         continue
@@ -784,12 +795,38 @@ class Item:
         h, w = img_hsv_upper.shape[:2]
         digitimg = self.img2digitimg(img_hsv_upper, im_th_upper)
 
- 
+        #下2桁切り出して上下幅を決める
+        img_right = digitimg[0:h, int(128/174*w):w]
+        hr, wr = img_right.shape[:2]
+        for x in range(wr):
+            img_right[0, x] = 0
+            img_right[hr-1, x] = 0
+        for y in range(hr):
+            img_right[y, 0] = 0
+            img_right[y, wr-1] = 0
+
+        contours = cv2.findContours(img_right, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+        tmp_pts = []
+        for cnt in contours:
+            ret = cv2.boundingRect(cnt)
+            area = cv2.contourArea(cnt)
+            pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
+            if area > 15:
+                tmp_pts.append(pt)
+        h_top = tmp_pts[-1][1]
+        h_bottom = tmp_pts[-1][3]
+        
         #物体検出を成功させるために右端を黒に染める
         for y in range(h):
-            for x in range(5):
+            for x in range(int(7*161/w)):
                 digitimg[y, w-x-1] = 0
-        #情報ウィンドウが数字とかぶった部分を除去する
+         #物体検出を成功させるために上下端を黒に染める
+        for x in range(w):
+            for y in range(h_top):
+                digitimg[y, x] = 0
+        for x in range(w):
+            for y in range(h - h_bottom):
+                digitimg[h - y -1, x] = 0
 
         contours = cv2.findContours(digitimg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
 
@@ -798,7 +835,11 @@ class Item:
             ret = cv2.boundingRect(cnt)
             area = cv2.contourArea(cnt)
             pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-            if ret[1] + ret[3] > int(h/2) and ret[1] < int(h*0.7) and ret[2] < int(35/190*w) and area > 15 and ret[2] > int(9/190*w): #9/190でギリギリ
+##            if ret[1] + ret[3] > int(h/2) and ret[1] < int(h*0.7) and ret[2] < int(35/190*w) and area > 15 and ret[2] > int(9/190*w): #9/190でギリギリ
+##                item_pts_upper = self.conflictcheck(item_pts_upper, pt)
+            if ret[1] + ret[3] > int(h/2) and  ret[1] < int(h*0.7) and ret[2] < int(40/190*w) and ret[1] < int(h*0.7) and area > 15 and ret[2] > int(9/190*w):
+##                and ret[1] < int(h*0.7) and ret[2] < int(35/190*w) and area > 15 and ret[2] > int(9/190*w): #9/190でギリギリ
+##                print(ret[2])
                 item_pts_upper = self.conflictcheck(item_pts_upper, pt)
 
         item_pts_upper.sort()
@@ -829,7 +870,6 @@ class Item:
             result = int(pred[1][0][0])
             if result != 0:
                 lines = lines + chr(result)
-
         #以下エラー訂正
         if yellow==True:
             if not lines.endswith(")") or "(+" not in lines:
@@ -865,16 +905,20 @@ class Item:
                 elif self.name == "QP":
                     lines = '+' + lines
                 else:
-                    lines = 'x' + lines
+                    if int(lines) >= 100:
+                        lines = '+' + lines
+                    else:
+                        lines = 'x' + lines
 
         if len(lines) == 1:
             lines = "xErr"
 
         return lines
 
-    def ocr_digit(self):
+    def ocr_digit(self, bottom):
         """
         戦利品OCR
+        bottom はアイテム出現部が最下部かどうか
         """
         ## 50が0.0.2
     ##    th, im_th = cv2.threshold(img_gray, 176, 255, cv2.THRESH_BINARY)
@@ -923,7 +967,7 @@ class Item:
             if flag_silver == False:
                 item_pts_lower_white = self.detect_lower_white_char(img_hsv_lower, im_th_lower)
             else:
-                item_pts_lower_white = self.detect_lower_white_char4silver(im_th_lower, item_pts_lower_yellow)
+                item_pts_lower_white = self.detect_lower_white_char4silver(im_th_lower, item_pts_lower_yellow, bottom)
 
             line_lower_white = self.read_item(img_gray_lower, item_pts_lower_white)
 
