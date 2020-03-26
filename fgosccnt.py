@@ -655,7 +655,7 @@ class Item:
 
         img_hsv_lower_mask = cv2.inRange(img_hsv_lower, lower_yellow, upper_yellow)
         contours = cv2.findContours(img_hsv_lower_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
-     
+
         item_pts_lower_yellow = []
         # 物体検出マスクがうまくいっているかが成功の全て
         for cnt in contours:
@@ -667,7 +667,7 @@ class Item:
 
         item_pts_lower_yellow.sort()
         if len(item_pts_lower_yellow) > 0:
-            if w - item_pts_lower_yellow[-1][2] > 15:
+            if w - item_pts_lower_yellow[-1][2] > int((15*self.width/190)):
                 #黄文字は必ず右寄せなので最後の文字が画面端から離れている場合全部ゴミ
                 item_pts_lower_yellow = []
 
@@ -783,11 +783,14 @@ class Item:
         """
         h, w = img_hsv_upper.shape[:2]
         digitimg = self.img2digitimg(img_hsv_upper, im_th_upper)
+
+ 
         #物体検出を成功させるために右端を黒に染める
         for y in range(h):
-            for x in range(3):
+            for x in range(5):
                 digitimg[y, w-x-1] = 0
         #情報ウィンドウが数字とかぶった部分を除去する
+
         contours = cv2.findContours(digitimg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
 
         item_pts_upper = []
@@ -795,7 +798,7 @@ class Item:
             ret = cv2.boundingRect(cnt)
             area = cv2.contourArea(cnt)
             pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-            if ret[1] + ret[3] > int(h/2) and ret[1] < int(h*0.7) and ret[2] < 35 and area > 15 and ret[2] > 5: 
+            if ret[1] + ret[3] > int(h/2) and ret[1] < int(h*0.7) and ret[2] < int(35/190*w) and area > 15 and ret[2] > int(9/190*w): #9/190でギリギリ
                 item_pts_upper = self.conflictcheck(item_pts_upper, pt)
 
         item_pts_upper.sort()
@@ -818,18 +821,14 @@ class Item:
         for pt in pts:
             char = []
             tmpimg = img_gray[pt[1]:pt[3], pt[0]:pt[2]]
-##            cv2.imshow('img',tmpimg)
-##            ##cv2.imshow('res',res)
-##            cv2.waitKey(0)
-##            cv2.destroyAllWindows()
-##            cv2.imwrite("tmp.png", tmpimg)
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
             char.append(hog.compute(tmpimg))
             char = np.array(char)
             pred = self.svm.predict(char)
             result = int(pred[1][0][0])
-            lines = lines + chr(result)
+            if result != 0:
+                lines = lines + chr(result)
 
         #以下エラー訂正
         if yellow==True:
@@ -855,7 +854,7 @@ class Item:
             # イベントでポイントがドロップするとき、ポイントは銀枠で
             # 文字の右側が抜け落ちるが抜け落ちた部分は 0 なので訂正可能
             if len(pts) > 0:
-                for i in range(int((width-pts[-1][2])/21)):
+                for i in range(int((width-pts[-1][2])/(21/190*width))):
                     lines = lines + '0'
             if lines.isdigit():
                 lines = '+' + lines
@@ -917,7 +916,6 @@ class Item:
                 upper_flag = True            
             elif int(line_lower_yellow[2:-1]) > 24:
                 upper_flag = True
-
         if upper_flag == True:
             item_pts_upper = self.detect_upper_char(img_hsv_upper, im_th_upper, img_rgb_upper)
             line_upper = self.read_item(img_gray_upper, item_pts_upper, upper=True)
