@@ -561,7 +561,7 @@ class Item:
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
         self.height, self.width = img_rgb.shape[:2]
-        self.name = self.classify_item(img_gray)
+        self.name = self.classify_item(img_rgb)
         self.svm = svm
         if self.name not in std_item:
             self.dropnum = self.ocr_digit(bottom)
@@ -1025,6 +1025,17 @@ class Item:
                         masekifiles[i] = d2
                 masekifiles = sorted(masekifiles.items(), key=lambda x:x[1])
                 item = next(iter(masekifiles))
+            elif item[0].endswith("モ") or item[0].endswith("ピ"):
+                #ヒストグラム
+                img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+                h, w = img_hsv.shape[:2]
+                img_hsv = img_hsv[int(h/2-10):int(h/2+10),int(w/2-10):int(w/2+10)]
+                hist_s = cv2.calcHist([img_hsv],[1],None,[256],[0,256]) #Bのヒストグラムを計算
+                minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist_s)
+                if maxLoc[1] > 128:
+                    return item[0][0] + "モ"
+                else:
+                    return item[0][0] + "ピ"
                 
             return item[0]
 
