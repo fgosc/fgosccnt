@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ## スクショ集計したCSVから周回カウンタ書式に変換
 import csv
 import sys
