@@ -11,6 +11,15 @@ skillstone_list = [ '剣秘', '弓秘', '槍秘', '騎秘', '術秘', '殺秘', 
                     '剣魔', '弓魔', '槍魔', '騎魔', '術魔', '殺魔', '狂魔',
                     '剣輝', '弓輝', '槍輝', '騎輝', '術輝', '殺輝', '狂輝']
 
+stditem_list = ['爪',  '心臓',  '逆鱗',  '根',  '幼角',
+                '涙石',  '脂',  'ランプ',  'スカラベ',  '産毛',
+                '胆石',  '神酒',  '炉心',  '鏡',  '卵',  'カケラ',
+                '種',  'ランタン',  '八連',  '宝玉',  '羽根',
+                '歯車',  '頁',  'ホム',  '蹄鉄',  '勲章',
+                '貝殻',  '勾玉',  '結氷',  '指輪',  'オーロラ',
+                '鈴',  '矢尻',  '冠',
+                '証',  '骨',  '牙',  '塵',  '鎖',
+                '毒針',  '髄液',  '鉄杭',  '火薬']
 
 if __name__ == '__main__':
 
@@ -33,12 +42,20 @@ if __name__ == '__main__':
     output = ""
     monyupi_flag = False
     skillstone_flag = False
+    stditem_flag = False
     point_flag  = False
     qp_flag = False
     for i, item in enumerate(l[0].keys()):
         if i == 2:
             print (l[0][item] + "周")
         if i > 2:
+            if stditem_flag == False and item in stditem_list:
+                output = output[:-1] + "\n"
+                stditem_flag = True
+            elif stditem_flag == True and item not in stditem_list:
+                output = output[:-1] + "\n"
+                stditem_flag = False
+
             if skillstone_flag == False and item in skillstone_list:
                 output = output[:-1] + "\n"
                 skillstone_flag = True
