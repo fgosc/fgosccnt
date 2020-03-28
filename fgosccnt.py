@@ -277,6 +277,12 @@ std_item = [ '爪', '心臓', '逆鱗', '根', '幼角', '涙石', '脂', 'ラ�
     '狂種火', '狂灯火', '狂大火', '狂猛火', '狂業火',
 ]
 
+dist_card = {
+    '礼装EXP':np.array([[7, 129, 203, 233, 184, 185, 102,  111]], dtype='uint8'),
+    '礼装SSR':np.array([[201, 137,  59, 238,  50,  90,  44, 230]], dtype='uint8'),
+    'Point':np.array([[143,  41, 194, 167,  60, 219,  44, 150]], dtype='uint8'),
+}
+    
 std_item_dic = {}
 for i in std_item:
     std_item_dic[i] = 0
@@ -333,10 +339,12 @@ class ScreenShot:
         self.allitemdic = dict(Counter(self.allitemlist))
         self.qplist = self.makeqplist()
         self.qpdic =dict(Counter(self.qplist))
+        self.reisoulist = self.makereisoulist()
+        self.reisoudic =dict(Counter(self.reisoulist))
 
     def makelist(self):
         """
-        QP以外のアイテムを出力
+        QPと礼装以外のアイテムを出力
         """
         itemlist = []
         for i, item in enumerate(self.items):
@@ -344,7 +352,7 @@ class ScreenShot:
                 name = item.name + '_'
             else:
                 name = item.name
-            if name != 'QP':
+            if name != 'QP' and not item.card.startswith("礼装"):
                 itemlist.append(name + item.dropnum)
 ##            elif self.pagenum != 1:
 ##                itemlist.append(name + item.dropnum)                
@@ -356,9 +364,22 @@ class ScreenShot:
         """
         qplist = []
         for i, item in enumerate(self.items):
-            if i != 0 and item.name == 'QP':
+##            if i != 0 and item.name == 'QP':
+            if i == 0 and self.pagenum == 1:
+                continue
+            if  item.name == 'QP':
                 qplist.append(item.name + item.dropnum)
         return qplist
+
+    def makereisoulist(self):
+        """
+        礼装を出力
+        """
+        reisoulist = []
+        for i, item in enumerate(self.items):
+            if item.card.startswith('礼装'):
+                reisoulist.append(item.name)
+        return reisoulist
 
     def makelallist(self):
         """
@@ -621,6 +642,7 @@ class Item:
             self.dropnum = self.ocr_digit(bottom)
         else:
             self.dropnum = ""
+        self.card = self.classify_card()
 
     def is_silver_item(self):
         """
@@ -1131,6 +1153,22 @@ class Item:
         return itemfile.stem
 
 
+    def classify_card(self):
+        """
+        カード判別器
+       """
+        hash_card = self.compute_card_hash(self.img_rgb)
+        cardfiles = {}
+        # 既存のアイテムとの距離を比較
+        for i in dist_card.keys():
+            d = hasher.compare(hash_card, dist_card[i])
+            #同じアイテムでも14離れることあり(IMG_8785)
+            if d <= 10:
+                cardfiles[i] = d
+        if len(cardfiles) > 0:
+            return  sorted(cardfiles.items())[0][0]
+        return ""
+
     def classify_item(self, img):
         """
         アイテム判別器
@@ -1141,6 +1179,15 @@ class Item:
         if item == "":
             item = self.make_new_file(img)
         return item
+
+    def compute_card_hash(self, img_rgb):
+        """
+        種火レアリティ判別器
+        この場合は画像全域のハッシュをとる
+        """
+        img = img_rgb[int(123/135*self.height):int(130/135*self.height),
+                      int(32/135*self.width):int(92/135*self.width)]
+        return hasher.compute(img_rgb)
 
     def compute_tanebi_hash(self, img_rgb):
         """
@@ -1201,6 +1248,7 @@ def get_output(filenames):
     csvfieldnames = { 'filename' : "合計", 'ドロ数': "" } #CSVフィールド名用 key しか使わない
     wholelist = []
     rewardlist = []
+    reisoulist = []
     qplist = []
     outputcsv = [] #出力
     prev_pages = 0
@@ -1227,8 +1275,9 @@ def get_output(filenames):
                 wholelist = wholelist + sc.itemlist
                 if sc.reward != "":
                     rewardlist = rewardlist + [sc.reward]
+                reisoulist = reisoulist + sc.reisoulist
                 qplist = qplist + sc.qplist
-                output = { 'filename': filename, 'ドロ数':len(sc.itemlist) }
+                output = { 'filename': filename, 'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist) }
                 output.update(sc.allitemdic)
                 if sc.chestnum >= 21 and sc.lines >= 4 and sc.pagenum == 1 \
                    or sc.chestnum >= 42 and sc.lines >= 7 and sc.pagenum == 2:
@@ -1239,6 +1288,8 @@ def get_output(filenames):
         outputcsv.append(output)
 
     csvfieldnames.update(dict(Counter(rewardlist)))
+    reisou_dic = dict(Counter(reisoulist))
+    csvfieldnames.update(sorted(reisou_dic.items(), reverse=True))
     std_item_dic.update(dict(Counter(wholelist)))
     qp_dic = dict(Counter(qplist))
     
