@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('infile', nargs='?', type=argparse.FileType(),
                         default=sys.stdin)
+    parser.add_argument('--place', default='周回場所')
     args = parser.parse_args()
 
     with args.infile as f:
@@ -27,7 +28,7 @@ if __name__ == '__main__':
         if item['filename'] == "missing":
             print("missing なデータがあります", file=sys.stderr)
             sys.exit(1)
-    print ("【周回場所】", end="")
+    print ("【{}】".format(args.place), end="")
     output = ""
     monyupi_flag = False
     skillstone_flag = False
