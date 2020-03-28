@@ -18,6 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('infile', nargs='?', type=argparse.FileType(),
                         default=sys.stdin)
     parser.add_argument('--place', default='周回場所')
+    parser.add_argument('--point', default='ポイント', help="'Point' item's name")
     args = parser.parse_args()
 
     with args.infile as f:
@@ -52,10 +53,10 @@ if __name__ == '__main__':
                 output = output[:-1] + "\n"
                 monyupi_flag = False
 
-            if item.startswith('ポイント(+') and point_flag == False:
+            if item.startswith(args.point + '(+') and point_flag == False:
                 output = output[:-1] + "\n"
                 point_flag = True
-            elif point_flag == True and not item.startswith('ポイント(+'):
+            elif point_flag == True and not item.startswith(args.point + '(+'):
                 output = output[:-1] + "\n"
                 point_flag = False
 
