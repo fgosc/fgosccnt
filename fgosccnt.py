@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 import re
 import argparse
@@ -455,6 +456,8 @@ class ScreenShot:
             pt = [1282, 12, 1337, 40]
         elif self.width == 1334 and self.height == 750:
             pt = [1036, 14, 1073, 39]
+        elif self.width == 2224 and self.height == 1668:
+            pt = [1730, 232, 1785, 270]
         else:
             pt = []
         return pt
@@ -550,10 +553,49 @@ class ScreenShot:
             pts = [(168, 137, 292, 272), (311, 137, 435, 272), (455, 137, 579, 272), (598, 137, 722, 272), (741, 137, 865, 272), (884, 137, 1008, 272), (1028, 137, 1152, 272),
                        (168, 285, 292, 420), (311, 285, 435, 420), (455, 285, 579, 420), (598, 285, 722, 420), (741, 285, 865, 420), (884, 285, 1008, 420), (1028, 285, 1152, 420),
                        (168, 433, 292, 568), (311, 433, 435, 568), (455, 433, 579, 568), (598, 433, 722, 568), (741, 433, 865, 568), (884, 433, 1008, 568), (1028, 433, 1152, 568)]
+        elif self.width == 2224 and self.height == 1668:
+            criteria_left = 269
+            criteria_top = 425
+            item_width = 204
+            item_height = 223
+            margin_width = 35
+            margin_height = 24
+            pts = generate_booty_pts(criteria_left, criteria_top,
+                item_width, item_height, margin_width, margin_height)
         else:
             pts = []
 
         return pts
+
+
+def generate_booty_pts(criteria_left, criteria_top, item_width, item_height, margin_width, margin_height):
+    """
+        ScreenShot#booty_pts() が返すべき座標リストを生成する。
+        全戦利品画像が等間隔に並んでいることを仮定している。
+
+        criteria_left ... 左上にある戦利品の left 座標
+        criteria_top ... 左上にある戦利品の top 座標
+        item_width ... 戦利品画像の width
+        item_height ... 戦利品画像の height
+        margin_width ... 戦利品画像間の width
+        margin_height ... 戦利品画像間の height
+    """
+    pts = []
+    current = (criteria_left, criteria_top, criteria_left + item_width, criteria_top + item_height)
+    for j in range(3):
+        # top, bottom の y座標を計算
+        current_top = criteria_top + (item_height + margin_height) * j
+        current_bottom = current_top + item_height
+        # x座標を左端に固定
+        current = (criteria_left, current_top, criteria_left + item_width, current_bottom)
+        for i in range(7):
+            # y座標を固定したままx座標をスライドさせていく
+            current_left = criteria_left + (item_width + margin_width) * i
+            current_right = current_left + item_width
+            current = (current_left, current_top, current_right, current_bottom)
+            pts.append(current)
+    return pts
+
 
 class Item:
     def __init__(self, img_rgb, img_gray, svm, bottom=False):
