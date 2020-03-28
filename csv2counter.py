@@ -7,7 +7,7 @@ import argparse
 monyupi_list = ['剣モ', '弓モ', '槍モ', '騎モ', '術モ', '殺モ', '狂モ',
                 '剣ピ', '弓ピ', '槍ピ', '騎ピ', '術ピ', '殺ピ', '狂ピ', ]
 
-skilstone_list = [  '剣秘', '弓秘', '槍秘', '騎秘', '術秘', '殺秘', '狂秘',
+skillstone_list = [ '剣秘', '弓秘', '槍秘', '騎秘', '術秘', '殺秘', '狂秘',
                     '剣魔', '弓魔', '槍魔', '騎魔', '術魔', '殺魔', '狂魔',
                     '剣輝', '弓輝', '槍輝', '騎輝', '術輝', '殺輝', '狂輝']
 
@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('infile', nargs='?', type=argparse.FileType(),
                         default=sys.stdin)
+    parser.add_argument('--place', default='周回場所')
     args = parser.parse_args()
 
     with args.infile as f:
@@ -27,7 +28,7 @@ if __name__ == '__main__':
         if item['filename'] == "missing":
             print("missing なデータがあります", file=sys.stderr)
             sys.exit(1)
-    print ("【周回場所】", end="")
+    print ("【{}】".format(args.place), end="")
     output = ""
     monyupi_flag = False
     skillstone_flag = False
@@ -37,9 +38,9 @@ if __name__ == '__main__':
         if i == 2:
             print (l[0][item] + "周")
         if i > 2:
-            if skillstone_flag == False and item in skilstone_list:
+            if skillstone_flag == False and item in skillstone_list:
                 output = output[:-1] + "\n"
-                skillstone_flag = True                
+                skillstone_flag = True
             elif skillstone_flag == True and item not in skillstone_list:
                 output = output[:-1] + "\n"
                 skillstone_flag = False
@@ -68,4 +69,3 @@ if __name__ == '__main__':
 
     print (output[:-1])
     print ("#FGO周回カウンタ http://aoshirobo.net/fatego/rc/")
-
