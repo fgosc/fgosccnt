@@ -331,10 +331,12 @@ class ScreenShot:
         self.reward = self.makereward()
         self.allitemlist = self.makelallist()
         self.allitemdic = dict(Counter(self.allitemlist))
+        self.qplist = self.makeqplist()
+        self.qpdic =dict(Counter(self.qplist))
 
     def makelist(self):
         """
-        Quest RewardのQP以外のアイテムを出力
+        QP以外のアイテムを出力
         """
         itemlist = []
         for i, item in enumerate(self.items):
@@ -342,11 +344,21 @@ class ScreenShot:
                 name = item.name + '_'
             else:
                 name = item.name
-            if i != 0:
+            if name != 'QP':
                 itemlist.append(name + item.dropnum)
-            elif self.pagenum != 1:
-                itemlist.append(name + item.dropnum)                
+##            elif self.pagenum != 1:
+##                itemlist.append(name + item.dropnum)                
         return itemlist
+
+    def makeqplist(self):
+        """
+        Quest RewardのQP以外のQPを出力
+        """
+        qplist = []
+        for i, item in enumerate(self.items):
+            if i != 0 and item.name == 'QP':
+                qplist.append(item.name + item.dropnum)
+        return qplist
 
     def makelallist(self):
         """
@@ -1112,7 +1124,8 @@ class Item:
             if itemfile.is_file():
                 continue
             else:
-                cv2.imwrite(itemfile.as_posix(), img)
+                img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
+                cv2.imwrite(itemfile.as_posix(), img_gray)
                 dist_local[itemfile] = compute_hash(img)
                 break
         return itemfile.stem
@@ -1188,6 +1201,7 @@ def get_output(filenames):
     csvfieldnames = { 'filename' : "合計", 'ドロ数': "" } #CSVフィールド名用 key しか使わない
     wholelist = []
     rewardlist = []
+    qplist = []
     outputcsv = [] #出力
     prev_pages = 0
     prev_pagenum = 0
@@ -1213,6 +1227,7 @@ def get_output(filenames):
                 wholelist = wholelist + sc.itemlist
                 if sc.reward != "":
                     rewardlist = rewardlist + [sc.reward]
+                qplist = qplist + sc.qplist
                 output = { 'filename': filename, 'ドロ数':len(sc.itemlist) }
                 output.update(sc.allitemdic)
                 if sc.chestnum >= 21 and sc.lines >= 4 and sc.pagenum == 1 \
@@ -1225,10 +1240,13 @@ def get_output(filenames):
 
     csvfieldnames.update(dict(Counter(rewardlist)))
     std_item_dic.update(dict(Counter(wholelist)))
+    qp_dic = dict(Counter(qplist))
+    
     for key in list(std_item_dic.keys()):
         if std_item_dic[key] == 0:
             del std_item_dic[key]
     csvfieldnames.update(std_item_dic)
+    csvfieldnames.update(sorted(qp_dic.items()))
 
     return csvfieldnames, outputcsv
 
