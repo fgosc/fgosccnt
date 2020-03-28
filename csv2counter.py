@@ -47,7 +47,7 @@ if __name__ == '__main__':
     qp_flag = False
     for i, item in enumerate(l[0].keys()):
         if i == 2:
-            print (l[0][item] + "周")
+            output =  l[0][item] + "周\n"
         if i > 2:
             if stditem_flag == False and item in stditem_list:
                 output = output[:-1] + "\n"
