@@ -662,6 +662,10 @@ class Item:
             self.dropnum = self.ocr_digit(bottom)
         else:
             self.dropnum = ""
+        if self.card == "Point":
+            self.make_point_dist()
+        elif self.name == "ポイント":
+            self.card == "Point"
 
     def is_silver_item(self):
         """
@@ -1059,10 +1063,10 @@ class Item:
             item_pts_upper = self.detect_upper_char(img_hsv_upper, im_th_upper, img_rgb_upper)
             line_upper = self.read_item(img_gray_upper, item_pts_upper, upper=True)
         else:
-            if flag_silver == False:
-                item_pts_lower_white = self.detect_lower_white_char(img_hsv_lower, im_th_lower)
-            else:
+            if self.card == "Point" or flag_silver == True:
                 item_pts_lower_white = self.detect_lower_white_char4silver(im_th_lower, item_pts_lower_yellow, bottom)
+            else:
+                item_pts_lower_white = self.detect_lower_white_char(img_hsv_lower, im_th_lower)
 
             line_lower_white = self.read_item(img_gray_lower, item_pts_lower_white)
 
@@ -1152,10 +1156,21 @@ class Item:
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
             item = next(iter(itemfiles))
+            if type(item[0]) is str: #ポイント登録用
+                return item[0]
             return item[0].stem
 
         return ""
 
+    def make_point_dist(self):
+        """
+        3行目に現れ、Point表示が削れているアイテムのために
+        Pointを登録しておく
+        """
+        if "ポイント" not in dist_local.keys():
+            dist_local["ポイント"] = compute_hash(self.img_rgb) #画像の距離
+
+        
     def make_new_file(self, img):
         """
         ファイル名候補を探す
