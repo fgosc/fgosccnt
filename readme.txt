@@ -1,4 +1,4 @@
-FGOSCCNT ver0.1.1 2020/3/23
+FGOSCCNT ver0.1.2 2020/3/29
 
 Twitter @fgophi
 
@@ -16,20 +16,22 @@ pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
 1. fgosccnt.py :実行ファイル
 2. makeitem.py item.xml を作成
 3. makechest.py chest.xml を作成
-4. data フォルダ 2.3.で用いられるファイル
-5. csv2counter.py (おまけ)fgosccnt.pyの出力CSVをFGO周回カウンタ書式にする
-6. qpsplit.py (おまけ)スクショファイルを報酬QPごとにフォルダ分けする
+4. makecard.py card.xml を作成
+5. data フォルダ 2.3.4.で用いられるファイル
+6. csv2counter.py (おまけ)fgosccnt.pyの出力CSVをFGO周回カウンタ書式にする
+7. qpsplit.py (おまけ)スクショファイルを報酬QPごとにフォルダ分けする
 
-以下は2.3.実行時に作成される
-7. item.xml: アイテム下部の文字を読むSVMのトレーニングファイル
-8. chest.xml:  ドロップ数の文字を読むSVMのトレーニングファイル
+以下は2.3.4.実行時に作成される
+8. item.xml: アイテム下部の文字を読むSVMのトレーニングファイル
+9. chest.xml:  ドロップ数の文字を読むSVMのトレーニングファイル
+10. card.xml:  カード下部の文字を読むSVMのトレーニングファイル
 
 【インストール】
 ・OpenCV をインストール
 ・pageinfo.py を fgosccnt.py と同一フォルダ等に置く
-・makeitem.py, makechest.pyをそれぞれ実行
+・makeitem.py, makechest.py, makecard.py をそれぞれ実行
 
-※fgosccnt.py, item.xml chest.xml を同じフォルダにいれること
+※fgosccnt.py, item.xml chest.xml card.xmlを同じフォルダにいれること
 
 
 【使い方】
@@ -75,6 +77,9 @@ IMG_2067.PNG,7,1,,7,
 ・騎業火はデータが無いためおそらく誤認識される
 
 【リリースノート】
+ver0.1.2
+・戦利品の順番ルールのより厳密な実行(概念礼装のレアリティは考慮されない)
+
 ver0.1.1
 ・マスターミッションの情報ウィンドウのせいでドロップ数が読めないバグの修正
 ・XMLファイルの容量が大きいため、GitHubで扱いづらいのでmakeitem.py makechest.pyで使用者が作成するよう変更

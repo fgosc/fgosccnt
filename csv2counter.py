@@ -70,10 +70,10 @@ if __name__ == '__main__':
                 output = output[:-1] + "\n"
                 monyupi_flag = False
 
-            if item.startswith(args.point + '(+') and point_flag == False:
+            if item.startswith('ポイント(+') and point_flag == False:
                 output = output[:-1] + "\n"
                 point_flag = True
-            elif point_flag == True and not item.startswith(args.point + '(+'):
+            elif point_flag == True and not item.startswith('ポイント(+'):
                 output = output[:-1] + "\n"
                 point_flag = False
 
@@ -84,6 +84,6 @@ if __name__ == '__main__':
                 output = output[:-1] + "\n"
                 qp_flag = False
             output =  output + item + l[0][item] + "-"
-
+    output = output.replace('ポイント(+', args.point + '(+')
     print (output[:-1])
     print ("#FGO周回カウンタ http://aoshirobo.net/fatego/rc/")
