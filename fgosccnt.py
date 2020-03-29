@@ -15,6 +15,7 @@ version = "0.1.2"
 Item_dir = Path(__file__).resolve().parent / Path("item/")
 train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
 train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
+train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -278,9 +279,27 @@ std_item = [ '爪', '心臓', '逆鱗', '根', '幼角', '涙石', '脂', 'ラ�
 ]
 
 dist_card = {
-    '礼装EXP':np.array([[7, 129, 203, 233, 184, 185, 102,  111]], dtype='uint8'),
-    '礼装SSR':np.array([[201, 137,  59, 238,  50,  90,  44, 230]], dtype='uint8'),
-    'Point':np.array([[143,  41, 194, 167,  60, 219,  44, 150]], dtype='uint8'),
+    '礼装SSR':np.array([[ 11,  11, 173, 226, 182,  79, 179, 178]], dtype='uint8'),
+    '礼装SR':np.array([[ 39, 128, 203, 233, 184, 185, 118,  78]], dtype='uint8'),
+##    '礼装SR':np.array([[7, 129, 203, 233, 184, 185, 102, 111]], dtype='uint8'),
+    
+##    '礼装EXP':np.array([[7, 129, 203, 233, 184, 185, 102,  111]], dtype='uint8'),
+##    '礼装SSR':np.array([[201, 137,  59, 238,  50,  90,  44, 230]], dtype='uint8'),
+##    '礼装SSR2':np.array([[ 11,  11, 173, 226, 182,  79, 179, 178]], dtype='uint8'),
+##    '礼装SSR3':np.array([[ 11,   9, 173, 226, 180, 238, 177, 182]], dtype='uint8'),
+
+    'Point01':np.array([[ 15, 169, 234, 150, 168, 123, 194,  59]], dtype='uint8'),
+    'Point02':np.array([[143,  41, 194, 167,  60, 219,  44, 150]], dtype='uint8'),
+## 9.0 [[135 169 234 215 184 103 214 239]]
+
+##    'Point01':np.array([[143,  41, 194, 167,  60, 219,  44, 150]], dtype='uint8'),
+##    'Point02':np.array([[ 15, 169, 234, 150, 168, 123, 194, 187]], dtype='uint8'),
+##    'Point03':np.array([[ 47, 232, 226, 167, 188, 251, 236, 182]], dtype='uint8'),
+##    'Point04':np.array([[ 15, 169, 226, 167, 188, 211, 172, 182]], dtype='uint8'),
+##    'Point05':np.array([[ 15, 169, 226, 134, 184, 123, 162,  62]], dtype='uint8'),
+##    'Point06':np.array([[ 31, 169, 226, 134, 168, 121, 198,  59]], dtype='uint8'),
+##    'Point07':np.array([[  7, 169, 234, 150, 168,  62, 198, 239]], dtype='uint8'),
+##    'Point07':np.array([[135, 169, 234, 150, 168, 127, 246, 201]], dtype='uint8'),
 }
     
 std_item_dic = {}
@@ -308,7 +327,7 @@ def has_intersect(a, b):
 
 
 class ScreenShot:
-    def __init__(self, img_rgb, svm, svm_chest):
+    def __init__(self, img_rgb, svm, svm_chest, svm_card):
         threshold = 80
 
         self.img_rgb = img_rgb
@@ -329,9 +348,9 @@ class ScreenShot:
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
             if i >= 14:
-                self.items.append(Item(item_img_rgb, item_img_gray, svm, bottom=True))
+                self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card, bottom=True))
             else:
-                self.items.append(Item(item_img_rgb, item_img_gray, svm))
+                self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card))
         self.itemlist = self.makelist()
         self.itemdic = dict(Counter(self.itemlist))
         self.reward = self.makereward()
@@ -352,7 +371,7 @@ class ScreenShot:
                 name = item.name + '_'
             else:
                 name = item.name
-            if name != 'QP' and not item.card.startswith("礼装"):
+            if name != 'QP' and not item.card == "Craft Essence":
                 itemlist.append(name + item.dropnum)
 ##            elif self.pagenum != 1:
 ##                itemlist.append(name + item.dropnum)                
@@ -377,7 +396,7 @@ class ScreenShot:
         """
         reisoulist = []
         for i, item in enumerate(self.items):
-            if item.card.startswith('礼装'):
+            if item.card == "Craft Essence":
                 reisoulist.append(item.name)
         return reisoulist
 
@@ -631,18 +650,18 @@ def generate_booty_pts(criteria_left, criteria_top, item_width, item_height, mar
 
 
 class Item:
-    def __init__(self, img_rgb, img_gray, svm, bottom=False):
+    def __init__(self, img_rgb, img_gray, svm, svm_card, bottom=False):
         self.img_rgb = img_rgb
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
         self.height, self.width = img_rgb.shape[:2]
+        self.card = self.classify_card(svm_card)
         self.name = self.classify_item(img_rgb)
         self.svm = svm
         if self.name not in std_item:
             self.dropnum = self.ocr_digit(bottom)
         else:
             self.dropnum = ""
-        self.card = self.classify_card()
 
     def is_silver_item(self):
         """
@@ -1153,26 +1172,40 @@ class Item:
         return itemfile.stem
 
 
-    def classify_card(self):
+    def classify_card(self, svm_card):
         """
         カード判別器
        """
-        hash_card = self.compute_card_hash(self.img_rgb)
-        cardfiles = {}
-        # 既存のアイテムとの距離を比較
-        for i in dist_card.keys():
-            d = hasher.compare(hash_card, dist_card[i])
-            #同じアイテムでも14離れることあり(IMG_8785)
-            if d <= 10:
-                cardfiles[i] = d
-        if len(cardfiles) > 0:
-            return  sorted(cardfiles.items())[0][0]
-        return ""
+        """
+        カード判別器
+        この場合は画像全域のハッシュをとる
+        """
+        # Hog特徴のパラメータ
+        win_size = (120, 60)
+        block_size = (16, 16)
+        block_stride = (4, 4)
+        cell_size = (4, 4)
+        bins = 9
+        test = []
+        carddic = { 0:'Quest Reward', 1:'Item', 2:'Point', 3:'Craft Essence', 99:"" }
 
+        tmpimg = self.img_rgb[int(188/206*self.height):int(200/206*self.height),
+                      int(77/188*self.width):int(114/188*self.width)]
+
+        tmpimg = cv2.resize(tmpimg, (win_size))
+        hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
+        test.append(hog.compute(tmpimg)) # 特徴量の格納
+        test = np.array(test)
+        pred = svm_card.predict(test)
+
+        return carddic[pred[1][0][0]]
+        
     def classify_item(self, img):
         """
         アイテム判別器
         """
+        if self.card == "Point":
+            return "ポイント"
         item = self.classify_standard_item(img)
         if item == "":
             item = self.classify_local_item(img)
@@ -1180,14 +1213,35 @@ class Item:
             item = self.make_new_file(img)
         return item
 
-    def compute_card_hash(self, img_rgb):
-        """
-        種火レアリティ判別器
-        この場合は画像全域のハッシュをとる
-        """
-        img = img_rgb[int(123/135*self.height):int(130/135*self.height),
-                      int(32/135*self.width):int(92/135*self.width)]
-        return hasher.compute(img_rgb)
+##    def detect_card(self, svm_card, img_rgb):
+##        """
+##        カード判別器
+##        この場合は画像全域のハッシュをとる
+##        """
+##        # Hog特徴のパラメータ
+##        win_size = (120, 60)
+##        block_size = (16, 16)
+##        block_stride = (4, 4)
+##        cell_size = (4, 4)
+##        bins = 9
+##
+##        carddic = { 0:'Item', 1:'Point', 2:'礼装', 99:None }
+##
+##        tmpimg = img_rgb[int(188/206*self.height):int(200/206*self.height),
+##                      int(77/188*self.width):int(114/188*self.width)]
+##
+##        hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
+##        test.append(hog.compute(tmpimg)) # 特徴量の格納
+##        test = np.array(test)
+##
+##        pred = self.svm_card.predict(test)
+##        res = carddic(pred[1][0][0]))
+##
+##        
+##
+##        ##画像をつくる
+####        self.make_new_file(img)
+##        return res
 
     def compute_tanebi_hash(self, img_rgb):
         """
@@ -1244,6 +1298,7 @@ def get_output(filenames):
     calc_dist_local()
     svm = cv2.ml.SVM_load(str(train_item))
     svm_chest = cv2.ml.SVM_load(str(train_chest))
+    svm_card = cv2.ml.SVM_load(str(train_card))
 
     csvfieldnames = { 'filename' : "合計", 'ドロ数': "" } #CSVフィールド名用 key しか使わない
     wholelist = []
@@ -1263,7 +1318,7 @@ def get_output(filenames):
             img_rgb = imread(filename)
 
             try:
-                sc = ScreenShot(img_rgb, svm, svm_chest)
+                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card)
 
                 #2頁目以降のスクショが無い場合に migging と出力                
                 if prev_pages - prev_pagenum > 0 and sc.pagenum == 1:
