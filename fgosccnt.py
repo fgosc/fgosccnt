@@ -668,7 +668,7 @@ class Item:
         銀アイテム検出
         戦利品数OCRで銀アイテム背景だけ挙動が違うので分けるため
         """
-        img_hsv_top = self.img_hsv[24:34, 7:17]
+        img_hsv_top = self.img_hsv[int(38/257*self.height):int(48/257*self.height), 7:17]
 
         hist_s = cv2.calcHist([img_hsv_top],[1],None,[256],[0,256]) #Sのヒストグラムを計算
         # 最小値・最大値・最小値の位置・最大値の位置を取得
@@ -1192,6 +1192,7 @@ class Item:
         tmpimg = self.img_rgb[int(188/206*self.height):int(200/206*self.height),
                       int(77/188*self.width):int(114/188*self.width)]
 
+##        self.make_new_file(tmpimg)
         tmpimg = cv2.resize(tmpimg, (win_size))
         hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
         test.append(hog.compute(tmpimg)) # 特徴量の格納
