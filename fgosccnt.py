@@ -360,6 +360,9 @@ class ScreenShot:
         self.qpdic =dict(Counter(self.qplist))
         self.reisoulist = self.makereisoulist()
         self.reisoudic =dict(Counter(self.reisoulist))
+        # 複数ファイル対応のためポイントはその都度消す
+        if "ポイント" in dist_local.keys():
+            del dist_local["ポイント"]
 
     def makelist(self):
         """
@@ -371,6 +374,8 @@ class ScreenShot:
                 name = item.name + '_'
             else:
                 name = item.name
+            if item.card == "Point":
+                std_item_dic[name + item.dropnum] = 0
             if name != 'QP' and not item.card == "Craft Essence":
                 itemlist.append(name + item.dropnum)
 ##            elif self.pagenum != 1:
@@ -665,7 +670,7 @@ class Item:
         if self.card == "Point":
             self.make_point_dist()
         elif self.name == "ポイント":
-            self.card == "Point"
+            self.card = "Point"
 
     def is_silver_item(self):
         """
@@ -1206,8 +1211,6 @@ class Item:
 
         tmpimg = self.img_rgb[int(188/206*self.height):int(200/206*self.height),
                       int(77/188*self.width):int(114/188*self.width)]
-
-##        self.make_new_file(tmpimg)
         tmpimg = cv2.resize(tmpimg, (win_size))
         hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
         test.append(hog.compute(tmpimg)) # 特徴量の格納
@@ -1228,36 +1231,6 @@ class Item:
         if item == "":
             item = self.make_new_file(img)
         return item
-
-##    def detect_card(self, svm_card, img_rgb):
-##        """
-##        カード判別器
-##        この場合は画像全域のハッシュをとる
-##        """
-##        # Hog特徴のパラメータ
-##        win_size = (120, 60)
-##        block_size = (16, 16)
-##        block_stride = (4, 4)
-##        cell_size = (4, 4)
-##        bins = 9
-##
-##        carddic = { 0:'Item', 1:'Point', 2:'礼装', 99:None }
-##
-##        tmpimg = img_rgb[int(188/206*self.height):int(200/206*self.height),
-##                      int(77/188*self.width):int(114/188*self.width)]
-##
-##        hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
-##        test.append(hog.compute(tmpimg)) # 特徴量の格納
-##        test = np.array(test)
-##
-##        pred = self.svm_card.predict(test)
-##        res = carddic(pred[1][0][0]))
-##
-##        
-##
-##        ##画像をつくる
-####        self.make_new_file(img)
-##        return res
 
     def compute_tanebi_hash(self, img_rgb):
         """
