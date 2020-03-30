@@ -1366,3 +1366,5 @@ if __name__ == '__main__':
         writer.writerow(csvfieldnames)
     for o in outputcsv:
         writer.writerow(o)
+    if len(outputcsv) > 1 and o['ドロ数'].endswith('+'):
+        writer.writerow({'filename': 'missing'})
