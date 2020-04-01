@@ -411,10 +411,10 @@ class ScreenShot:
         """
         itemlist = []
         for i, item in enumerate(self.items):
-            if item.name[-1].isdigit():
-                name = item.name + '_'
-            else:
+            if item.card == 'Craft Essence' or not item.name[-1].isdigit():
                 name = item.name
+            else:
+                name = item.name + '_'
             itemlist.append(name + item.dropnum)
         return itemlist
 
@@ -1334,6 +1334,7 @@ def get_output(filenames):
     csvfieldnames.update(dict(Counter(rewardlist)))
     reisou_dic = dict(Counter(reisoulist))
     csvfieldnames.update(sorted(reisou_dic.items(), reverse=True))
+ 
     std_item_dic.update(dict(Counter(wholelist)))
     qp_dic = dict(Counter(qplist))
     
