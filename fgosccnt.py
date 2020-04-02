@@ -515,6 +515,8 @@ class ScreenShot:
             pt = [1036, 14, 1073, 39]
         elif self.width == 2224 and self.height == 1668:
             pt = [1730, 232, 1785, 270]
+        elif self.width == 2208 and self.height == 1242:
+            pt = [1717, 23, 1772, 61]
         else:
             pt = []
         return pt
@@ -580,7 +582,7 @@ class ScreenShot:
         ## 頁数と宝箱数によってすでに報告した戦利品を間引く
         if self.pagenum == 1 and self.chestnum < 20:
             item_pts = item_pts[:self.chestnum+1]
-        elif self.pagenum >= 2:
+        elif self.pages - self.pagenum == 0:
             item_pts = item_pts[14-(self.lines+2)%3*7:15+self.chestnum%7]
             
         return item_pts
@@ -617,6 +619,15 @@ class ScreenShot:
             item_height = 223
             margin_width = 35
             margin_height = 24
+            pts = generate_booty_pts(criteria_left, criteria_top,
+                item_width, item_height, margin_width, margin_height)
+        elif self.width == 2208 and self.height == 1242:
+            criteria_left = 267
+            criteria_top = 207
+            item_width = 203
+            item_height = 222
+            margin_width = 34
+            margin_height = 23
             pts = generate_booty_pts(criteria_left, criteria_top,
                 item_width, item_height, margin_width, margin_height)
         else:
@@ -1310,7 +1321,8 @@ def get_output(filenames):
                 sc = ScreenShot(img_rgb, svm, svm_chest, svm_card)
 
                 #2頁目以降のスクショが無い場合に migging と出力                
-                if prev_pages - prev_pagenum > 0 and sc.pagenum == 1:
+                if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
+                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
                     outputcsv.append({'filename': 'missing'})
                 prev_pages = sc.pages
                 prev_pagenum = sc.pagenum
@@ -1323,8 +1335,12 @@ def get_output(filenames):
                 qplist = qplist + sc.qplist
                 output = { 'filename': filename, 'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist) }
                 output.update(sc.allitemdic)
-                if sc.chestnum >= 21 and sc.lines >= 4 and sc.pagenum == 1 \
-                   or sc.chestnum >= 42 and sc.lines >= 7 and sc.pagenum == 2:
+                if sc.pagenum == 1:
+                    if sc.lines >= 7:
+                        output["ドロ数"] = str(output["ドロ数"]) + "++"
+                    elif sc.lines >= 4:
+                        output["ドロ数"] = str(output["ドロ数"]) + "+"
+                elif sc.pagenum == 2 and sc.lines >= 7:             
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
                 output.update(sc.allitemdic)
             except:
