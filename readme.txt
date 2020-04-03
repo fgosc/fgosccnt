@@ -1,4 +1,4 @@
-FGOSCCNT ver0.1.2 2020/3/29
+FGOSCCNT ver0.2.0 2020/4/3
 
 Twitter @fgophi
 
