@@ -1394,6 +1394,18 @@ def get_output(filenames):
     出力内容を作成
     """
     calc_dist_local()
+    if train_item.exists() == False:
+        print("[エラー]item.xml が存在しません")
+        print("python makeitem.py を実行してください")
+        sys.exit(1)
+    if train_chest.exists() == False:
+        print("[エラー]chest.xml が存在しません")
+        print("python makechest.py を実行してください")
+        sys.exit(1)
+    if train_card.exists() == False:
+        print("[エラー]card.xml が存在しません")
+        print("python makecard.py を実行してください")
+        sys.exit(1)
     svm = cv2.ml.SVM_load(str(train_item))
     svm_chest = cv2.ml.SVM_load(str(train_chest))
     svm_card = cv2.ml.SVM_load(str(train_card))
