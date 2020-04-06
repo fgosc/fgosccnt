@@ -543,7 +543,9 @@ class ScreenShot:
         ## Offsetを算出
         offset_x = pts[0][0] -margin_x 
         offset_y = pts[0][1] - std_pts[0][1]
-        if offset_y > 30: #これ以上になったら二行目の座標と判断
+        if offset_y > (std_pts[7][1] - std_pts[7][0])*2: #これ以上になったら三行目の座標と判断
+            offset_y = pts[0][1] - std_pts[14][1]
+        elif offset_y > 30: #これ以上になったら二行目の座標と判断
             offset_y = pts[0][1] - std_pts[7][1]
 
         ## Offset を反映
