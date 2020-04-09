@@ -1,3 +1,4 @@
+![fgosccnt1](https://user-images.githubusercontent.com/62515228/78866947-437c3100-7a7b-11ea-8eb7-7771786b1763.png)
 # fgosccnt
 FGOの戦利品のスクショをカウントする
 
