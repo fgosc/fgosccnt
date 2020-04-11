@@ -347,7 +347,7 @@ class ScreenShot:
     """
     戦利品スクリーンショットを表すクラス
     """
-    def __init__(self, img_rgb, svm, svm_chest, svm_card):
+    def __init__(self, img_rgb, svm, svm_chest, svm_card, debug=False):
         threshold = 80
 
         self.img_rgb = img_rgb
@@ -367,7 +367,7 @@ class ScreenShot:
         for i, pt in enumerate(item_pts):
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
-            self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card))
+            self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card, debug))
         self.itemlist = self.makelist()
         self.itemdic = dict(Counter(self.itemlist))
         self.reward = self.makereward()
@@ -693,7 +693,7 @@ def generate_booty_pts(criteria_left, criteria_top, item_width, item_height, mar
 
 
 class Item:
-    def __init__(self, img_rgb, img_gray, svm, svm_card):
+    def __init__(self, img_rgb, img_gray, svm, svm_card, debug=False):
         self.img_rgb = img_rgb
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
@@ -706,6 +706,11 @@ class Item:
         self.height, self.width = img_rgb.shape[:2]
         self.card = self.classify_card(svm_card)
         self.name = self.classify_item(img_rgb)
+        if debug == True:
+            if self.name not in std_item and self.card == "Item":
+                print('"' + self.name + '"', end="")
+                self.name = self.classify_item(img_rgb,debug)
+
         self.svm = svm
         if self.name not in std_item and self.card != "Craft Essence" and self.card != "Exp. UP":
             self.ocr_digit()
@@ -1126,7 +1131,7 @@ class Item:
         if self.dropnum != "":
             self.dropnum = "(" + self.dropnum + ")"
 
-    def classify_standard_item(self, img):
+    def classify_standard_item(self, img, debug=False):
         """
         imgとの距離を比較して近いアイテムを求める
         """
@@ -1155,6 +1160,8 @@ class Item:
         
         hash_item = compute_hash(img) #画像の距離
         itemfiles = {}
+        if debug == True:
+            print(":np.array([" + str(list(hash_item[0])) + "], dtype='uint8'),")
         # 既存のアイテムとの距離を比較
         for i in dist_item.keys():
             d = hasher.compare(hash_item, dist_item[i])
@@ -1317,7 +1324,7 @@ class Item:
 
         return carddic[pred[1][0][0]]
         
-    def classify_item(self, img):
+    def classify_item(self, img, debug=False):
         """
         アイテム判別器
         """
@@ -1327,7 +1334,7 @@ class Item:
             return "QP"
         elif self.card == "Exp. UP":
             return self.classify_tanebi(img)
-        item = self.classify_standard_item(img)
+        item = self.classify_standard_item(img, debug)
         if item == "":
             item = self.classify_local_item(img)
         if item == "":
@@ -1391,7 +1398,7 @@ def calc_dist_local():
         dist_local[fname] = compute_hash(img)
 
 
-def get_output(filenames):
+def get_output(filenames, debug=False):
     """
     出力内容を作成
     """
@@ -1430,7 +1437,7 @@ def get_output(filenames):
             img_rgb = imread(filename)
 
             try:
-                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card)
+                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, debug)
 
                 #2頁目以降のスクショが無い場合に migging と出力                
                 if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
@@ -1480,6 +1487,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
+    parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
     parser.add_argument('--version', action='version', version=progname + " " + version)
 
     args = parser.parse_args()    # 引数を解析
@@ -1487,7 +1495,7 @@ if __name__ == '__main__':
     if not Item_dir.is_dir():
         Item_dir.mkdir()
 
-    csvfieldnames, outputcsv = get_output(args.filenames)
+    csvfieldnames, outputcsv = get_output(args.filenames, args.debug)
     
     fnames = csvfieldnames.keys()
     writer = csv.DictWriter(sys.stdout, fieldnames=fnames, lineterminator='\n')
