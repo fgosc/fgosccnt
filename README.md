@@ -52,6 +52,7 @@ pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
     
     optional arguments:
       -h, --help  show this help message and exit
+      -d, --debug  デバッグ情報の出力
       --version   show program's version number and exit
 
 # 実行結果
