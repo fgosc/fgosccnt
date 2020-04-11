@@ -31,6 +31,9 @@ pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
 * OpenCV をインストール
 * pageinfo.py を fgosccnt.py と同一フォルダ等に置く
 * makeitem.py, makechest.py, makecard.py をそれぞれ実行
+
+下記コマンドを実行
+
     $ python makeitem.py
     $ python makechest.py
     $ python makecard.py
