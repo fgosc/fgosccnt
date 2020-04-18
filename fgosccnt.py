@@ -10,7 +10,7 @@ from collections import Counter
 import csv
 
 progname = "FGOスクショカウント"
-version = "0.2.0"
+version = "0.3.0"
 
 Item_dir = Path(__file__).resolve().parent / Path("item/")
 train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
@@ -348,17 +348,40 @@ class ScreenShot:
     戦利品スクリーンショットを表すクラス
     """
     def __init__(self, img_rgb, svm, svm_chest, svm_card, debug=False):
+        TRAINING_IMG_WIDTH = 1755
         threshold = 80
+        self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
+        self.img_rgb_orig = img_rgb
+        self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
+        th, self.img_th_orig = cv2.threshold(self.img_gray_orig, threshold, 255, cv2.THRESH_BINARY)
 
-        self.img_rgb = img_rgb
-        self.img_gray = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
+        game_screen = self.extract_game_screen(debug)
+        if debug:
+            cv2.imwrite('game_screen.png', game_screen)
+
+        height_g, width_g, _ = game_screen.shape
+        wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
+        resizeScale = 1 / wscale
+
+        if resizeScale > 1:
+            matImgResize = 1 / resizeScale
+            self.img_rgb = cv2.resize(game_screen, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_CUBIC)
+            self.img_th_resize = cv2.resize(self.img_th_orig, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_CUBIC)
+        else:
+            self.img_rgb = cv2.resize(game_screen, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
+            self.img_th_resize = cv2.resize(self.img_th_orig, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
+
+        if debug:
+            cv2.imwrite('game_screen_resize.png', self.img_rgb)
+
+        self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
         th, self.img_th = cv2.threshold(self.img_gray, threshold, 255, cv2.THRESH_BINARY)
         self.svm = svm
         self.svm_chest = svm_chest
         
-        self.height, self.width = img_rgb.shape[:2]
-        self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
+        self.height, self.width = self.img_rgb.shape[:2]
         self.chestnum = self.ocr_tresurechest()
+ 
         item_pts = []
         if self.chestnum >= 0:
             item_pts = self.img2points()
@@ -368,6 +391,10 @@ class ScreenShot:
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
             self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card, debug))
+            if debug:
+                cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
+                
+
         self.itemlist = self.makelist()
         self.itemdic = dict(Counter(self.itemlist))
         self.reward = self.makereward()
@@ -380,6 +407,63 @@ class ScreenShot:
         # 複数ファイル対応のためポイントはその都度消す
         if "ポイント" in dist_local.keys():
             del dist_local["ポイント"]
+
+    def extract_game_screen(self, debug=False):
+        """
+        1. Make cutting image using edge and line detection
+        2. Correcting to be a gamescreen from cutting image
+        """
+        # 1. Edge detection
+        height, width = self.img_gray_orig.shape[:2]
+        canny_img = cv2.Canny(self.img_gray_orig, 100, 100)
+
+        if debug:
+            cv2.imwrite("canny_img.png",canny_img)
+
+        # 2. Line detectino
+        # In the case where minLineLength is too short, it catches the line of the item.
+        # Some pictures fail when maxLineGap =7
+        lines = cv2.HoughLinesP(canny_img, rho=1, theta=np.pi/360, threshold=80, minLineLength=int(height/5), maxLineGap=8)
+
+        left_x = upper_y =  0
+        right_x = width
+        bottom_y = height
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            # Detect Left line
+            if x1 == x2 and x1 < width/2:
+                if left_x < x1: left_x = x1
+            # Detect Upper line
+            if y1 == y2 and y1 < height/2:
+                if upper_y < y1: upper_y = y1
+            # Detect Bottom line
+            if y1 == y2 and y1 > height/2:
+                if bottom_y > y1: bottom_y = y1
+
+        # Detect Right line
+        # Avoid catching the line of the scroll bar
+        if debug:
+                line_img = self.img_rgb_orig.copy()
+            
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            if debug:
+                line_img = cv2.line(line_img,(x1,y1),(x2,y2),(0,0,255),1)
+                cv2.imwrite("line_img.png", line_img)
+            if x1 == x2 and x1 > width/2 and (y1 < upper_y or y2 < upper_y):
+                if right_x > x1: right_x = x1
+        if debug:
+            tmpimg = self.img_rgb_orig[upper_y:bottom_y,left_x:right_x]
+            cv2.imwrite("cutting_img.png",tmpimg)
+
+        # Correcting to be a gamescreen
+        # Actual iPad (2048x1536) measurements
+        scale = bottom_y - upper_y
+        upper_y = upper_y - int(177*scale/665)
+        bottom_y = bottom_y + int(306*scale/665)
+
+        game_screen = self.img_rgb_orig[upper_y:bottom_y,left_x:right_x]
+        return game_screen
 
     def makelist(self):
         """
@@ -448,7 +532,7 @@ class ScreenShot:
         """
 
         tb_max = 70 #宝箱数の上限値(推測)
-        pt = self.tresurechest_pt()
+        pt = [1443, 20, 1505, 61]
         img_num = self.img_th[pt[1]:pt[3],pt[0]:pt[2]]
         im_th = cv2.bitwise_not(img_num)
         h, w = im_th.shape[:2]
@@ -501,40 +585,6 @@ class ScreenShot:
             res = res + str(int(pred[1][0][0]))
          
         return int(res)
-
-
-    def tresurechest_pt(self):
-        """
-        OCRで宝箱数を読む領域 [left, top, right, bottom]
-        解像度別に設定
-        左はぎりぎりまで切り詰めないと間に文字が有ると誤認識する
-        """
-        if self.width == 2560 and self.height == 1600:
-            pt = [1989, 95, 2065, 153]
-        elif self.width == 2436 and self.height == 1125:
-            pt = [1740, 19, 1799, 60]
-        elif self.width == 2048 and self.height == 1536:
-##            pt = [1593, 211, 1660, 255]
-            pt = [1592, 211, 1660, 255]
-        elif self.width == 2048 and self.height == 1152:
-            pt = [1592, 21, 1650, 59]
-        elif self.width == 2048 and self.height == 877:
-            pt = [1405, 16, 1455, 48]
-        elif self.width == 1920 and self.height == 1200:
-            pt = [1492, 77, 1560, 113]
-        elif self.width == 1920 and self.height == 1080:
-            pt = [1492, 16, 1533, 57]
-        elif self.width == 1792 and self.height == 828:
-            pt = [1282, 12, 1337, 40]
-        elif self.width == 1334 and self.height == 750:
-            pt = [1036, 14, 1073, 39]
-        elif self.width == 2224 and self.height == 1668:
-            pt = [1730, 232, 1785, 270]
-        elif self.width == 2208 and self.height == 1242:
-            pt = [1717, 23, 1772, 61]
-        else:
-            pt = []
-        return pt
 
     def calc_offset(self, pts, std_pts, margin_x):
         """
@@ -591,7 +641,7 @@ class ScreenShot:
                     if ret[1] > self.height * 0.15 \
                        and ret[1] + ret[3] < self.height * 0.76: #小数の数値はだいたいの実測                
                         pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-                        leftcell_pts.append(pts)            
+                        leftcell_pts.append(pts)
         item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
 
         ## 頁数と宝箱数によってすでに報告した戦利品を間引く
@@ -607,61 +657,15 @@ class ScreenShot:
         戦利品が出現する21の座標 [left, top, right, bottom]
         解像度別に設定
         """
-        if self.width == 2560 and self.height == 1600:
-            criteria_left = 310
-            criteria_top = 330
-            item_width = 235
-            item_height = 257
-            margin_width = 40
-            margin_height = 27
-        elif self.width == 2436 and self.height == 1125:
-            criteria_left = 502
-            criteria_top = 184
-            item_width = 174
-            item_height = 190
-            margin_width = 29
-            margin_height = 20
-        elif self.width == 2048 and self.height == 1536: # iPad2018
-            criteria_left = 248
-            criteria_top = 392
-            item_width = 188
-            item_height = 206
-            margin_width = 32
-            margin_height = 21
-        elif self.width == 1920 and self.height == 1200: # Nexus 7(2013)
-            criteria_left = 233
-            criteria_top = 248
-            item_width = 176
-            item_height = 193
-            margin_width = 30
-            margin_height = 20
-        elif self.width == 1334 and self.height == 750: # iPhone6
-            criteria_left = 169
-            criteria_top = 138
-            item_width = 123
-            item_height = 134
-            margin_width = 20
-            margin_height = 14
-        elif self.width == 2224 and self.height == 1668:
-            criteria_left = 269
-            criteria_top = 425
-            item_width = 204
-            item_height = 223
-            margin_width = 35
-            margin_height = 24
-        elif self.width == 2208 and self.height == 1242: # iPhone 8 plus
-            criteria_left = 267
-            criteria_top = 207
-            item_width = 203
-            item_height = 222
-            margin_width = 34
-            margin_height = 23
-        else:
-            return []
+        criteria_left = 102
+        criteria_top = 198
+        item_width = 188
+        item_height = 206
+        margin_width = 32
+        margin_height = 21
         pts = generate_booty_pts(criteria_left, criteria_top,
                                  item_width, item_height, margin_width, margin_height)
         return pts
-
 
 def generate_booty_pts(criteria_left, criteria_top, item_width, item_height, margin_width, margin_height):
     """
@@ -935,14 +939,17 @@ class Item:
 
         ## QP,ポイントはボーナス6桁のときに高さが変わる
         ## それ以外は3桁のときに変わるはず(未確認)
-        top_y = base_line- int(240/1930*self.height)
-        cut_width = self.get_font_width()
-        margin_right = self.get_margin_right()
+        # この top_y は何？
+#        top_y = base_line- int(240/1930*self.height)
+        top_y = base_line - 26
+        cut_width = 20
+        margin_right = 15
+        comma_width = 9
 
         if (self.name in ['QP', 'ポイント'] and len(self.dropnum) > 6 + 2) or \
            (self.name not in ['QP', 'ポイント'] and len(self.dropnum) > 3 + 2):
             # 1. 下2桁から文字の高さを推測
-            top_y = base_line- int(170/1350*self.height)
+            top_y = base_line- 23
             digitimg = self.get_digitimg(self.img_hsv, self.img_th)
             #下2桁切り出して上下幅を決める
 
@@ -971,7 +978,6 @@ class Item:
                 cut_width = int(18/24*(tmp_pts[0][3] - tmp_pts[0][1] + int(40/1240*self.width)))
             elif len(tmp_pts) > 1:
                 cut_width = int(tmp_pts[-1][2]-tmp_pts[-2][2])
-        comma_width = self.get_comma_width()
 
         ## まず、+, xの位置が何桁目か調査する
         for i in range(8): #8桁以上は無い
@@ -1429,6 +1435,8 @@ def get_output(filenames, debug=False):
     prev_pagenum = 0
 
     for filename in filenames:
+        if debug:
+            print(filename)
         f = Path(filename)
 
         if f.exists() == False:
