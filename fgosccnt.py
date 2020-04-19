@@ -420,10 +420,10 @@ class ScreenShot:
         if debug:
             cv2.imwrite("canny_img.png",canny_img)
 
-        # 2. Line detectino
+        # 2. Line detection
         # In the case where minLineLength is too short, it catches the line of the item.
         # Some pictures fail when maxLineGap =7
-        lines = cv2.HoughLinesP(canny_img, rho=1, theta=np.pi/2, threshold=80, minLineLength=int(height/5), maxLineGap=8)
+        lines = cv2.HoughLinesP(canny_img, rho=1, theta=np.pi/2, threshold=80, minLineLength=int(height/5), maxLineGap=9)
 
         left_x = upper_y =  0
         right_x = width
@@ -436,9 +436,6 @@ class ScreenShot:
             # Detect Upper line
             if y1 == y2 and y1 < height/2:
                 if upper_y < y1: upper_y = y1
-            # Detect Bottom line
-            if y1 == y2 and y1 > height/2:
-                if bottom_y > y1: bottom_y = y1
 
         # Detect Right line
         # Avoid catching the line of the scroll bar
@@ -452,6 +449,16 @@ class ScreenShot:
                 cv2.imwrite("line_img.png", line_img)
             if x1 == x2 and x1 > width/2 and (y1 < upper_y or y2 < upper_y):
                 if right_x > x1: right_x = x1
+
+        # Detect Bottom line
+        # Changed to use a line through the center of the Next button.
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+##            if y1 == y2 and y1 > height/20 and (x1 > right_x or x2 > right_x):
+            if y1 == y2 and y1 > height/2 and (x1 > right_x or x2 > right_x):
+                if bottom_y > y1: bottom_y = y1
+
+
         if debug:
             tmpimg = self.img_rgb_orig[upper_y:bottom_y,left_x:right_x]
             cv2.imwrite("cutting_img.png",tmpimg)
@@ -459,8 +466,8 @@ class ScreenShot:
         # Correcting to be a gamescreen
         # Actual iPad (2048x1536) measurements
         scale = bottom_y - upper_y
-        upper_y = upper_y - int(177*scale/665)
-        bottom_y = bottom_y + int(306*scale/665)
+        upper_y = upper_y - int(177*scale/847)
+        bottom_y = bottom_y + int(124*scale/847)
 
         game_screen = self.img_rgb_orig[upper_y:bottom_y,left_x:right_x]
         return game_screen
