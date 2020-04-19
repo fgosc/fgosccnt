@@ -451,7 +451,7 @@ class ScreenShot:
                 if right_x > x1: right_x = x1
 
         # Detect Bottom line
-        # Changed to use a line through the center of the Next button.
+        # Changed the underline of cut image to use the top of Next button.
         for line in lines:
             x1, y1, x2, y2 = line[0]
 ##            if y1 == y2 and y1 > height/20 and (x1 > right_x or x2 > right_x):
