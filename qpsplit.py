@@ -1,16 +1,22 @@
-import fgosccnt2
+import fgosccnt
 import argparse
 import cv2
 from pathlib import Path
 import shutil
 
-training = Path(__file__).resolve().parent / Path("training.xml")
+training = Path(__file__).resolve().parent / Path("item.xml")
+train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
+train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
+train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
     args = parser.parse_args()    # 引数を解析
-    svm = cv2.ml.SVM_load(str(training))
+    svm = cv2.ml.SVM_load(str(train_item))
+    svm_chest = cv2.ml.SVM_load(str(train_chest))
+    svm_card = cv2.ml.SVM_load(str(train_card))
 
     prev_pagenum = 0
     prev_chestnum = 0
@@ -20,8 +26,8 @@ if __name__ == '__main__':
         if f.exists() == False:
             print( filename + 'is not found.')
         else:            
-            img_rgb = fgosccnt2.imread(filename)
-            a = fgosccnt2.ScreenShot(img_rgb, svm)
+            img_rgb = fgosccnt.imread(filename)
+            a = fgosccnt.ScreenShot(img_rgb, svm, svm_chest, svm_card)
 ##            print(a.qplist)
 ##            print(a.chestnum)
 ##            print(a.pagenum)
