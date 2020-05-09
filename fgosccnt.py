@@ -1479,7 +1479,7 @@ def get_output(filenames, debug=False):
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
                 output.update(sc.allitemdic)
             except:
-                output = ({'filename': filename + ': not valid'})
+                output = ({'filename': str(filename) + ': not valid'})
         outputcsv.append(output)
 
     csvfieldnames.update(dict(Counter(rewardlist)))
@@ -1502,6 +1502,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
+    parser.add_argument('-f', '--folder', help='フォルダで指定')
     parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
     parser.add_argument('--version', action='version', version=progname + " " + version)
 
@@ -1510,7 +1511,11 @@ if __name__ == '__main__':
     if not Item_dir.is_dir():
         Item_dir.mkdir()
 
-    csvfieldnames, outputcsv = get_output(args.filenames, args.debug)
+    if args.folder:
+        inputs = [x for x in Path(args.folder).iterdir()]
+    else:
+        inputs = args.filenames
+    csvfieldnames, outputcsv = get_output(inputs, args.debug)
     
     fnames = csvfieldnames.keys()
     writer = csv.DictWriter(sys.stdout, fieldnames=fnames, lineterminator='\n')
