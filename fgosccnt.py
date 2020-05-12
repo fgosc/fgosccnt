@@ -447,7 +447,7 @@ class ScreenShot:
             if debug:
                 line_img = cv2.line(line_img,(x1,y1),(x2,y2),(0,0,255),1)
                 cv2.imwrite("line_img.png", line_img)
-            if x1 == x2 and x1 > width/2 and (y1 < upper_y or y2 < upper_y):
+            if x1 == x2 and x1 > width*3/4 and (y1 < upper_y or y2 < upper_y):
                 if right_x > x1: right_x = x1
 
         # Detect Bottom line
