@@ -825,10 +825,12 @@ class Item:
         h, w = img_hsv_lower.shape[:2]
         # 手持ちスクショでうまくいっている範囲
         # 黄文字がこの数値でマスクできるかが肝
-        lower_yellow = np.array([25,180,119]) 
+        # 未対応機種が発生したため[25,180,119] →[25,175,119]に変更
+        lower_yellow = np.array([25,175,119]) 
         upper_yellow = np.array([37,255,255])
 
         img_hsv_lower_mask = cv2.inRange(img_hsv_lower, lower_yellow, upper_yellow)
+
         contours = cv2.findContours(img_hsv_lower_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
 
         item_pts_lower_yellow = []
@@ -1041,7 +1043,7 @@ class Item:
         for pt in pts:
             char = []
             tmpimg = self.img_gray[pt[1]:pt[3], pt[0]:pt[2]]
-             
+            
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
             char.append(hog.compute(tmpimg))
@@ -1108,6 +1110,7 @@ class Item:
         lines = ""
         char = []
         tmpimg = self.img_gray[pt[1]:pt[3], pt[0]:pt[2]]
+
         tmpimg = cv2.resize(tmpimg, (win_size))
         hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
         char.append(hog.compute(tmpimg))
