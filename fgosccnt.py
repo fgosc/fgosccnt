@@ -547,6 +547,8 @@ class ScreenShot:
         #情報ウィンドウが数字とかぶった部分を除去する
         for y in range(h):
             im_th[y, 0] = 255
+        for x in range(w): # ドロップ数7のときバグる対策 #54
+            im_th[0, x] = 255
         # 物体検出
         contours = cv2.findContours(im_th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
         item_pts = []
@@ -1527,5 +1529,6 @@ if __name__ == '__main__':
         writer.writerow(csvfieldnames)
     for o in outputcsv:
         writer.writerow(o)
-    if len(outputcsv) > 1 and str(o['ドロ数']).endswith('+'):
-        writer.writerow({'filename': 'missing'})
+    if 'ドロ数' in o.keys(): # issue: #55
+        if len(outputcsv) > 1 and str(o['ドロ数']).endswith('+'):
+            writer.writerow({'filename': 'missing'})
