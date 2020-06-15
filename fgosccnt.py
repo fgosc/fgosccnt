@@ -547,6 +547,8 @@ class ScreenShot:
         #情報ウィンドウが数字とかぶった部分を除去する
         for y in range(h):
             im_th[y, 0] = 255
+        for x in range(w): # ドロップ数7のときバグる対策 #54
+            im_th[0, x] = 255
         # 物体検出
         contours = cv2.findContours(im_th, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
         item_pts = []
@@ -1454,35 +1456,35 @@ def get_output(filenames, debug=False):
         else:            
             img_rgb = imread(filename)
 
-            try:
-                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, debug)
+##            try:
+            sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, debug)
 
-                #2頁目以降のスクショが無い場合に migging と出力                
-                if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
-                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    outputcsv.append({'filename': 'missing'})
-                    
-                prev_pages = sc.pages
-                prev_pagenum = sc.pagenum
+            #2頁目以降のスクショが無い場合に migging と出力                
+            if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
+               or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                outputcsv.append({'filename': 'missing'})
+                
+            prev_pages = sc.pages
+            prev_pagenum = sc.pagenum
 
-                #戦利品順番ルールに則った対応による出力処理
-                wholelist = wholelist + sc.itemlist
-                if sc.reward != "":
-                    rewardlist = rewardlist + [sc.reward]
-                reisoulist = reisoulist + sc.reisoulist
-                qplist = qplist + sc.qplist
-                output = { 'filename': filename, 'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist) }
-                output.update(sc.allitemdic)
-                if sc.pagenum == 1:
-                    if sc.lines >= 7:
-                        output["ドロ数"] = str(output["ドロ数"]) + "++"
-                    elif sc.lines >= 4:
-                        output["ドロ数"] = str(output["ドロ数"]) + "+"
-                elif sc.pagenum == 2 and sc.lines >= 7:             
+            #戦利品順番ルールに則った対応による出力処理
+            wholelist = wholelist + sc.itemlist
+            if sc.reward != "":
+                rewardlist = rewardlist + [sc.reward]
+            reisoulist = reisoulist + sc.reisoulist
+            qplist = qplist + sc.qplist
+            output = { 'filename': filename, 'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist) }
+            output.update(sc.allitemdic)
+            if sc.pagenum == 1:
+                if sc.lines >= 7:
+                    output["ドロ数"] = str(output["ドロ数"]) + "++"
+                elif sc.lines >= 4:
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
-                output.update(sc.allitemdic)
-            except:
-                output = ({'filename': str(filename) + ': not valid'})
+            elif sc.pagenum == 2 and sc.lines >= 7:             
+                output["ドロ数"] = str(output["ドロ数"]) + "+"
+            output.update(sc.allitemdic)
+##            except:
+##                output = ({'filename': str(filename) + ': not valid'})
         outputcsv.append(output)
 
     csvfieldnames.update(dict(Counter(rewardlist)))
@@ -1527,5 +1529,6 @@ if __name__ == '__main__':
         writer.writerow(csvfieldnames)
     for o in outputcsv:
         writer.writerow(o)
-    if len(outputcsv) > 1 and str(o['ドロ数']).endswith('+'):
-        writer.writerow({'filename': 'missing'})
+    if 'ドロ数' in o.keys(): # issue: #55
+        if len(outputcsv) > 1 and str(o['ドロ数']).endswith('+'):
+            writer.writerow({'filename': 'missing'})
