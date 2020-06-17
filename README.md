@@ -1,9 +1,9 @@
 ![fgosccnt1](https://user-images.githubusercontent.com/62515228/78866947-437c3100-7a7b-11ea-8eb7-7771786b1763.png)
 # fgosccnt
-FGOの戦利品のスクショをカウントする
+FGOのバトルリザルトのスクリーンショットから戦利品をカウント
 
-このプログラムをウェブ化したサービスをまっくすさんが公開しています
-https://fgojunks.max747.org/fgosccnt/
+このプログラムをインストールしなくてもWeb版でお試しできます(詳しくない人にはこちらを推奨)
+https://github.com/fgophi/fgosccnt/wiki/Easy-Use
 
 # 必要なソフトウェア
 Python 3.7以降
