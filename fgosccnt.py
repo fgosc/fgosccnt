@@ -347,7 +347,7 @@ class ScreenShot:
     """
     戦利品スクリーンショットを表すクラス
     """
-    def __init__(self, img_rgb, svm, svm_chest, svm_card, debug=False):
+    def __init__(self, img_rgb, svm, svm_chest, svm_card, debug=False, reward_only=False):
         TRAINING_IMG_WIDTH = 1755
         threshold = 80
         self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
@@ -387,6 +387,9 @@ class ScreenShot:
             item_pts = self.img2points()
 
         self.items = []
+        if reward_only == True:
+            # qpsplit.py で利用
+            item_pts = item_pts[0:1]
         for i, pt in enumerate(item_pts):
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
@@ -394,6 +397,9 @@ class ScreenShot:
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
                 
+        if reward_only == True:
+            self.reward = self.makereward()
+            return
 
         self.itemlist = self.makelist()
         self.itemdic = dict(Counter(self.itemlist))
@@ -863,6 +869,7 @@ class Item:
         upper_white = np.array([255,255, 255])
         img_hsv_mask = cv2.inRange(self.img_hsv, lower_white, upper_white)
         kernel = np.ones((2,1),np.uint8)
+##        kernel = np.ones((1,5),np.uint8)
         img = cv2.cv2.bitwise_or(img_hsv_mask, im_th)
         erosion = cv2.erode(img,kernel,iterations = 1)
         erosion_rev = cv2.cv2.bitwise_not(erosion)
@@ -943,7 +950,7 @@ class Item:
             
         return w
 
-    def detect_white_char(self, base_line, offset_x=0):
+    def detect_white_char(self, base_line, offset_x=0, cut_width=20, comma_width = 9):
         """
         上段と下段の白文字を見つける機能を一つに統合
         """
@@ -953,9 +960,9 @@ class Item:
         # この top_y は何？
 #        top_y = base_line- int(240/1930*self.height)
         top_y = base_line - 26
-        cut_width = 20
+##        cut_width = 20
         margin_right = 15
-        comma_width = 9
+##        comma_width = 9
 
         if (self.name in ['QP', 'ポイント'] and len(self.dropnum) > 6 + 2) or \
            (self.name not in ['QP', 'ポイント'] and len(self.dropnum) > 3 + 2):
@@ -1004,7 +1011,6 @@ class Item:
                 return ""
             if result in ['x', '+']:
                 break
-
         ## 決まった位置まで出力する
         line = ""
         for j in range(i): 
@@ -1125,7 +1131,8 @@ class Item:
         """
         戦利品OCR
         """
-
+        cut_width = 20
+        comma_width = 9
         flag_silver = False
         if self.is_silver_item() == True:
             flag_silver = True
@@ -1133,7 +1140,11 @@ class Item:
         item_pts_lower_yellow = self.detect_lower_yellow_char()        
         self.dropnum = self.read_item(item_pts_lower_yellow, yellow=True)
         if self.name in ["QP", "ポイント"] and len(self.dropnum) >= 5: #ボーナスは"(+*0)"なので
+            # 末尾の括弧上部からの距離を設定
             base_line = item_pts_lower_yellow[-1][1] -int(4/206*self.height)
+            if len(self.dropnum) >= 9: # issue: #57
+                cut_width = 18
+                comma_width = 8
         else:
             base_line = int(180/206*self.height)
 
@@ -1143,7 +1154,7 @@ class Item:
             x = self.width - (item_pts_lower_yellow[0][0] -0) - int(130/1880*self.width)
         else:
             x = 0
-        self.dropnum =  self.detect_white_char(base_line, offset_x = x) + self.dropnum
+        self.dropnum =  self.detect_white_char(base_line, offset_x = x, cut_width = cut_width, comma_width = comma_width) + self.dropnum
         
         self.dropnum =re.sub("\([^\(\)]*\)$", "", self.dropnum) #括弧除去
         if self.dropnum != "":
