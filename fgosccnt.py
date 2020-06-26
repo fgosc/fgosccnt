@@ -1019,6 +1019,8 @@ class Item:
                   self.width - margin_right  - cut_width * j  - comma_width * int((j + 1)/4) - offset_x,
                   base_line]
             c = self.read_char(pt)
+            if ord(c) == 0: # Null文字対策
+                c = '?'
             line = line + c
         j = j + 1
         pt = [self.width - margin_right - cut_width * (j + 1) - comma_width * int((j - 1)/3) - offset_x,
@@ -1026,6 +1028,8 @@ class Item:
             self.width - margin_right  - cut_width * j  - comma_width * int((j  - 1)/3) - offset_x,
             base_line]
         c = self.read_char(pt)
+        if ord(c) == 0: # Null文字対策
+            c = '?'
         line = line + c
 
         line = line[::-1]
