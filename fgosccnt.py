@@ -8,9 +8,23 @@ import numpy as np
 from pathlib import Path
 from collections import Counter
 import csv
+from enum import Enum
 
 progname = "FGOスクショカウント"
 version = "0.3.0"
+
+
+class Ordering(Enum):
+    """
+        ファイルの処理順序を示す定数
+    """
+    NOTSPECIFIED = 'notspecified'   # 指定なし
+    FILENAME = 'filename'           # ファイル名
+    TIMESTAMP = 'timestamp'         # 作成日時
+
+    def __str__(self):
+        return self.value
+
 
 Item_dir = Path(__file__).resolve().parent / Path("item/")
 train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
@@ -1517,6 +1531,17 @@ def get_output(filenames, debug=False):
 
     return csvfieldnames, outputcsv
 
+
+def sort_files(files, ordering):
+    if ordering == Ordering.NOTSPECIFIED:
+        return files
+    elif ordering == Ordering.FILENAME:
+        return sorted(files)
+    elif ordering == Ordering.TIMESTAMP:
+        return sorted(files, key=lambda f: Path(f).stat().st_ctime)
+    raise ValueError(f'Unsupported ordering: {ordering}')
+
+
 if __name__ == '__main__':
     ## オプションの解析
     parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
@@ -1524,6 +1549,8 @@ if __name__ == '__main__':
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
     parser.add_argument('-f', '--folder', help='フォルダで指定')
     parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
+    parser.add_argument('--ordering', help='ファイルの処理順序 (未指定の場合 notspecified)',
+        type=Ordering, choices=list(Ordering), default=Ordering.NOTSPECIFIED)
     parser.add_argument('--version', action='version', version=progname + " " + version)
 
     args = parser.parse_args()    # 引数を解析
@@ -1535,8 +1562,10 @@ if __name__ == '__main__':
         inputs = [x for x in Path(args.folder).iterdir()]
     else:
         inputs = args.filenames
-    csvfieldnames, outputcsv = get_output(inputs, args.debug)
     
+    inputs = sort_files(inputs, args.ordering)
+    csvfieldnames, outputcsv = get_output(inputs, args.debug)
+
     fnames = csvfieldnames.keys()
     writer = csv.DictWriter(sys.stdout, fieldnames=fnames, lineterminator='\n')
     writer.writeheader()
