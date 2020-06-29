@@ -1007,7 +1007,7 @@ class Item:
             if len(tmp_pts) > 0:
                 top_y = top_y + (tmp_pts[-1][1] - int(10/1350*self.height))
             if len(tmp_pts) == 1:
-                cut_width = int(18/24*(tmp_pts[0][3] - tmp_pts[0][1] + int(40/1240*self.width)))
+                cut_width = min(18, int(18/24*(tmp_pts[0][3] - tmp_pts[0][1] + int(40/1240*self.width))))
             elif len(tmp_pts) > 1:
                 cut_width = int(tmp_pts[-1][2]-tmp_pts[-2][2])
 
