@@ -882,7 +882,7 @@ class Item:
         lower_white = np.array([0,1, 0]) 
         upper_white = np.array([255,255, 255])
         img_hsv_mask = cv2.inRange(self.img_hsv, lower_white, upper_white)
-        kernel = np.ones((2,1),np.uint8)
+        kernel = np.ones((1,3),np.uint8)
 ##        kernel = np.ones((1,5),np.uint8)
         img = cv2.cv2.bitwise_or(img_hsv_mask, im_th)
         erosion = cv2.erode(img,kernel,iterations = 1)
@@ -890,80 +890,6 @@ class Item:
 
         return erosion_rev
     
-    def img2digitimg(self, img_hsv, im_th):
-        """
-        白でマスク(文字のフチのみ白に)→2値化画像とOR(文字内部のみ黒に)→
-        白エリア収縮することで文字(黒)拡張→反転(文字内部のみ白に)
-        """
-        lower_white = np.array([0,1, 0]) 
-        upper_white = np.array([255,255, 255])
-        img_hsv_mask = cv2.inRange(img_hsv, lower_white, upper_white)
-        kernel = np.ones((2,2),np.uint8)
-        img = cv2.cv2.bitwise_or(img_hsv_mask, im_th)
-        erosion = cv2.erode(img,kernel,iterations = 1)
-        erosion_rev = cv2.cv2.bitwise_not(erosion)
-
-        return erosion_rev
-
-    def get_font_width(self):
-        """
-        白文字の1文字が使用するフォント幅
-        """
-
-        if self.width == 235:
-            w = 25
-        elif self.width == 203 or self.width == 204:
-            w = 22
-        elif self.width == 188:
-            w = 20
-        elif self.width == 176 or self.width == 174:
-            w = 18
-        elif self.width == 123:
-            w = 13
-        else:
-            w = int(220/2040*self.width)
-
-        return w
-
-    def get_margin_right(self):
-        """
-        白文字の数字右端から画面端までの幅
-        """
-        if self.width == 235:
-            w = 20
-        elif self.width == 203 or self.width == 204:
-            w = 16
-        elif self.width == 188:
-            w = 15
-        elif self.width == 176 or self.width == 174:
-            w = 14
-        elif self.width == 123:
-            w = 10
-            
-        else:
-            w = int(150/1880*self.width)
-            
-        return w
-
-    def get_comma_width(self):
-        """
-        白文字のコンマ前後が使用するフォント幅
-        """
-        if self.width == 235:
-            w = 11
-        elif self.width == 203 or self.width == 204:
-            w = 10
-        elif self.width == 188:
-            w = 9 
-        elif self.width == 176 or self.width == 174:
-            w = 9 
-        elif self.width == 123:
-            w = 6
-        else:
-            w = int(11/235*self.width)
-            
-        return w
-
     def detect_white_char(self, base_line, offset_x=0, cut_width=20, comma_width = 9):
         """
         上段と下段の白文字を見つける機能を一つに統合
@@ -979,7 +905,8 @@ class Item:
 ##        comma_width = 9
 
         if (self.name in ['QP', 'ポイント'] and len(self.dropnum) > 6 + 2) or \
-           (self.name not in ['QP', 'ポイント'] and len(self.dropnum) > 3 + 2):
+           (self.name not in ['QP', 'ポイント'] and len(self.dropnum) > 3 + 2) or \
+           self.name in ['QP', 'ポイント'] and self.dropnum == "":
             # 1. 下2桁から文字の高さを推測
             top_y = base_line- 23
             digitimg = self.get_digitimg(self.img_hsv, self.img_th)
@@ -1007,7 +934,14 @@ class Item:
             if len(tmp_pts) > 0:
                 top_y = top_y + (tmp_pts[-1][1] - int(10/1350*self.height))
             if len(tmp_pts) == 1:
-                cut_width = min(18, int(18/24*(tmp_pts[0][3] - tmp_pts[0][1] + int(40/1240*self.width))))
+                char_height = tmp_pts[0][3] - tmp_pts[0][1]
+                if char_height <= 18:
+                    cut_width = 16
+                elif char_height <= 20:
+                    cut_width = 18
+                else:
+                    cut_width = 20
+##                cut_width = min(18, int(18/24*(tmp_pts[0][3] - tmp_pts[0][1] + int(40/1240*self.width))))
             elif len(tmp_pts) > 1:
                 cut_width = int(tmp_pts[-1][2]-tmp_pts[-2][2])
 
@@ -1028,9 +962,9 @@ class Item:
         ## 決まった位置まで出力する
         line = ""
         for j in range(i): 
-            pt = [self.width - margin_right - cut_width * (j + 1) - comma_width * int((j + 1)/4) - offset_x,
+            pt = [self.width - margin_right - cut_width * (j + 1) - comma_width * int(j/3) - offset_x,
                   top_y,
-                  self.width - margin_right  - cut_width * j  - comma_width * int((j + 1)/4) - offset_x,
+                  self.width - margin_right  - cut_width * j  - comma_width * int(j/3) - offset_x,
                   base_line]
             c = self.read_char(pt)
             if ord(c) == 0: # Null文字対策
@@ -1136,6 +1070,9 @@ class Item:
         lines = ""
         char = []
         tmpimg = self.img_gray[pt[1]:pt[3], pt[0]:pt[2]]
+##        cv2.imshow("img", cv2.resize(tmpimg, dsize=None, fx=4.5, fy=4.5))
+##        cv2.waitKey(0)
+##        cv2.destroyAllWindows()
 
         tmpimg = cv2.resize(tmpimg, (win_size))
         hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
@@ -1155,7 +1092,7 @@ class Item:
         if self.is_silver_item() == True:
             flag_silver = True
 
-        item_pts_lower_yellow = self.detect_lower_yellow_char()        
+        item_pts_lower_yellow = self.detect_lower_yellow_char()
         self.dropnum = self.read_item(item_pts_lower_yellow, yellow=True)
         if self.name in ["QP", "ポイント"] and len(self.dropnum) >= 5: #ボーナスは"(+*0)"なので
             # 末尾の括弧上部からの距離を設定
