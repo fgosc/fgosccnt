@@ -33,6 +33,11 @@ train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
 
 hasher = cv2.img_hash.PHash_create()
 
+FONTSIZE_UNDEFINED = -1
+FONTSIZE_NORMAL = 0
+FONTSIZE_SMALL = 1
+FONTSIZE_TINY = 2
+
 #恒常アイテムのハッシュ値
 dist_item ={
     'QP':np.array([[ 82, 9, 116, 145, 236, 2, 32, 3]], dtype='uint8'),
@@ -746,13 +751,15 @@ class Item:
 
         self.svm = svm
         if self.name not in std_item and self.card != "Craft Essence" and self.card != "Exp. UP":
-            self.ocr_digit()
+            self.ocr_digit(debug)
         else:
             self.dropnum = ""
         if self.card == "Point":
             self.make_point_dist()
         elif self.name == "ポイント":
             self.card = "Point"
+        if debug:
+            print(self.card)
 
     def is_silver_item(self):
         """
@@ -872,79 +879,26 @@ class Item:
                 item_pts_lower_yellow = []
 
         return self.extension(item_pts_lower_yellow)
-
-
-    def get_digitimg(self, img_hsv, im_th):
-        """
-        白でマスク(文字のフチのみ白に)→2値化画像とOR(文字内部のみ黒に)→
-        白エリア収縮することで文字(黒)拡張→反転(文字内部のみ白に)
-        """
-        lower_white = np.array([0,1, 0]) 
-        upper_white = np.array([255,255, 255])
-        img_hsv_mask = cv2.inRange(self.img_hsv, lower_white, upper_white)
-        kernel = np.ones((1,3),np.uint8)
-##        kernel = np.ones((1,5),np.uint8)
-        img = cv2.cv2.bitwise_or(img_hsv_mask, im_th)
-        erosion = cv2.erode(img,kernel,iterations = 1)
-        erosion_rev = cv2.cv2.bitwise_not(erosion)
-
-        return erosion_rev
     
-    def detect_white_char(self, base_line, offset_x=0, cut_width=20, comma_width = 9):
-        """
-        上段と下段の白文字を見つける機能を一つに統合
-        """
+    def define_fontsize(self, font_size):
+        if font_size == FONTSIZE_NORMAL:
+            cut_width = 20
+            cut_height = 27
+            comma_width = 9
+        elif font_size == FONTSIZE_SMALL:
+            cut_width = 18
+            cut_height = 23
+            comma_width = 9
+        else:
+            cut_width = 16
+            cut_height = 22
+            comma_width = 6
+        return cut_width, cut_height, comma_width
 
-        ## QP,ポイントはボーナス6桁のときに高さが変わる
-        ## それ以外は3桁のときに変わるはず(未確認)
-        # この top_y は何？
-#        top_y = base_line- int(240/1930*self.height)
-        top_y = base_line - 26
-##        cut_width = 20
-        margin_right = 15
-##        comma_width = 9
 
-        if (self.name in ['QP', 'ポイント'] and len(self.dropnum) > 6 + 2) or \
-           (self.name not in ['QP', 'ポイント'] and len(self.dropnum) > 3 + 2) or \
-           self.name in ['QP', 'ポイント'] and self.dropnum == "":
-            # 1. 下2桁から文字の高さを推測
-            top_y = base_line- 23
-            digitimg = self.get_digitimg(self.img_hsv, self.img_th)
-            #下2桁切り出して上下幅を決める
-
-            img_right = digitimg[top_y:base_line+1,
-                                 int(870/1230*self.width) - offset_x:self.width - margin_right - offset_x]
-            hr, wr = img_right.shape[:2]
-            for x in range(wr):
-                img_right[0, x] = 0
-                img_right[hr-1, x] = 0
-            for y in range(hr):
-                img_right[y, 0] = 0
-                img_right[y, wr-1] = 0
-
-            contours = cv2.findContours(img_right, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-            tmp_pts = []
-            for cnt in contours:
-                ret = cv2.boundingRect(cnt)
-                area = cv2.contourArea(cnt)
-                pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-                if area > int(23/135*self.height) and ret[2] > int((60/1240)*self.width): #この数値は結構デリケート
-                    tmp_pts = self.conflictcheck(tmp_pts, pt)
-            tmp_pts.sort()
-            if len(tmp_pts) > 0:
-                top_y = top_y + (tmp_pts[-1][1] - int(10/1350*self.height))
-            if len(tmp_pts) == 1:
-                char_height = tmp_pts[0][3] - tmp_pts[0][1]
-                if char_height <= 18:
-                    cut_width = 16
-                elif char_height <= 20:
-                    cut_width = 18
-                else:
-                    cut_width = 20
-##                cut_width = min(18, int(18/24*(tmp_pts[0][3] - tmp_pts[0][1] + int(40/1240*self.width))))
-            elif len(tmp_pts) > 1:
-                cut_width = int(tmp_pts[-1][2]-tmp_pts[-2][2])
-
+    def get_number(self, base_line, margin_right, font_size, offset_x=0):
+        cut_width, cut_height, comma_width = self.define_fontsize(font_size)
+        top_y = base_line- cut_height
         ## まず、+, xの位置が何桁目か調査する
         for i in range(8): #8桁以上は無い
             if i == 0:
@@ -979,14 +933,56 @@ class Item:
         if ord(c) == 0: # Null文字対策
             c = '?'
         line = line + c
-
         line = line[::-1]
+
+        return line
+
+    def change_value(self, line):
         line = re.sub('000000$', "百万", line)
         line = re.sub('0000$', "万", line)
         if len(line) > 5:
             line = re.sub('000$', "千", line)
-
         return line
+
+    def detect_white_char(self, base_line, font_size, offset_x=0):
+        """
+        上段と下段の白文字を見つける機能を一つに統合
+        """
+
+        ## QP,ポイントはボーナス6桁のときに高さが変わる
+        ## それ以外は3桁のときに変わるはず(未確認)
+        # この top_y は何？
+#        top_y = base_line- int(240/1930*self.height)
+        top_y = base_line - 26
+        cut_width = 20
+        margin_right = 15
+        comma_width = 9
+        if font_size != FONTSIZE_UNDEFINED:
+            line = self.get_number(base_line, margin_right, font_size, offset_x)
+            line = self.change_value(line)
+            return(line)
+        else:
+            # 7桁読み込み
+            pattern_tiny = r"^[+x][12]\d{4}00$"
+            pattern_small = r"^[+x]\d{4}00$"
+            font_size = FONTSIZE_TINY
+            line = self.get_number(base_line, margin_right, font_size, offset_x)
+            m_tiny = re.match(pattern_tiny,line)
+            if m_tiny:
+                line = self.change_value(line)
+                return(line)
+            # 6桁の読み込み
+            font_size = FONTSIZE_SMALL
+            line = self.get_number(base_line, margin_right, font_size, offset_x)
+            m_tiny = re.match(pattern_small,line)
+            if m_tiny:
+                line = self.change_value(line)
+                return(line)
+            # 1-5桁の読み込み
+            font_size = FONTSIZE_NORMAL
+            line = self.get_number(base_line, margin_right, font_size, offset_x)
+            line = self.change_value(line)
+            return line            
 
     def read_item(self, pts, upper=False, yellow=False,):
         """
@@ -1082,24 +1078,33 @@ class Item:
         result = int(pred[1][0][0])
         return chr(result)
 
-    def ocr_digit(self):
+    def ocr_digit(self, debug=False):
         """
         戦利品OCR
         """
-        cut_width = 20
-        comma_width = 9
+##        cut_width = 20
+##        comma_width = 9
+        font_size = FONTSIZE_UNDEFINED
         flag_silver = False
         if self.is_silver_item() == True:
             flag_silver = True
 
         item_pts_lower_yellow = self.detect_lower_yellow_char()
         self.dropnum = self.read_item(item_pts_lower_yellow, yellow=True)
+        # フォントサイズを決定
+        if debug:
+            if len(item_pts_lower_yellow) > 0:
+                y_height = item_pts_lower_yellow[-1][3] - item_pts_lower_yellow[-1][1]
+                if y_height< 25:
+                    font_size = FONTSIZE_TINY
+                elif y_height > 27:
+                    font_size = FONTSIZE_NORMAL
+                else:
+                    font_size = FONTSIZE_SMALL
+                    
         if self.name in ["QP", "ポイント"] and len(self.dropnum) >= 5: #ボーナスは"(+*0)"なので
             # 末尾の括弧上部からの距離を設定
             base_line = item_pts_lower_yellow[-1][1] -int(4/206*self.height)
-            if len(self.dropnum) >= 9: # issue: #57
-                cut_width = 18
-                comma_width = 8
         else:
             base_line = int(180/206*self.height)
 
@@ -1109,7 +1114,8 @@ class Item:
             x = self.width - (item_pts_lower_yellow[0][0] -0) - int(130/1880*self.width)
         else:
             x = 0
-        self.dropnum =  self.detect_white_char(base_line, offset_x = x, cut_width = cut_width, comma_width = comma_width) + self.dropnum
+##        self.dropnum =  self.detect_white_char(base_line, offset_x = x, cut_width = cut_width, comma_width = comma_width) + self.dropnum
+        self.dropnum =  self.detect_white_char(base_line, font_size) + self.dropnum
         
         self.dropnum =re.sub("\([^\(\)]*\)$", "", self.dropnum) #括弧除去
         if self.dropnum != "":
@@ -1422,35 +1428,35 @@ def get_output(filenames, debug=False):
         else:            
             img_rgb = imread(filename)
 
-            try:
-                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, debug)
+##            try:
+            sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, debug)
 
-                #2頁目以降のスクショが無い場合に migging と出力                
-                if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
-                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    outputcsv.append({'filename': 'missing'})
-                    
-                prev_pages = sc.pages
-                prev_pagenum = sc.pagenum
+            #2頁目以降のスクショが無い場合に migging と出力                
+            if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
+               or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                outputcsv.append({'filename': 'missing'})
+                
+            prev_pages = sc.pages
+            prev_pagenum = sc.pagenum
 
-                #戦利品順番ルールに則った対応による出力処理
-                wholelist = wholelist + sc.itemlist
-                if sc.reward != "":
-                    rewardlist = rewardlist + [sc.reward]
-                reisoulist = reisoulist + sc.reisoulist
-                qplist = qplist + sc.qplist
-                output = { 'filename': filename, 'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist) }
-                output.update(sc.allitemdic)
-                if sc.pagenum == 1:
-                    if sc.lines >= 7:
-                        output["ドロ数"] = str(output["ドロ数"]) + "++"
-                    elif sc.lines >= 4:
-                        output["ドロ数"] = str(output["ドロ数"]) + "+"
-                elif sc.pagenum == 2 and sc.lines >= 7:             
+            #戦利品順番ルールに則った対応による出力処理
+            wholelist = wholelist + sc.itemlist
+            if sc.reward != "":
+                rewardlist = rewardlist + [sc.reward]
+            reisoulist = reisoulist + sc.reisoulist
+            qplist = qplist + sc.qplist
+            output = { 'filename': filename, 'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist) }
+            output.update(sc.allitemdic)
+            if sc.pagenum == 1:
+                if sc.lines >= 7:
+                    output["ドロ数"] = str(output["ドロ数"]) + "++"
+                elif sc.lines >= 4:
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
-                output.update(sc.allitemdic)
-            except:
-                output = ({'filename': str(filename) + ': not valid'})
+            elif sc.pagenum == 2 and sc.lines >= 7:             
+                output["ドロ数"] = str(output["ドロ数"]) + "+"
+            output.update(sc.allitemdic)
+##            except:
+##                output = ({'filename': str(filename) + ': not valid'})
         outputcsv.append(output)
 
     csvfieldnames.update(dict(Counter(rewardlist)))
