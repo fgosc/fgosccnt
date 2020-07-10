@@ -851,6 +851,10 @@ class Item:
         img_hsv_lower = self.img_hsv[margin_top:self.height - margin_bottom,
                                      margin_left :self.width - margin_right]
 
+
+##        cv2.imshow("img", cv2.resize(img_hsv_lower, dsize=None, fx=4.5, fy=4.5))
+##        cv2.waitKey(0)
+##        cv2.destroyAllWindows()
         h, w = img_hsv_lower.shape[:2]
         # 手持ちスクショでうまくいっている範囲
         # 黄文字がこの数値でマスクできるかが肝
@@ -869,7 +873,9 @@ class Item:
             area = cv2.contourArea(cnt)
             pt = [ ret[0] + margin_left, ret[1] + margin_top,
                    ret[0] + ret[2] + margin_left, ret[1] + ret[3]  + margin_top]
-            if ret[2] < int(w/2) and ret[1] < int(h*3/5) and area > 3:
+            
+            # ）が上下に割れることがあるので上の一つは消す
+            if ret[2] < int(w/2) and ret[1] < int(h*3/5) and ret[1] + ret[3] > h*0.7 and area > 3:
                 item_pts_lower_yellow = self.conflictcheck(item_pts_lower_yellow, pt)
 
         item_pts_lower_yellow.sort()
@@ -999,6 +1005,9 @@ class Item:
         for pt in pts:
             char = []
             tmpimg = self.img_gray[pt[1]:pt[3], pt[0]:pt[2]]
+##            cv2.imshow("img", cv2.resize(tmpimg, dsize=None, fx=4.5, fy=4.5))
+##            cv2.waitKey(0)
+##            cv2.destroyAllWindows()
             
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
@@ -1010,7 +1019,9 @@ class Item:
                 lines = lines + chr(result)
         #以下エラー訂正
         if yellow==True:
-            if not lines.endswith(")") or "(+" not in lines:
+            if not lines.endswith(")"):
+                lines = lines[:-1] + ")"
+            if "(+" not in lines:
                 lines = ""
         lines = lines.replace("()", "0")
         if len(lines) > 1:
@@ -1027,26 +1038,26 @@ class Item:
             elif point_x != -1:
                 lines = lines[point_x:]
 
-        if upper == True:
-            #エラー訂正 文字列右側
-            # イベントでポイントがドロップするとき、ポイントは銀枠で
-            # 文字の右側が抜け落ちるが抜け落ちた部分は 0 なので訂正可能
-            if len(pts) > 0:
-                for i in range(int((self.width-pts[-1][2])/(21/190*self.width))):
-                    lines = lines + '0'
-            if lines.isdigit():
+##        if upper == True:
+##            #エラー訂正 文字列右側
+##            # イベントでポイントがドロップするとき、ポイントは銀枠で
+##            # 文字の右側が抜け落ちるが抜け落ちた部分は 0 なので訂正可能
+##            if len(pts) > 0:
+##                for i in range(int((self.width-pts[-1][2])/(21/190*self.width))):
+##                    lines = lines + '0'
+##            if lines.isdigit():
+##                lines = '+' + lines
+##        else:
+        if lines.isdigit():
+            if int(lines) == 0:
+                lines = "xErr"
+            elif self.name == "QP":
                 lines = '+' + lines
-        else:
-            if lines.isdigit():
-                if int(lines) == 0:
-                    lines = "xErr"
-                elif self.name == "QP":
+            else:
+                if int(lines) >= 100:
                     lines = '+' + lines
                 else:
-                    if int(lines) >= 100:
-                        lines = '+' + lines
-                    else:
-                        lines = 'x' + lines
+                    lines = 'x' + lines
 
         if len(lines) == 1:
             lines = "xErr"
@@ -1101,10 +1112,13 @@ class Item:
                     font_size = FONTSIZE_NORMAL
                 else:
                     font_size = FONTSIZE_SMALL
-                    
+            print("フォントサイズ", end=": ")
+            print(font_size)
         if self.name in ["QP", "ポイント"] and len(self.dropnum) >= 5: #ボーナスは"(+*0)"なので
             # 末尾の括弧上部からの距離を設定
-            base_line = item_pts_lower_yellow[-1][1] -int(4/206*self.height)
+##            base_line = item_pts_lower_yellow[-1][1] -int(4/206*self.height)
+            # 1桁目の上部からの距離を設定
+            base_line = item_pts_lower_yellow[-2][1] - 3
         else:
             base_line = int(180/206*self.height)
 
