@@ -875,7 +875,7 @@ class Item:
                    ret[0] + ret[2] + margin_left, ret[1] + ret[3]  + margin_top]
             
             # ）が上下に割れることがあるので上の一つは消す
-            if ret[2] < int(w/2) and ret[1] < int(h*3/5) and ret[1] + ret[3] > h*0.7 and area > 3:
+            if ret[2] < int(w/2) and ret[1] < int(h*3/5) and ret[1] + ret[3] > h*0.65 and area > 3:
                 item_pts_lower_yellow = self.conflictcheck(item_pts_lower_yellow, pt)
 
         item_pts_lower_yellow.sort()
