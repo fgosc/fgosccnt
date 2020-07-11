@@ -992,7 +992,7 @@ class Item:
 
     def read_item(self, pts, upper=False, yellow=False,):
         """
-        戦利品の数値をOCRする(エラー訂正有)
+        ボーナスの数値をOCRする(エラー訂正有)
         """
 
         win_size = (120, 60)
@@ -1008,6 +1008,7 @@ class Item:
 ##            cv2.imshow("img", cv2.resize(tmpimg, dsize=None, fx=4.5, fy=4.5))
 ##            cv2.waitKey(0)
 ##            cv2.destroyAllWindows()
+##            cv2.imwrite("tmp.png", tmpimg)
             
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
@@ -1021,8 +1022,11 @@ class Item:
         if yellow==True:
             if not lines.endswith(")"):
                 lines = lines[:-1] + ")"
-            if "(+" not in lines:
-                lines = ""
+            if not lines.startswith("(+") and not lines.startswith("(x"):
+                if lines[0] in ["+", 'x']:
+                    lines = "(" + lines
+                else:
+                    lines = ""
         lines = lines.replace("()", "0")
         if len(lines) > 1:
             #エラー訂正 文字列左側
