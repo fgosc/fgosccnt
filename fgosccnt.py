@@ -952,7 +952,7 @@ class Item:
             line = re.sub('000$', "千", line)
         return line
 
-    def detect_white_char(self, base_line, font_size, offset_x=0):
+    def detect_white_char(self, base_line, font_size, offset_x=0, debug=False):
         """
         上段と下段の白文字を見つける機能を一つに統合
         """
@@ -968,29 +968,38 @@ class Item:
         if font_size != FONTSIZE_UNDEFINED:
             line = self.get_number(base_line, margin_right, font_size, offset_x)
             line = self.change_value(line)
-            return(line)
         else:
             # 7桁読み込み
             pattern_tiny = r"^[+x][12]\d{4}00$"
+            pattern_tiny_qp = r"^\+[12]\d{4}00$"
             pattern_small = r"^[+x]\d{4}00$"
+            pattern_small_qp = r"^\+\d{4}00$"
             font_size = FONTSIZE_TINY
             line = self.get_number(base_line, margin_right, font_size, offset_x)
+            if debug: print("TINY読み込み: {}".format(line))
+            if self.name in ["QP", "ポイント"]:pattern_tiny=pattern_tiny_qp
             m_tiny = re.match(pattern_tiny,line)
             if m_tiny:
+                if debug: print("フォントサイズ: {}".format(font_size))
                 line = self.change_value(line)
                 return(line)
             # 6桁の読み込み
             font_size = FONTSIZE_SMALL
             line = self.get_number(base_line, margin_right, font_size, offset_x)
-            m_tiny = re.match(pattern_small,line)
+            if debug: print("SAMLL読み込み: {}".format(line))
+            if self.name in ["QP", "ポイント"]:pattern_small=pattern_small_qp
+            m_small = re.match(pattern_small,line)
             if m_tiny:
+                if debug: print("フォントサイズ: {}".format(font_size))
                 line = self.change_value(line)
                 return(line)
             # 1-5桁の読み込み
             font_size = FONTSIZE_NORMAL
             line = self.get_number(base_line, margin_right, font_size, offset_x)
+            if debug: print("NORMAL読み込み: {}".format(line))
             line = self.change_value(line)
-            return line            
+        if debug: print("フォントサイズ: {}".format(font_size))
+        return line            
 
     def read_item(self, pts, upper=False, yellow=False,):
         """
@@ -1118,7 +1127,7 @@ class Item:
                     font_size = FONTSIZE_NORMAL
                 else:
                     font_size = FONTSIZE_SMALL
-            print("フォントサイズ", end=": ")
+            print("ボーナスフォントサイズ", end=": ")
             print(font_size)
         # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
         if self.name in ["QP", "ポイント"] and len(self.dropnum) >= 5: #ボーナスは"(+*0)"なので
@@ -1137,7 +1146,7 @@ class Item:
         else:
             x = 0
 ##        self.dropnum =  self.detect_white_char(base_line, offset_x = x, cut_width = cut_width, comma_width = comma_width) + self.dropnum
-        self.dropnum =  self.detect_white_char(base_line, font_size, offset_x = x) + self.dropnum
+        self.dropnum =  self.detect_white_char(base_line, font_size, offset_x = x, debug=debug) + self.dropnum
         
         self.dropnum =re.sub("\([^\(\)]*\)$", "", self.dropnum) #括弧除去
         if self.dropnum != "":
