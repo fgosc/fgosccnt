@@ -411,7 +411,7 @@ class ScreenShot:
         if reward_only == True:
             # qpsplit.py で利用
             item_pts = item_pts[0:1]
-        for i, pt in enumerate(item_pts[8:9]):
+        for i, pt in enumerate(item_pts):
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
             self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card, debug))
@@ -1083,9 +1083,9 @@ class Item:
         lines = ""
         char = []
         tmpimg = self.img_gray[pt[1]:pt[3], pt[0]:pt[2]]
-        cv2.imshow("img", cv2.resize(tmpimg, dsize=None, fx=4.5, fy=4.5))
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+##        cv2.imshow("img", cv2.resize(tmpimg, dsize=None, fx=4.5, fy=4.5))
+##        cv2.waitKey(0)
+##        cv2.destroyAllWindows()
 
         tmpimg = cv2.resize(tmpimg, (win_size))
         hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
