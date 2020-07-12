@@ -1508,7 +1508,7 @@ def get_output(filenames, debug=False):
     if not output['filename'].endswith(': Not Found') and \
        not output['filename'].endswith(': not valid'):
 
-        if ce_drop == False:
+        if ce_drop == False and len(set(wholelist) - set(std_item)) > 0:
             if (len(filenames) == 1 and sc.pagenum == 1) or len(filenames) > 1:
                 csvfieldnames["礼装"] = 0
                 
