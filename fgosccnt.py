@@ -1439,6 +1439,7 @@ def get_output(filenames, debug=False):
     outputcsv = [] #出力
     prev_pages = 0
     prev_pagenum = 0
+    ce_drop = False
 
     for filename in filenames:
         if debug:
@@ -1466,9 +1467,14 @@ def get_output(filenames, debug=False):
                 if sc.reward != "":
                     rewardlist = rewardlist + [sc.reward]
                 reisoulist = reisoulist + sc.reisoulist
+                if len(sc.reisoulist) > 0:
+                    ce_drop = True
                 qplist = qplist + sc.qplist
                 output = { 'filename': filename,
                            'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist)}
+                if sc.pagenum == 1 and len(set(sc.itemlist)-set(std_item_dic.keys())) > 0:
+                    #とりあえずデータを入れて必要に応じてあとで抜く
+                    output['礼装'] = 0
                 output.update(sc.allitemdic)
                 if sc.pagenum == 1:
                     if sc.lines >= 7:
@@ -1481,10 +1487,22 @@ def get_output(filenames, debug=False):
             except:
                 output = ({'filename': str(filename) + ': not valid'})
         outputcsv.append(output)
-
+    new_outputcsv = []
+    if ce_drop == True:
+        for o in outputcsv:
+            if "礼装" in o.keys():
+                del o["礼装"]
+            new_outputcsv.append(o)
+        outputcsv = new_outputcsv
+            
     csvfieldnames.update(dict(Counter(rewardlist)))
     if not output['filename'].endswith(': Not Found') and \
        not output['filename'].endswith(': not valid'):
+
+        if ce_drop == False:
+            if (len(filenames) == 1 and sc.pagenum == 1) or len(filenames) > 1:
+                csvfieldnames["礼装"] = 0
+                
         reisou_dic = dict(Counter(reisoulist))
         csvfieldnames.update(sorted(reisou_dic.items(), reverse=True))
      
@@ -1492,12 +1510,10 @@ def get_output(filenames, debug=False):
         qp_dic = dict(Counter(qplist))
         
         for key in list(drop_item_dic.keys()):
-            if key == "礼装":
-                if (len(filenames) == 1 and sc.pagenum != 1) or len(set(sc.itemlist)-set(std_item_dic.keys())) == 0:
-                    del drop_item_dic[key]
-                else:
-                    output["礼装"] = 0
-            elif drop_item_dic[key] == 0:
+##            if key == "礼装" and ce_drop == True:
+##                del drop_item_dic[key]
+##            elif drop_item_dic[key] == 0:
+            if drop_item_dic[key] == 0:
                 del drop_item_dic[key]
         csvfieldnames.update(drop_item_dic)
         csvfieldnames.update(sorted(qp_dic.items()))
