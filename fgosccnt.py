@@ -761,6 +761,7 @@ class Item:
         elif self.name == "ポイント":
             self.card = "Point"
         if debug:
+            print(self.dropnum)
             print(self.card)
 
     def is_silver_item(self):
@@ -970,9 +971,9 @@ class Item:
             line = self.change_value(line)
         else:
             # 7桁読み込み
-            pattern_tiny = r"^[+x][12]\d{4}00$"
+            pattern_tiny = r"^[\+x][12]\d{4}00$"
             pattern_tiny_qp = r"^\+[12]\d{4}00$"
-            pattern_small = r"^[+x]\d{4}00$"
+            pattern_small = r"^[\+x]\d{4}00$"
             pattern_small_qp = r"^\+\d{4}00$"
             font_size = FONTSIZE_TINY
             line = self.get_number(base_line, margin_right, font_size, offset_x)
@@ -989,7 +990,7 @@ class Item:
             if debug: print("SAMLL読み込み: {}".format(line))
             if self.name in ["QP", "ポイント"]:pattern_small=pattern_small_qp
             m_small = re.match(pattern_small,line)
-            if m_tiny:
+            if m_small:
                 if debug: print("フォントサイズ: {}".format(font_size))
                 line = self.change_value(line)
                 return(line)
@@ -1147,7 +1148,6 @@ class Item:
             x = 0
 ##        self.dropnum =  self.detect_white_char(base_line, offset_x = x, cut_width = cut_width, comma_width = comma_width) + self.dropnum
         self.dropnum =  self.detect_white_char(base_line, font_size, offset_x = x, debug=debug) + self.dropnum
-        
         self.dropnum =re.sub("\([^\(\)]*\)$", "", self.dropnum) #括弧除去
         if self.dropnum != "":
             self.dropnum = "(" + self.dropnum + ")"
