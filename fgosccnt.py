@@ -1493,7 +1493,7 @@ def get_output(filenames, debug=False):
         
         for key in list(drop_item_dic.keys()):
             if key == "礼装":
-                if sc.pagenum != 1 or len(set(sc.itemlist)-set(std_item_dic.keys())) == 0:
+                if (len(filenames) == 1 and sc.pagenum != 1) or len(set(sc.itemlist)-set(std_item_dic.keys())) == 0:
                     del drop_item_dic[key]
                 else:
                     output["礼装"] = 0
