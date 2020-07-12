@@ -339,8 +339,10 @@ std_item = ['実', 'カケラ', '卵', '鏡','炉心', '神酒', '胆石', '産�
 ]
     
 std_item_dic = {}
+std_item_dic['礼装'] = 0 #イベント用
 for i in std_item:
     std_item_dic[i] = 0
+drop_item_dic = std_item_dic.copy()
 
 def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
     """
@@ -508,7 +510,7 @@ class ScreenShot:
             else:
                 name = item.name
             if item.card == "Point":
-                std_item_dic[name + item.dropnum] = 0
+                drop_item_dic[name + item.dropnum] = 0
             if name != 'QP' and not item.card == "Craft Essence":
                 itemlist.append(name + item.dropnum)
         return itemlist
@@ -1118,6 +1120,7 @@ class Item:
                     font_size = FONTSIZE_SMALL
             print("フォントサイズ", end=": ")
             print(font_size)
+        # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
         if self.name in ["QP", "ポイント"] and len(self.dropnum) >= 5: #ボーナスは"(+*0)"なので
             # 末尾の括弧上部からの距離を設定
 ##            base_line = item_pts_lower_yellow[-1][1] -int(4/206*self.height)
@@ -1126,6 +1129,7 @@ class Item:
         else:
             base_line = int(180/206*self.height)
 
+        # 実際の(ボーナス無し)ドロップ数の右端の位置を決定
         if self.name in ["QP", "ポイント"]:
             x = 0            
         elif len(item_pts_lower_yellow) > 0:
@@ -1133,7 +1137,7 @@ class Item:
         else:
             x = 0
 ##        self.dropnum =  self.detect_white_char(base_line, offset_x = x, cut_width = cut_width, comma_width = comma_width) + self.dropnum
-        self.dropnum =  self.detect_white_char(base_line, font_size) + self.dropnum
+        self.dropnum =  self.detect_white_char(base_line, font_size, offset_x = x) + self.dropnum
         
         self.dropnum =re.sub("\([^\(\)]*\)$", "", self.dropnum) #括弧除去
         if self.dropnum != "":
@@ -1463,7 +1467,8 @@ def get_output(filenames, debug=False):
                     rewardlist = rewardlist + [sc.reward]
                 reisoulist = reisoulist + sc.reisoulist
                 qplist = qplist + sc.qplist
-                output = { 'filename': filename, 'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist) }
+                output = { 'filename': filename,
+                           'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist)}
                 output.update(sc.allitemdic)
                 if sc.pagenum == 1:
                     if sc.lines >= 7:
@@ -1478,18 +1483,24 @@ def get_output(filenames, debug=False):
         outputcsv.append(output)
 
     csvfieldnames.update(dict(Counter(rewardlist)))
-    reisou_dic = dict(Counter(reisoulist))
-    csvfieldnames.update(sorted(reisou_dic.items(), reverse=True))
- 
-    std_item_dic.update(dict(Counter(wholelist)))
-    qp_dic = dict(Counter(qplist))
-    
-    for key in list(std_item_dic.keys()):
-        if std_item_dic[key] == 0:
-            del std_item_dic[key]
-    csvfieldnames.update(std_item_dic)
-    csvfieldnames.update(sorted(qp_dic.items()))
-
+    if not output['filename'].endswith(': Not Found') and \
+       not output['filename'].endswith(': not valid'):
+        reisou_dic = dict(Counter(reisoulist))
+        csvfieldnames.update(sorted(reisou_dic.items(), reverse=True))
+     
+        drop_item_dic.update(dict(Counter(wholelist)))
+        qp_dic = dict(Counter(qplist))
+        
+        for key in list(drop_item_dic.keys()):
+            if key == "礼装":
+                if sc.pagenum != 1 or len(set(sc.itemlist)-set(std_item_dic.keys())) == 0:
+                    del drop_item_dic[key]
+                else:
+                    output["礼装"] = 0
+            elif drop_item_dic[key] == 0:
+                del drop_item_dic[key]
+        csvfieldnames.update(drop_item_dic)
+        csvfieldnames.update(sorted(qp_dic.items()))
     return csvfieldnames, outputcsv
 
 
