@@ -23,8 +23,10 @@ def file_Assignment(files):
             print( filename + 'is not found.')
         else:            
             img_rgb = fgosccnt.imread(filename)
+            fileextention = f.suffix
             try:
-                a = fgosccnt.ScreenShot(img_rgb, svm, svm_chest, svm_card,reward_only=True)
+                a = fgosccnt.ScreenShot(img_rgb, svm, svm_chest, svm_card,
+                                    fileextention, reward_only=True)
             except:
                 print(Path(f).name, end=": ")
                 print("正常なFGOのバトルリザルトのスクショではありません")
