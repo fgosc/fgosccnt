@@ -1443,8 +1443,8 @@ class Item:
         3行目に現れ、Point表示が削れているアイテムのために
         Pointを登録しておく
         """
-        if "ポイント" not in dist_local.keys():
-            dist_local["ポイント"] = compute_hash(self.img_rgb) #画像の距離
+        if "ポイント" not in dist_item.keys():
+            dist_item["ポイント"] = compute_hash(self.img_rgb) #画像の距離
 
         
     def make_new_file(self, img):
