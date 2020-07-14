@@ -773,7 +773,8 @@ class Item:
                 self.name = self.classify_item(img_rgb,debug)
 
         self.svm = svm
-        if self.name not in std_item and self.card != "Craft Essence" and self.card != "Exp. UP":
+ ##       if self.name not in std_item and self.card != "Craft Essence" and self.card != "Exp. UP":
+        if self.card != "Craft Essence" and self.card != "Exp. UP":
             self.ocr_digit(mode, debug)
         else:
             self.dropnum = ""
@@ -1343,7 +1344,7 @@ class Item:
         # 既存のアイテムとの距離を比較
         for i in dist_item.keys():
             d = hasher.compare(hash_item, dist_item[i])
-            if d <= 10:
+            if d <= 11:
             #ポイントと種の距離が8という例有り(IMG_0274)→16に
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に
                 itemfiles[i] = d
