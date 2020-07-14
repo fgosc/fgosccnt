@@ -403,8 +403,8 @@ class ScreenShot:
         self.svm_chest = svm_chest
         
         self.height, self.width = self.img_rgb.shape[:2]
-        self.chestnum = self.ocr_tresurechest()
- 
+        self.chestnum = self.ocr_tresurechest(debug)
+        if debug: print("総ドロップ数(OCR): {}".format(self.chestnum))
         item_pts = []
         if self.chestnum >= 0:
             item_pts = self.img2points()
@@ -611,7 +611,7 @@ class ScreenShot:
         return ""
             
 
-    def ocr_tresurechest(self):
+    def ocr_tresurechest(self, debug=False):
         """
         宝箱数をOCRする関数
         """
@@ -632,9 +632,9 @@ class ScreenShot:
         item_pts = []
         for cnt in contours:
             ret = cv2.boundingRect(cnt)
-
+            area = cv2.contourArea(cnt)
             pt = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
-            if ret[2] < int(w/2):
+            if ret[2] < int(w/2) and area > 100: # #105
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt) == True:
@@ -650,6 +650,7 @@ class ScreenShot:
                     item_pts.append(pt)
 
         item_pts.sort()
+        if debug: print("ドロップ桁数(OCR): {}".format(len(item_pts)))
 
         # Hog特徴のパラメータ
         win_size = (120, 60)
