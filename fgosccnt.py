@@ -1375,7 +1375,7 @@ class Item:
         # 既存のアイテムとの距離を比較
         for i in dist_item.keys():
             d = hasher.compare(hash_item, dist_item[i])
-            if d <= 121:
+            if d <= 12:
             #ポイントと種の距離が8という例有り(IMG_0274)→16に
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に
                 itemfiles[i] = d
