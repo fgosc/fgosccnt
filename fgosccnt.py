@@ -698,7 +698,6 @@ class ScreenShot:
                        and ret[1] + ret[3] < self.height * 0.76: #小数の数値はだいたいの実測                
                         pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
                         leftcell_pts.append(pts)
-        print(leftcell_pts)
         item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
 
         ## 頁数と宝箱数によってすでに報告した戦利品を間引く
