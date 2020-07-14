@@ -437,6 +437,33 @@ class ScreenShot:
         if "ポイント" in dist_local.keys():
             del dist_local["ポイント"]
 
+
+    def find_edge(self, img_th):
+        """
+        直線検出で検出されなかったフチ幅を検出
+        """
+        edge_width = 4
+        ## lx = rx = 0
+        height, width = img_th.shape[:2]
+        for i in range(edge_width):
+            img_th_x = img_th[:,i:i+1]
+            hist = cv2.calcHist([img_th_x],[0],None,[256],[0,256]) #ヒストグラムを計算
+            # 最小値・最大値・最小値の位置・最大値の位置を取得
+            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist)
+            if maxLoc[1] == 0:
+                break
+        lx = i
+        for j in range(edge_width):
+            img_th_x = img_th[:,width - j:width - j + 1]
+            hist = cv2.calcHist([img_th_x],[0],None,[256],[0,256]) #ヒストグラムを計算
+            # 最小値・最大値・最小値の位置・最大値の位置を取得
+            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist)
+            if maxLoc[1] == 0:
+                break
+        rx = i
+
+        return lx, rx
+
     def extract_game_screen(self, debug=False):
         """
         1. Make cutting image using edge and line detection
@@ -487,10 +514,14 @@ class ScreenShot:
             if y1 == y2 and y1 > height/2 and (x1 > right_x or x2 > right_x):
                 if bottom_y > y1: bottom_y = y1
 
-
         if debug:
             tmpimg = self.img_rgb_orig[upper_y:bottom_y,left_x:right_x]
             cv2.imwrite("cutting_img.png",tmpimg)
+        # 内側の直線をとれなかったときのために補正する
+        thimg = self.img_th_orig[upper_y:bottom_y,left_x:right_x]
+        lx, rx = self.find_edge(thimg)
+        left_x = left_x + lx
+        right_x = right_x - rx
 
         # Correcting to be a gamescreen
         # Actual iPad (2048x1536) measurements
