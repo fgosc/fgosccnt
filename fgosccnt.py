@@ -651,7 +651,7 @@ class ScreenShot:
         ## Offsetを算出
         offset_x = pts[0][0] -margin_x 
         offset_y = pts[0][1] - std_pts[0][1]
-        if offset_y > (std_pts[7][1] - std_pts[7][0])*2: #これ以上になったら三行目の座標と判断
+        if offset_y > (std_pts[7][3] - std_pts[7][1])*2: #これ以上になったら三行目の座標と判断
             offset_y = pts[0][1] - std_pts[14][1]
         elif offset_y > 30: #これ以上になったら二行目の座標と判断
             offset_y = pts[0][1] - std_pts[7][1]
@@ -698,6 +698,7 @@ class ScreenShot:
                        and ret[1] + ret[3] < self.height * 0.76: #小数の数値はだいたいの実測                
                         pts = [ ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3] ]
                         leftcell_pts.append(pts)
+        print(leftcell_pts)
         item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
 
         ## 頁数と宝箱数によってすでに報告した戦利品を間引く
@@ -1344,7 +1345,7 @@ class Item:
         # 既存のアイテムとの距離を比較
         for i in dist_item.keys():
             d = hasher.compare(hash_item, dist_item[i])
-            if d <= 11:
+            if d <= 121:
             #ポイントと種の距離が8という例有り(IMG_0274)→16に
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に
                 itemfiles[i] = d
