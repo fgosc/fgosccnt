@@ -680,6 +680,8 @@ class ScreenShot:
         """
         ## Y列でソート
         pts.sort(key=lambda x: x[1])
+        if len(pts) > 1: # #107
+            if (pts[1][3] - pts[1][1]) - (pts[0][3] - pts[0][1]) > 0: pts = pts[1:]
         ## Offsetを算出
         offset_x = pts[0][0] -margin_x 
         offset_y = pts[0][1] - std_pts[0][1]
