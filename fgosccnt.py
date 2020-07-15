@@ -415,8 +415,9 @@ class ScreenShot:
             item_pts = item_pts[0:1]
         for i, pt in enumerate(item_pts):
             if debug: print("\n[Item{} Information]".format(i))
-            item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] :  pt[2]]
-            item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0] :  pt[2]]
+            lx, rx = self.find_edge(self.img_th[pt[1] :  pt[3],  pt[0] :  pt[2]], reverse=True)
+            item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] + lx :  pt[2] + lx]
+            item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0]  + lx :  pt[2] + lx ]
             if debug: cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card, fileextention, mode, debug))
                 
@@ -438,19 +439,20 @@ class ScreenShot:
             del dist_local["ポイント"]
 
 
-    def find_edge(self, img_th):
+    def find_edge(self, img_th, reverse=False):
         """
         直線検出で検出されなかったフチ幅を検出
         """
         edge_width = 4
         ## lx = rx = 0
         height, width = img_th.shape[:2]
+        target_color = 255 if reverse else 0
         for i in range(edge_width):
             img_th_x = img_th[:,i:i+1]
             hist = cv2.calcHist([img_th_x],[0],None,[256],[0,256]) #ヒストグラムを計算
             # 最小値・最大値・最小値の位置・最大値の位置を取得
             minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist)
-            if maxLoc[1] == 0:
+            if maxLoc[1] == target_color:
                 break
         lx = i
         for j in range(edge_width):
