@@ -1103,6 +1103,8 @@ class Item:
                   top_y,
                   self.width - margin_right  - cut_width * i  - comma_width * int((i  - 1)/3),
                   base_line]
+            if pt[0] < 0:
+                break
             result = self.read_char(pt)
             if i == 1 and ord(result) == 0:
                 # アイテム数 x1 とならず表記無し場合のエラー処理
@@ -1116,6 +1118,8 @@ class Item:
                   top_y,
                   self.width - margin_right  - cut_width * j  - comma_width * int(j/3),
                   base_line]
+            if pt[0] < 0:
+                break
             c = self.read_char(pt)
             if ord(c) == 0: # Null文字対策
                 c = '?'
@@ -1125,10 +1129,11 @@ class Item:
             top_y,
             self.width - margin_right  - cut_width * j  - comma_width * int((j  - 1)/3),
             base_line]
-        c = self.read_char(pt)
-        if ord(c) == 0: # Null文字対策
-            c = '?'
-        line = line + c
+        if pt[0] > 0:
+            c = self.read_char(pt)
+            if ord(c) == 0: # Null文字対策
+                c = '?'
+            line = line + c
         line = line[::-1]
 
         return line
