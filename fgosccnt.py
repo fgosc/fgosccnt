@@ -435,8 +435,8 @@ class ScreenShot:
         self.reisoulist = self.makereisoulist()
         self.reisoudic =dict(Counter(self.reisoulist))
         # 複数ファイル対応のためポイントはその都度消す
-        if "ポイント" in dist_local.keys():
-            del dist_local["ポイント"]
+        if "ポイント" in dist_item.keys():
+            del dist_item["ポイント"]
 
 
     def find_edge(self, img_th, reverse=False):
