@@ -1639,7 +1639,7 @@ def get_output(filenames, debug=False):
         f = Path(filename)
 
         if f.exists() == False:
-            output = { 'filename': filename + ': Not Found' }
+            output = { 'filename': str(filename) + ': Not Found' }
         else:
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
@@ -1678,7 +1678,7 @@ def get_output(filenames, debug=False):
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
                 output.update(sc.allitemdic)
             except:
-                output = ({'filename': filename + ': not valid'})
+                output = ({'filename': str(filename) + ': not valid'})
         outputcsv.append(output)
     new_outputcsv = []
     if ce_drop == True:
