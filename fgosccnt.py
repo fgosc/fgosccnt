@@ -803,8 +803,11 @@ class Item:
         self.height, self.width = img_rgb.shape[:2]
         self.card = self.classify_card(svm_card)
         self.name = self.classify_item(img_rgb)
+        if self.card == "":
+            if self.name.endswith('火'): self.card ="Exp. UP"
         if debug == True:
             print("Card Type: {}".format(self.card))
+            print("Name: {}".format(self.name))
             if self.name not in std_item and self.card == "Item":
                 print('"' + self.name + '"', end="")
                 self.name = self.classify_item(img_rgb,debug)
@@ -1352,28 +1355,10 @@ class Item:
         imgとの距離を比較して近いアイテムを求める
         """
         # 種火かどうかの判別
-        hash_tanebi = self.compute_tanebi_hash(img)
-        tanebifiles = {}
-        for i in dist_tanebi.keys():
-            dt = hasher.compare(hash_tanebi, dist_tanebi[i])
-            if dt <= 15: #IMG_1833で11 IMG_1837で15
-                tanebifiles[i] = dt
-        tanebifiles = sorted(tanebifiles.items(), key=lambda x:x[1])
+        item = self.classify_tanebi(img)
+        if item != "":
+            return item
 
-        if len(tanebifiles) > 0:
-            tanebi = next(iter(tanebifiles))
-            hash_tanebi_class = self.compute_tanebi_class_hash(img)
-            tanebiclassfiles = {}
-            for i in dist_tanebi_class.keys():
-                if (tanebi[0].replace('変換', ''))[-2:] in i:
-                    dtc = hasher.compare(hash_tanebi_class, dist_tanebi_class[i])
-                    if dtc <= 19: #18離れることがあったので(Screenshot_20200318-140020.png)
-                        tanebiclassfiles[i] = dtc
-            tanebiclassfiles = sorted(tanebiclassfiles.items(), key=lambda x:x[1])
-            if len(tanebiclassfiles) > 0:
-                tanebiclass = next(iter(tanebiclassfiles))
-                return tanebiclass[0].replace('変換', '')
-        
         hash_item = compute_hash(img) #画像の距離
         itemfiles = {}
         if debug == True:
@@ -1435,46 +1420,28 @@ class Item:
 
         return ""
 
-##    def classify_local_item(self, img):
-##        """
-##        既所持のアイテム画像の距離を計算して保持
-##        """
-##        hash_item = compute_hash(img) #画像の距離
-##
-##        itemfiles = {}
-##        # 既存のアイテムとの距離を比較
-##        for i in dist_local.keys():
-##            d = hasher.compare(hash_item, dist_local[i])
-##            #同じアイテムでも14離れることあり(IMG_8785)
-##            if d <= 15:
-##                itemfiles[i] = d
-##        if len(itemfiles) > 0:
-##            itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
-##            item = next(iter(itemfiles))
-##            if type(item[0]) is str: #ポイント登録用
-##                return item[0]
-##            return item[0].stem
-##
-##        return ""
-
     def classify_tanebi(self, img):
         hash_item = self.compute_tanebi_rarity_hash(img) #画像の距離
         itemfiles = {}
         for i in dist_tanebi_rarity.keys():
-            d = hasher.compare(hash_item, dist_tanebi_rarity[i])
-            itemfiles[i] = d
+            dt = hasher.compare(hash_item, dist_tanebi_rarity[i])
+            if dt <= 15: #IMG_1833で11 IMG_1837で15
+                itemfiles[i] = dt
         itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
-        item = next(iter(itemfiles))
-        hash_tanebi_class = self.compute_tanebi_class_hash(img)
-        tanebiclassfiles = {}
-        for i in dist_tanebi_class.keys():
-            dtc = hasher.compare(hash_tanebi_class, dist_tanebi_class[i])
-            tanebiclassfiles[i] = dtc
-        tanebiclassfiles = sorted(tanebiclassfiles.items(), key=lambda x:x[1])
-        tanebiclass = next(iter(tanebiclassfiles))
+        if len(itemfiles) > 0:
+            item = next(iter(itemfiles))
+            hash_tanebi_class = self.compute_tanebi_class_hash(img)
+            tanebiclassfiles = {}
+            for i in dist_tanebi_class.keys():
+                dtc = hasher.compare(hash_tanebi_class, dist_tanebi_class[i])
+                tanebiclassfiles[i] = dtc
+            tanebiclassfiles = sorted(tanebiclassfiles.items(), key=lambda x:x[1])
+            tanebiclass = next(iter(tanebiclassfiles))
 
-        result = tanebiclass[0][0] + item[0].replace('変換', '')
-        return result
+            result = tanebiclass[0][0] + item[0].replace('変換', '')
+            return result
+
+        return ""
 
     def make_point_dist(self):
         """
@@ -1536,7 +1503,7 @@ class Item:
             return "ポイント"
         elif self.card == "Quest Reward":
             return "QP"
-        elif self.card == "Exp. UP":
+#        elif self.card == "Exp. UP":
             return self.classify_tanebi(img)
         item = self.classify_standard_item(img, debug)
 ##        if item == "":
@@ -1559,6 +1526,7 @@ class Item:
         """
         img = img_rgb[int(53/189*self.height):int(136/189*self.height),
                       int(37/206*self.width):int(149/206*self.width)]
+
         return hasher.compute(img)
 
     def compute_tanebi_class_hash(self, img_rgb):
