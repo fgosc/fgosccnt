@@ -1663,7 +1663,7 @@ def get_output(filenames, debug=False):
                 if len(sc.reisoulist) > 0:
                     ce_drop = True
                 qplist = qplist + sc.qplist
-                output = { 'filename': filename,
+                output = { 'filename': str(filename),
                            'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist)}
                 if sc.pagenum == 1 and len(set(sc.itemlist)-set(std_item_dic.keys())) > 0:
                     #とりあえずデータを入れて必要に応じてあとで抜く
@@ -1678,7 +1678,7 @@ def get_output(filenames, debug=False):
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
                 output.update(sc.allitemdic)
             except:
-                output = ({'filename': str(filename) + ': not valid'})
+                output = ({'filename': filename + ': not valid'})
         outputcsv.append(output)
     new_outputcsv = []
     if ce_drop == True:
