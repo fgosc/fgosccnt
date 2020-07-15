@@ -804,9 +804,11 @@ class Item:
         self.card = self.classify_card(svm_card)
         self.name = self.classify_item(img_rgb)
         if debug == True:
+            print("Card Type: {}".format(self.card))
             if self.name not in std_item and self.card == "Item":
                 print('"' + self.name + '"', end="")
                 self.name = self.classify_item(img_rgb,debug)
+
 
         self.svm = svm
  ##       if self.name not in std_item and self.card != "Craft Essence" and self.card != "Exp. UP":
@@ -820,7 +822,6 @@ class Item:
             self.card = "Point"
         if debug:
             print("Number of Drop: {}".format(self.dropnum))
-            print("Card Type: {}".format(self.card))
 
     def is_silver_item(self):
         """
