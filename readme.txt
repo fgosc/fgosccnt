@@ -9,7 +9,6 @@ Python 3.7以降
 
 【必要なライブラリ】
 OpenCV
-pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
 
 
 【ファイル】
@@ -28,7 +27,6 @@ pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
 
 【インストール】
 ・OpenCV をインストール
-・pageinfo.py を fgosccnt.py と同一フォルダ等に置く
 ・makeitem.py, makechest.py, makecard.py をそれぞれ実行
 
 ※fgosccnt.py, item.xml chest.xml card.xmlを同じフォルダにいれること
