@@ -8,9 +8,6 @@ https://github.com/fgophi/fgosccnt/wiki/Easy-Use
 # 必要なソフトウェア
 Python 3.7以降
 
-# 必要なライブラリ
-pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
-
 # ファイル
 1. fgosccnt.py :実行ファイル
 2. makeitem.py item.xml を作成
@@ -29,7 +26,6 @@ pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
 # インストール
 
 * OpenCV をインストール
-* pageinfo.py を fgosccnt.py と同一フォルダ等に置く
 * makeitem.py, makechest.py, makecard.py をそれぞれ実行
 
 下記コマンドを実行
