@@ -1312,7 +1312,7 @@ class Item:
             flag_silver = True
 
         if self.fileextention.lower() == '.png':
-            bonus_pts = self.detect_lower_bonus_char()
+            bonus_pts = self.detect_bonus_char()
             self.dropnum = self.read_item(bonus_pts, debug)
             # フォントサイズを決定
             if len(bonus_pts) > 0:
@@ -1324,7 +1324,7 @@ class Item:
                 else:
                     font_size = FONTSIZE_SMALL
         else:
-            self.bonus, item_pts_lower_yellow, font_size = self.detect_bonus_char4jpg(mode, debug)
+            self.bonus, bonus_pts, font_size = self.detect_bonus_char4jpg(mode, debug)
         if debug:
             print("Bonus Font Size: {}\nBonus: {}".format(font_size, self.bonus))
 
@@ -1617,41 +1617,41 @@ def get_output(filenames, debug=False):
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
 
-            try:
-                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
+##            try:
+            sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
 
-                #2頁目以降のスクショが無い場合に migging と出力                
-                if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
-                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    outputcsv.append({'filename': 'missing'})
-                    
-                prev_pages = sc.pages
-                prev_pagenum = sc.pagenum
+            #2頁目以降のスクショが無い場合に migging と出力                
+            if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
+               or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                outputcsv.append({'filename': 'missing'})
+                
+            prev_pages = sc.pages
+            prev_pagenum = sc.pagenum
 
-                #戦利品順番ルールに則った対応による出力処理
-                wholelist = wholelist + sc.itemlist
-                if sc.reward != "":
-                    rewardlist = rewardlist + [sc.reward]
-                reisoulist = reisoulist + sc.reisoulist
-                if len(sc.reisoulist) > 0:
-                    ce_drop = True
-                qplist = qplist + sc.qplist
-                output = { 'filename': str(filename),
-                           'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist)}
-                if sc.pagenum == 1 and len(set(sc.itemlist)-set(std_item_dic.keys())) > 0:
-                    #とりあえずデータを入れて必要に応じてあとで抜く
-                    output['礼装'] = 0
-                output.update(sc.allitemdic)
-                if sc.pagenum == 1:
-                    if sc.lines >= 7:
-                        output["ドロ数"] = str(output["ドロ数"]) + "++"
-                    elif sc.lines >= 4:
-                        output["ドロ数"] = str(output["ドロ数"]) + "+"
-                elif sc.pagenum == 2 and sc.lines >= 7:             
+            #戦利品順番ルールに則った対応による出力処理
+            wholelist = wholelist + sc.itemlist
+            if sc.reward != "":
+                rewardlist = rewardlist + [sc.reward]
+            reisoulist = reisoulist + sc.reisoulist
+            if len(sc.reisoulist) > 0:
+                ce_drop = True
+            qplist = qplist + sc.qplist
+            output = { 'filename': str(filename),
+                       'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist)}
+            if sc.pagenum == 1 and len(set(sc.itemlist)-set(std_item_dic.keys())) > 0:
+                #とりあえずデータを入れて必要に応じてあとで抜く
+                output['礼装'] = 0
+            output.update(sc.allitemdic)
+            if sc.pagenum == 1:
+                if sc.lines >= 7:
+                    output["ドロ数"] = str(output["ドロ数"]) + "++"
+                elif sc.lines >= 4:
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
-                output.update(sc.allitemdic)
-            except:
-                output = ({'filename': str(filename) + ': not valid'})
+            elif sc.pagenum == 2 and sc.lines >= 7:             
+                output["ドロ数"] = str(output["ドロ数"]) + "+"
+            output.update(sc.allitemdic)
+##            except:
+##                output = ({'filename': str(filename) + ': not valid'})
         outputcsv.append(output)
     new_outputcsv = []
     if ce_drop == True:
