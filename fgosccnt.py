@@ -567,10 +567,10 @@ class ScreenShot:
 ##                name = item.name + '_'
 ##            else:
 ##                name = item.name
-            name = item_name[item.name]
+            name = item.name
             if item.card == "Point":
                 drop_item_dic[name + item.dropnum] = 0
-            if name != 'QP' and not item.card == "Craft Essence":
+            if name not in [ 'クエストクリア報酬QP', 'QP'] and not item.card == "Craft Essence":
                 itemlist.append(name + item.dropnum)
         return itemlist
 
@@ -606,12 +606,12 @@ class ScreenShot:
         for i, item in enumerate(self.items):
             tmp = {}
             if item.card == "Quest Reward":
-                tmp['name'] = "報酬QP"
+                tmp['id'] = 5
+                tmp['name'] = "クエストクリア報酬QP"
                 tmp['priority'] = 0
             else:
                 tmp['name'] = item.name
-                print (item.name)
-                tmp['priority'] = item_priority[item.name]
+                tmp['priority'] = item_priority[item.id]
             tmp['dropnum'] = item.dropnum
             tmp['bonus'] = item.bonus
             newitemlist.append(tmp)
@@ -828,7 +828,8 @@ class Item:
         
         self.height, self.width = img_rgb.shape[:2]
         self.card = self.classify_card(svm_card)
-        self.name = self.classify_item(img_rgb)
+        self.id = self.classify_item(img_rgb)
+        self.name = item_name[self.id]
         if self.card == "":
             if self.name.endswith('火'): self.card ="Exp. UP"
         if debug == True:
@@ -1288,7 +1289,7 @@ class Item:
         if lines.isdigit():
             if int(lines) == 0:
                 lines = "xErr"
-            elif self.name == "QP":
+            elif self.name == "QP" or self.name == "クエストクリア報酬QP":
                 lines = '+' + lines
             else:
                 if int(lines) >= 100:
@@ -1386,14 +1387,15 @@ class Item:
     def classify_standard_item(self, img, debug=False):
         """
         imgとの距離を比較して近いアイテムを求める
+        id を返すように変更
         """
         # 種火かどうかの判別
-        item = self.classify_tanebi(img)
-        if item != "":
-            return item
+        id = self.classify_tanebi(img)
+        if id != "":
+            return id
 
         hash_item = compute_hash(img) #画像の距離
-        itemfiles = {}
+        ids = {}
         if debug == True:
             print(":np.array([" + str(list(hash_item[0])) + "], dtype='uint8'),")
         # 既存のアイテムとの距離を比較
@@ -1402,54 +1404,60 @@ class Item:
             if d <= 12:
             #ポイントと種の距離が8という例有り(IMG_0274)→16に
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に
-                itemfiles[i] = d
-        if len(itemfiles) > 0:
-            itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
-            item = next(iter(itemfiles))
+                ids[i] = d
+        if len(ids) > 0:
+            idfiles = sorted(ids.items(), key=lambda x:x[1])
+            id = next(iter(ids))
  
-            if type(item[0]) is str:
-                if item[0].endswith("秘"):
-                    hash_hi = self.compute_maseki_hash(img)
-                    hisekifiles = {}
-                    for i in dist_hiseki.keys():
-                        d2 = hasher.compare(hash_hi, dist_hiseki[i])
-                        if d2 <= 20:
-                            hisekifiles[i] = d2
-                    hisekifiles = sorted(hisekifiles.items(), key=lambda x:x[1])
-                    item = next(iter(hisekifiles))
-                elif item[0].endswith("魔"):
-                    hash_ma = self.compute_maseki_hash(img)
-                    masekifiles = {}
-                    for i in dist_maseki.keys():
-                        d2 = hasher.compare(hash_ma, dist_maseki[i])
-                        if d2 <= 20:
-                            masekifiles[i] = d2
-                    masekifiles = sorted(masekifiles.items(), key=lambda x:x[1])
-                    item = next(iter(masekifiles))
-                elif item[0].endswith("輝"):
-                    hash_ki = self.compute_maseki_hash(img)
-                    kisekifiles = {}
-                    for i in dist_kiseki.keys():
-                        d2 = hasher.compare(hash_ki, dist_kiseki[i])
-                        if d2 <= 20:
-                            kisekifiles[i] = d2
-                    kisekifiles = sorted(kisekifiles.items(), key=lambda x:x[1])
-                    item = next(iter(kisekifiles))
-                elif item[0].endswith("モ") or item[0].endswith("ピ"):
-                    #ヒストグラム
-                    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-                    h, w = img_hsv.shape[:2]
-                    img_hsv = img_hsv[int(h/2-10):int(h/2+10),int(w/2-10):int(w/2+10)]
-                    hist_s = cv2.calcHist([img_hsv],[1],None,[256],[0,256]) #Bのヒストグラムを計算
-                    minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist_s)
-                    if maxLoc[1] > 128:
-                        return item[0][0] + "モ"
-                    else:
-                        return item[0][0] + "ピ"
+##            if type(id[0]) is int:
+            if item_name[id].endswith("秘"):
+                hash_hi = self.compute_maseki_hash(img)
+                hisekifiles = {}
+                for i in dist_hiseki.keys():
+                    d2 = hasher.compare(hash_hi, dist_hiseki[i])
+                    if d2 <= 20:
+                        hisekifiles[i] = d2
+                hisekifiles = sorted(hisekifiles.items(), key=lambda x:x[1])
+                item = next(iter(hisekifiles))
+                id = [k for k in ids.keys() if item_name[k] == item[0][0] + "の秘石"][0]
+            elif item_name[id].endswith("魔石"):
+                hash_ma = self.compute_maseki_hash(img)
+                masekifiles = {}
+                for i in dist_maseki.keys():
+                    d2 = hasher.compare(hash_ma, dist_maseki[i])
+                    if d2 <= 20:
+                        masekifiles[i] = d2
+                masekifiles = sorted(masekifiles.items(), key=lambda x:x[1])
+                item = next(iter(masekifiles))
+                id = [k for k in ids.keys() if item_name[k] == item[0][0] + "の魔石"][0]
+            elif item_name[id].endswith("輝石"):
+                hash_ki = self.compute_maseki_hash(img)
+                kisekifiles = {}
+                for i in dist_kiseki.keys():
+                    d2 = hasher.compare(hash_ki, dist_kiseki[i])
+                    if d2 <= 20:
+                        kisekifiles[i] = d2
+                kisekifiles = sorted(kisekifiles.items(), key=lambda x:x[1])
+                item = next(iter(kisekifiles))
+                id = [k for k in ids.keys() if item_name[k] == item[0][0] + "の輝石"][0]
+            elif item_name[id].endswith("モニュメント") \
+                 or item_name[id].endswith("ピース"):
+                #ヒストグラム
+                img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+                h, w = img_hsv.shape[:2]
+                img_hsv = img_hsv[int(h/2-10):int(h/2+10),int(w/2-10):int(w/2+10)]
+                hist_s = cv2.calcHist([img_hsv],[1],None,[256],[0,256]) #Bのヒストグラムを計算
+                minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist_s)
+                if maxLoc[1] > 128:
+                    item = item_name[0].replace("モニュメント","").replace("ピース","") + "モニュメント"
+                else:
+                    item = item_name[0].replace("モニュメント","").replace("ピース","") + "ピース"
+                id = [k for k in ids.keys() if item_name[k] == item][0]
                 
-            if type(item[0]) is str or type(item[0]) is int: #ポイント登録用
-                return item[0]
-            return item[0].stem
+##            if type(item[0]) is str or type(item[0]) is int: #ポイント登録用
+##                return item[0]
+##            return item[0].stem
+            return id
 
         return ""
 
@@ -1471,8 +1479,9 @@ class Item:
             tanebiclassfiles = sorted(tanebiclassfiles.items(), key=lambda x:x[1])
             tanebiclass = next(iter(tanebiclassfiles))
 
-            result = tanebiclass[0][0] + item[0].replace('変換', '')
-            return result
+            item = tanebiclass[0][0] + item[0].replace('変換', '')
+            id = [k for k in item_name.keys() if item_name[k] == item][0]
+            return id
 
         return ""
 
@@ -1533,17 +1542,18 @@ class Item:
         アイテム判別器
         """
         if self.card == "Point":
-            return "ポイント"
+            return 900000
         elif self.card == "Quest Reward":
-            return "QP"
+##            return "QP"
+            return 5
 #        elif self.card == "Exp. UP":
             return self.classify_tanebi(img)
-        item = self.classify_standard_item(img, debug)
+        id = self.classify_standard_item(img, debug)
 ##        if item == "":
 ##            item = self.classify_local_item(img)
-        if item == "":
-            item = self.make_new_file(img)
-        return item
+        if id == "":
+            id = self.make_new_file(img)
+        return id
 
     def compute_tanebi_hash(self, img_rgb):
         """
@@ -1633,7 +1643,7 @@ def get_output(filenames, debug=False):
     """
     出力内容を作成
     """
-    calc_dist_local()
+##    calc_dist_local()
     calc_dist()
     if train_item.exists() == False:
         print("[エラー]item.xml が存在しません")
