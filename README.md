@@ -8,9 +8,6 @@ https://github.com/fgophi/fgosccnt/wiki/Easy-Use
 # 必要なソフトウェア
 Python 3.7以降
 
-# 必要なライブラリ
-pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
-
 # ファイル
 1. fgosccnt.py :実行ファイル
 2. makeitem.py item.xml を作成
@@ -29,7 +26,6 @@ pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
 # インストール
 
 * OpenCV をインストール
-* pageinfo.py を fgosccnt.py と同一フォルダ等に置く
 * makeitem.py, makechest.py, makecard.py をそれぞれ実行
 
 下記コマンドを実行
@@ -75,7 +71,9 @@ pageinfo.py https://github.com/max747/fgojunks/blob/master/pageinfo/pageinfo.py
 ***
 * 日本版FGOに加えNA版FGOのバトルリザルトのスクショにも対応している
 * PNGに加え、JPEGファイルにも対応した(テストはPNGに比べて十分に行えていない)
+  * JPEGの品質を落とすと当然認識ミスが増えます 55 で確認した例あり 
   * おそらくOpenCVが対応しているフォーマットのファイルなら扱えるはず
+  
 * 恒常アイテム名とポイントは自動認識される
 * イベント限定アイテムを初めて認識させた場合、item フォルダ内に item*.png というファイルができる
 　　* item*.pngのファイル名をアイテム名に変更すると次回実行以降もそのアイテム名で表示されるため例2のように出力され可読性があがる
