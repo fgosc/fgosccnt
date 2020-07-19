@@ -30,6 +30,7 @@ Item_dir = Path(__file__).resolve().parent / Path("item/")
 train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
 train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
 train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
+Item_dist_file = Path(__file__).resolve().parent / Path("hash_item2.csv")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -38,89 +39,92 @@ FONTSIZE_NORMAL = 0
 FONTSIZE_SMALL = 1
 FONTSIZE_TINY = 2
 
+item_name = {}
+item_priority = {}
+
 #恒常アイテムのハッシュ値
 dist_item ={
-    'QP':np.array([[ 82, 9, 116, 145, 236, 2, 32, 3]], dtype='uint8'),
-    '爪':np.array([[254,   7,  81, 188,  13, 198, 115,  18]], dtype='uint8'),
-    '心臓':np.array([[ 94, 131,  49, 137,  73,  76,   0,  90]], dtype='uint8'),
-    '逆鱗':np.array([[142, 121,  57, 147, 103,   7,  78,  11]], dtype='uint8'),
-    '根':np.array([[ 86,  41, 169,  73, 164,  22,  41,   9]], dtype='uint8'),
-    '幼角':np.array([[146, 41, 86, 41, 214, 73, 165, 210]], dtype='uint8'),
-    '涙石':np.array([[22, 33, 88, 166, 104, 19, 153, 76]], dtype='uint8'),
-    '脂':np.array([[ 94,   5, 161,  97,  27,  88,  20, 132]], dtype='uint8'),
-    'ランプ':np.array([[182,  41, 197, 114,  21, 204, 131, 120]], dtype='uint8'),
-    'スカラベ':np.array([[190,  13,  67, 113,  24, 128, 132,   0]], dtype='uint8'),
-    '産毛':np.array([[ 30,  51, 217,  41, 164,  22, 154,  74]], dtype='uint8'),
-    '胆石':np.array([[ 22, 129,  97, 162, 156,  99,  38, 148]], dtype='uint8'),
-    '神酒':np.array([[ 62, 132,  37, 169,  89,  89, 100,  78]], dtype='uint8'),
-    '炉心':np.array([[122,   5,  36, 171,  25,  88,  17, 136]], dtype='uint8'),
-    '鏡':np.array([[254,   3, 196,  86, 163, 165,  41,  41]], dtype='uint8'),
-    '卵':np.array([[ 22, 161, 237,  72,  25,   9,  73,  72]], dtype='uint8'),
-    'カケラ':np.array([[ 26, 129, 102,  88,   5, 154,   5,  44]], dtype='uint8'),
-    '実':np.array([[126, 129,  82, 101, 140,  10, 120,  30]], dtype='uint8'),
-    '種':np.array([[ 62, 133, 169, 41, 90, 148, 134, 32]], dtype='uint8'),
-    'ランタン':np.array([[166, 201, 89, 154, 166, 100, 121, 38]], dtype='uint8'),
-    '八連':np.array([[126, 5, 165, 201,  25, 150, 98, 36]], dtype='uint8'),
-    '蛇玉':np.array([[86, 165, 195, 114, 185, 177, 137, 114]], dtype='uint8'),
-    '羽根':np.array([[166, 187,  77,  68, 105,  20,  68, 162]], dtype='uint8'),
-    '歯車':np.array([[ 94,  18, 225, 121,  25, 141,  12, 228]], dtype='uint8'),
-    '頁':np.array([[223,   9, 246,  28, 178, 236,  91, 168]], dtype='uint8'),
-    'ホム':np.array([[ 86, 225, 106, 132, 177,  25, 173, 101]], dtype='uint8'),
-    '蹄鉄':np.array([[120, 133, 115, 185,  24, 196, 100,  34]], dtype='uint8'),
-    '勲章':np.array([[150,  82, 109, 173, 181,  20, 108,  43]], dtype='uint8'),
-    '貝殻':np.array([[26, 165, 213, 72, 140, 214, 176, 73]], dtype='uint8'),
-    '勾玉':np.array([[254,   5,  98, 233,  92, 182,  13, 204]], dtype='uint8'),
-    '結氷':np.array([[126, 129, 108, 198, 147, 106, 201,  54]], dtype='uint8'),
-    '指輪':np.array([[122,   7, 197, 177, 123,  11,  81,  24]], dtype='uint8'),
-    'オーロラ':np.array([[ 94, 163,  85,  20, 169, 137,  36, 105]], dtype='uint8'),
-    '鈴':np.array([[122,   5, 193, 131,  60,  42,  82,  22]], dtype='uint8'),
-    '矢尻':np.array([[190,   1, 104, 168,  77,  66, 180, 130]], dtype='uint8'),
-    '冠':np.array([[233,  29, 234,  65,  62,  69, 250, 233]], dtype='uint8'),
-    '霊子':np.array([[250,   6,  61, 185, 139,  82,  86, 212]], dtype='uint8'),
-    '証':np.array([[94, 5, 161, 88, 6, 70, 33, 25]], dtype='uint8'),
-    '骨':np.array([[82, 75, 37, 149,  85,  33, 168, 165]], dtype='uint8'),
-    '牙':np.array([[58, 131,  21, 217, 237, 101,  44, 176]], dtype='uint8'),
-    '塵':np.array([[222, 1, 104, 26, 134, 164, 42, 17]], dtype='uint8'),
-    '鎖':np.array([[ 14,  83, 177,  25, 204, 169,  38,  22]], dtype='uint8'),
-    '毒針':np.array([[ 90, 181,  41,  75, 211, 178,  52, 108]], dtype='uint8'),
-    '髄液':np.array([[ 38,  25, 114, 205, 154,   7,   2, 100]], dtype='uint8'),
-    '鉄杭':np.array([[ 76, 141,  51,  99, 227,  99,  48,  48]], dtype='uint8'),
-    '火薬':np.array([[110, 147,  57, 157,  69, 53, 194, 42]], dtype='uint8'),
-    '剣秘':np.array([[106, 150, 230,  97,  31, 216, 153, 174]], dtype='uint8'),
-    '弓秘':np.array([[104,  22, 102, 227,  63, 216, 205, 234]], dtype='uint8'),
-    '槍秘':np.array([[232,   6,  50,  97, 159, 176, 207, 154]], dtype='uint8'),
-    '騎秘':np.array([[42, 142, 118,  97,  31, 153, 207,  58]], dtype='uint8'),
-    '術秘':np.array([[122,   6,  70,  51,  31, 232, 153, 110]], dtype='uint8'),
-    '殺秘':np.array([[106, 158, 102, 227,  27, 224, 143, 154]], dtype='uint8'),
-    '狂秘':np.array([[234,  30, 102, 194,  27, 200,  15, 154]], dtype='uint8'),
-    '剣魔':np.array([[94, 161, 41, 137, 9, 72,76, 66]], dtype='uint8'),
-    '弓魔':np.array([[ 22, 225,  41,  41, 136,  72,  92,  66]], dtype='uint8'),
-    '槍魔':np.array([[ 86, 161, 169,  57,   9,  72,  24,  66]], dtype='uint8'),
-    '騎魔':np.array([[94, 165, 41, 25, 9, 76, 88, 198]], dtype='uint8'),
-    '術魔':np.array([[ 94, 161,  49,  41,   9,   8, 100,  66]], dtype='uint8'),
-    '殺魔':np.array([[ 94, 165, 185,  41,  12,  72,  92,  66]], dtype='uint8'),
-    '狂魔':np.array([[94, 165, 185, 41, 12, 72, 88, 102]], dtype='uint8'),
-    '剣輝':np.array([[ 30, 225,  41,  90,  82,   6, 166,  41]], dtype='uint8'),
-    '弓輝':np.array([[30, 225, 169, 121, 214, 38,134, 36]], dtype='uint8'),
-    '槍輝':np.array([[ 30, 225, 169,  27,  70, 198, 166,  33]], dtype='uint8'),
-    '騎輝':np.array([[30, 225, 169, 89, 86, 6, 128, 164]], dtype='uint8'),
-    '術輝':np.array([[ 30, 225, 169,  73,  86, 150, 166,  41]], dtype='uint8'),
-    '殺輝':np.array([[30, 229, 169, 89, 70, 22, 166, 33]], dtype='uint8'),
-    '狂輝':np.array([[ 30, 229, 169, 121,  86, 150, 132,  36]], dtype='uint8'),
-    '剣モ':np.array([[150, 161,  89,  73, 100, 155, 166,  38]], dtype='uint8'),
-    '弓モ':np.array([[ 70, 153,  35,  66, 133,  27,  61,  58]], dtype='uint8'),
-    '槍モ':np.array([[214, 169,  50,  73, 164,  13, 102, 146]], dtype='uint8'),
-    '騎モ':np.array([[54, 233,  25, 158, 101,  58, 137, 68]], dtype='uint8'),
-    '術モ':np.array([[ 70, 161,  24, 183, 100,  83, 156,  98]], dtype='uint8'),
-    '殺モ':np.array([[102, 185, 204, 210,  37,  38,  17,  78]], dtype='uint8'),
-    '狂モ':np.array([[ 14,  73, 163, 211,  73, 134, 100,  43]], dtype='uint8'),
-    '剣ピ':np.array([[150, 177, 73, 73, 100, 154, 166, 36]], dtype='uint8'),
-    '弓ピ':np.array([[ 86, 153,  99,  66, 132,  89,  61,  56]], dtype='uint8'),
-    '槍ピ':np.array([[214, 169,  58, 216, 164,  44, 102, 146]], dtype='uint8'),
-    '騎ピ':np.array([[54, 233,  25, 154, 101,  58, 137, 100]], dtype='uint8'),
-    '術ピ':np.array([[ 70, 233,  24, 178, 108,  83, 172,  98]], dtype='uint8'),
-    '殺ピ':np.array([[102, 185, 204, 210,  53,  38, 153,  78]], dtype='uint8'),
-    '狂ピ':np.array([[14, 105, 163,  82,  89, 150, 116, 107]], dtype='uint8'),
+##    'QP':np.array([[ 82, 9, 116, 145, 236, 2, 32, 3]], dtype='uint8'),
+##    '爪':np.array([[254,   7,  81, 188,  13, 198, 115,  18]], dtype='uint8'),
+##    '心臓':np.array([[ 94, 131,  49, 137,  73,  76,   0,  90]], dtype='uint8'),
+##    '逆鱗':np.array([[142, 121,  57, 147, 103,   7,  78,  11]], dtype='uint8'),
+##    '根':np.array([[ 86,  41, 169,  73, 164,  22,  41,   9]], dtype='uint8'),
+##    '幼角':np.array([[146, 41, 86, 41, 214, 73, 165, 210]], dtype='uint8'),
+##    '涙石':np.array([[22, 33, 88, 166, 104, 19, 153, 76]], dtype='uint8'),
+##    '脂':np.array([[ 94,   5, 161,  97,  27,  88,  20, 132]], dtype='uint8'),
+##    'ランプ':np.array([[182,  41, 197, 114,  21, 204, 131, 120]], dtype='uint8'),
+##    'スカラベ':np.array([[190,  13,  67, 113,  24, 128, 132,   0]], dtype='uint8'),
+##    '産毛':np.array([[ 30,  51, 217,  41, 164,  22, 154,  74]], dtype='uint8'),
+##    '胆石':np.array([[ 22, 129,  97, 162, 156,  99,  38, 148]], dtype='uint8'),
+##    '神酒':np.array([[ 62, 132,  37, 169,  89,  89, 100,  78]], dtype='uint8'),
+##    '炉心':np.array([[122,   5,  36, 171,  25,  88,  17, 136]], dtype='uint8'),
+##    '鏡':np.array([[254,   3, 196,  86, 163, 165,  41,  41]], dtype='uint8'),
+##    '卵':np.array([[ 22, 161, 237,  72,  25,   9,  73,  72]], dtype='uint8'),
+##    'カケラ':np.array([[ 26, 129, 102,  88,   5, 154,   5,  44]], dtype='uint8'),
+##    '実':np.array([[126, 129,  82, 101, 140,  10, 120,  30]], dtype='uint8'),
+##    '種':np.array([[ 62, 133, 169, 41, 90, 148, 134, 32]], dtype='uint8'),
+##    'ランタン':np.array([[166, 201, 89, 154, 166, 100, 121, 38]], dtype='uint8'),
+##    '八連':np.array([[126, 5, 165, 201,  25, 150, 98, 36]], dtype='uint8'),
+##    '蛇玉':np.array([[86, 165, 195, 114, 185, 177, 137, 114]], dtype='uint8'),
+##    '羽根':np.array([[166, 187,  77,  68, 105,  20,  68, 162]], dtype='uint8'),
+##    '歯車':np.array([[ 94,  18, 225, 121,  25, 141,  12, 228]], dtype='uint8'),
+##    '頁':np.array([[223,   9, 246,  28, 178, 236,  91, 168]], dtype='uint8'),
+##    'ホム':np.array([[ 86, 225, 106, 132, 177,  25, 173, 101]], dtype='uint8'),
+##    '蹄鉄':np.array([[120, 133, 115, 185,  24, 196, 100,  34]], dtype='uint8'),
+##    '勲章':np.array([[150,  82, 109, 173, 181,  20, 108,  43]], dtype='uint8'),
+##    '貝殻':np.array([[26, 165, 213, 72, 140, 214, 176, 73]], dtype='uint8'),
+##    '勾玉':np.array([[254,   5,  98, 233,  92, 182,  13, 204]], dtype='uint8'),
+##    '結氷':np.array([[126, 129, 108, 198, 147, 106, 201,  54]], dtype='uint8'),
+##    '指輪':np.array([[122,   7, 197, 177, 123,  11,  81,  24]], dtype='uint8'),
+##    'オーロラ':np.array([[ 94, 163,  85,  20, 169, 137,  36, 105]], dtype='uint8'),
+##    '鈴':np.array([[122,   5, 193, 131,  60,  42,  82,  22]], dtype='uint8'),
+##    '矢尻':np.array([[190,   1, 104, 168,  77,  66, 180, 130]], dtype='uint8'),
+##    '冠':np.array([[233,  29, 234,  65,  62,  69, 250, 233]], dtype='uint8'),
+##    '霊子':np.array([[250,   6,  61, 185, 139,  82,  86, 212]], dtype='uint8'),
+##    '証':np.array([[94, 5, 161, 88, 6, 70, 33, 25]], dtype='uint8'),
+##    '骨':np.array([[82, 75, 37, 149,  85,  33, 168, 165]], dtype='uint8'),
+##    '牙':np.array([[58, 131,  21, 217, 237, 101,  44, 176]], dtype='uint8'),
+##    '塵':np.array([[222, 1, 104, 26, 134, 164, 42, 17]], dtype='uint8'),
+##    '鎖':np.array([[ 14,  83, 177,  25, 204, 169,  38,  22]], dtype='uint8'),
+##    '毒針':np.array([[ 90, 181,  41,  75, 211, 178,  52, 108]], dtype='uint8'),
+##    '髄液':np.array([[ 38,  25, 114, 205, 154,   7,   2, 100]], dtype='uint8'),
+##    '鉄杭':np.array([[ 76, 141,  51,  99, 227,  99,  48,  48]], dtype='uint8'),
+##    '火薬':np.array([[110, 147,  57, 157,  69, 53, 194, 42]], dtype='uint8'),
+##    '剣秘':np.array([[106, 150, 230,  97,  31, 216, 153, 174]], dtype='uint8'),
+##    '弓秘':np.array([[104,  22, 102, 227,  63, 216, 205, 234]], dtype='uint8'),
+##    '槍秘':np.array([[232,   6,  50,  97, 159, 176, 207, 154]], dtype='uint8'),
+##    '騎秘':np.array([[42, 142, 118,  97,  31, 153, 207,  58]], dtype='uint8'),
+##    '術秘':np.array([[122,   6,  70,  51,  31, 232, 153, 110]], dtype='uint8'),
+##    '殺秘':np.array([[106, 158, 102, 227,  27, 224, 143, 154]], dtype='uint8'),
+##    '狂秘':np.array([[234,  30, 102, 194,  27, 200,  15, 154]], dtype='uint8'),
+##    '剣魔':np.array([[94, 161, 41, 137, 9, 72,76, 66]], dtype='uint8'),
+##    '弓魔':np.array([[ 22, 225,  41,  41, 136,  72,  92,  66]], dtype='uint8'),
+##    '槍魔':np.array([[ 86, 161, 169,  57,   9,  72,  24,  66]], dtype='uint8'),
+##    '騎魔':np.array([[94, 165, 41, 25, 9, 76, 88, 198]], dtype='uint8'),
+##    '術魔':np.array([[ 94, 161,  49,  41,   9,   8, 100,  66]], dtype='uint8'),
+##    '殺魔':np.array([[ 94, 165, 185,  41,  12,  72,  92,  66]], dtype='uint8'),
+##    '狂魔':np.array([[94, 165, 185, 41, 12, 72, 88, 102]], dtype='uint8'),
+##    '剣輝':np.array([[ 30, 225,  41,  90,  82,   6, 166,  41]], dtype='uint8'),
+##    '弓輝':np.array([[30, 225, 169, 121, 214, 38,134, 36]], dtype='uint8'),
+##    '槍輝':np.array([[ 30, 225, 169,  27,  70, 198, 166,  33]], dtype='uint8'),
+##    '騎輝':np.array([[30, 225, 169, 89, 86, 6, 128, 164]], dtype='uint8'),
+##    '術輝':np.array([[ 30, 225, 169,  73,  86, 150, 166,  41]], dtype='uint8'),
+##    '殺輝':np.array([[30, 229, 169, 89, 70, 22, 166, 33]], dtype='uint8'),
+##    '狂輝':np.array([[ 30, 229, 169, 121,  86, 150, 132,  36]], dtype='uint8'),
+##    '剣モ':np.array([[150, 161,  89,  73, 100, 155, 166,  38]], dtype='uint8'),
+##    '弓モ':np.array([[ 70, 153,  35,  66, 133,  27,  61,  58]], dtype='uint8'),
+##    '槍モ':np.array([[214, 169,  50,  73, 164,  13, 102, 146]], dtype='uint8'),
+##    '騎モ':np.array([[54, 233,  25, 158, 101,  58, 137, 68]], dtype='uint8'),
+##    '術モ':np.array([[ 70, 161,  24, 183, 100,  83, 156,  98]], dtype='uint8'),
+##    '殺モ':np.array([[102, 185, 204, 210,  37,  38,  17,  78]], dtype='uint8'),
+##    '狂モ':np.array([[ 14,  73, 163, 211,  73, 134, 100,  43]], dtype='uint8'),
+##    '剣ピ':np.array([[150, 177, 73, 73, 100, 154, 166, 36]], dtype='uint8'),
+##    '弓ピ':np.array([[ 86, 153,  99,  66, 132,  89,  61,  56]], dtype='uint8'),
+##    '槍ピ':np.array([[214, 169,  58, 216, 164,  44, 102, 146]], dtype='uint8'),
+##    '騎ピ':np.array([[54, 233,  25, 154, 101,  58, 137, 100]], dtype='uint8'),
+##    '術ピ':np.array([[ 70, 233,  24, 178, 108,  83, 172,  98]], dtype='uint8'),
+##    '殺ピ':np.array([[102, 185, 204, 210,  53,  38, 153,  78]], dtype='uint8'),
+##    '狂ピ':np.array([[14, 105, 163,  82,  89, 150, 116, 107]], dtype='uint8'),
 }
 
 #秘石を見分けるハッシュ値
@@ -434,6 +438,7 @@ class ScreenShot:
         self.qpdic =dict(Counter(self.qplist))
         self.reisoulist = self.makereisoulist()
         self.reisoudic =dict(Counter(self.reisoulist))
+        self.newlist = self.makenewlist()
         # 複数ファイル対応のためポイントはその都度消す
         if "ポイント" in dist_item.keys():
             del dist_item["ポイント"]
@@ -558,10 +563,11 @@ class ScreenShot:
         """
         itemlist = []
         for i, item in enumerate(self.items):
-            if item.name[-1].isdigit():
-                name = item.name + '_'
-            else:
-                name = item.name
+##            if item.name[-1].isdigit():
+##                name = item.name + '_'
+##            else:
+##                name = item.name
+            name = item_name[item.name]
             if item.card == "Point":
                 drop_item_dic[name + item.dropnum] = 0
             if name != 'QP' and not item.card == "Craft Essence":
@@ -590,6 +596,26 @@ class ScreenShot:
             if item.card == "Craft Essence":
                 reisoulist.append(item.name)
         return reisoulist
+
+
+    def makenewlist(self):
+        """
+        アイテムを出力
+        """
+        newitemlist = []
+        for i, item in enumerate(self.items):
+            tmp = {}
+            if item.card == "Quest Reward":
+                tmp['name'] = "報酬QP"
+                tmp['priority'] = 0
+            else:
+                tmp['name'] = item.name
+                print (item.name)
+                tmp['priority'] = item_priority[item.name]
+            tmp['dropnum'] = item.dropnum
+            tmp['bonus'] = item.bonus
+            newitemlist.append(tmp)
+        return newitemlist
 
     def makelallist(self):
         """
@@ -814,11 +840,12 @@ class Item:
 
 
         self.svm = svm
+        self.bonus = ""
  ##       if self.name not in std_item and self.card != "Craft Essence" and self.card != "Exp. UP":
         if self.card != "Craft Essence" and self.card != "Exp. UP":
             self.ocr_digit(mode, debug)
         else:
-            self.dropnum = ""
+            self.dropnum = "x1"
         if self.card == "Point":
             self.make_point_dist()
         elif self.name == "ポイント":
@@ -826,19 +853,19 @@ class Item:
         if debug:
             print("Number of Drop: {}".format(self.dropnum))
 
-    def is_silver_item(self):
-        """
-        銀アイテム検出
-        戦利品数OCRで銀アイテム背景だけ挙動が違うので分けるため
-        """
-        img_hsv_top = self.img_hsv[int(38/257*self.height):int(48/257*self.height), 7:17]
-
-        hist_s = cv2.calcHist([img_hsv_top],[1],None,[256],[0,256]) #Sのヒストグラムを計算
-        # 最小値・最大値・最小値の位置・最大値の位置を取得
-        minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist_s)
-        if maxLoc[1] < 17:
-            return True
-        return False
+##    def is_silver_item(self):
+##        """
+##        銀アイテム検出
+##        戦利品数OCRで銀アイテム背景だけ挙動が違うので分けるため
+##        """
+##        img_hsv_top = self.img_hsv[int(38/257*self.height):int(48/257*self.height), 7:17]
+## 
+##        hist_s = cv2.calcHist([img_hsv_top],[1],None,[256],[0,256]) #Sのヒストグラムを計算
+##        # 最小値・最大値・最小値の位置・最大値の位置を取得
+##        minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist_s)
+##        if maxLoc[1] < 17:
+##            return True
+##        return False
 
     def conflictcheck(self, pts, pt):
         """
@@ -929,7 +956,7 @@ class Item:
         m_normal = re.match(pattern_normal,line)
         if m_normal:
             if debug: print("フォントサイズ: {}".format(font_size))
-            line = self.change_value(line)
+##            line = self.change_value(line)
             return line, pts, font_size
         ############################################            
         # 6桁の読み込み
@@ -944,7 +971,7 @@ class Item:
         m_small = re.match(pattern_small,line)
         if m_small:
             if debug: print("フォントサイズ: {}".format(font_size))
-            line = self.change_value(line)
+##            line = self.change_value(line)
             return line, pts, font_size
         ############################################            
         # 7桁読み込み
@@ -958,7 +985,7 @@ class Item:
         if self.name in ["QP", "ポイント"]:pattern_tiny=pattern_tiny_qp
         m_tiny = re.match(pattern_tiny,line)
         if m_tiny:
-            line = self.change_value(line)
+##            line = self.change_value(line)
             if debug: print("Font Size: {}\nNumber of Drop:{}".format(font_size, line))
             return line, pts, font_size
         ############################################            
@@ -1162,7 +1189,7 @@ class Item:
 ##            margin_right = 15
         if font_size != FONTSIZE_UNDEFINED:
             line = self.get_number(base_line, margin_right, font_size)
-            line = self.change_value(line)
+##            line = self.change_value(line)
             return(line)
         else:
             pattern_tiny = r"^[\+x][12]\d{4}00$"
@@ -1180,7 +1207,7 @@ class Item:
             m_normal = re.match(pattern_normal,line)
             if m_normal:
                 if debug: print("Font Size: {}".format(font_size))
-                line = self.change_value(line)
+##                line = self.change_value(line)
                 return(line)
             ########################################            
             # 6桁の読み込み
@@ -1191,7 +1218,7 @@ class Item:
             m_small = re.match(pattern_small,line)
             if m_small:
                 if debug: print("Font Size: {}".format(font_size))
-                line = self.change_value(line)
+##                line = self.change_value(line)
                 return(line)
             ########################################            
             # 7桁読み込み
@@ -1202,7 +1229,7 @@ class Item:
             m_tiny = re.match(pattern_tiny,line)
             if m_tiny:
                 if debug: print("Font Size: {}".format(font_size))
-                line = self.change_value(line)
+##                line = self.change_value(line)
                 return(line)
             ##########################################            
             return ""
@@ -1307,9 +1334,9 @@ class Item:
 ##        cut_width = 20
 ##        comma_width = 9
         font_size = FONTSIZE_UNDEFINED
-        flag_silver = False
-        if self.is_silver_item() == True:
-            flag_silver = True
+##        flag_silver = False
+##        if self.is_silver_item() == True:
+##            flag_silver = True
 
         if self.fileextention.lower() == '.png':
             bonus_pts = self.detect_bonus_char()
@@ -1352,7 +1379,8 @@ class Item:
 ##        self.dropnum =  self.detect_white_char(base_line, offset_x = x, cut_width = cut_width, comma_width = comma_width) + self.dropnum
         self.dropnum =  self.detect_white_char(base_line, margin_right, font_size, debug=debug)
 ##        self.dropnum =re.sub("\([^\(\)]*\)$", "", self.dropnum) #括弧除去
-##        if self.dropnum != "":
+        if len(self.dropnum) == 0:
+            self.dropnum = "x1"
 ##            self.dropnum = "(" + self.dropnum + ")"
 
     def classify_standard_item(self, img, debug=False):
@@ -1419,7 +1447,7 @@ class Item:
                     else:
                         return item[0][0] + "ピ"
                 
-            if type(item[0]) is str: #ポイント登録用
+            if type(item[0]) is str or type(item[0]) is int: #ポイント登録用
                 return item[0]
             return item[0].stem
 
@@ -1575,11 +1603,38 @@ def calc_dist_local():
 ##        dist_local[fname] = compute_hash(img)
         dist_item[fname] = compute_hash(img) # #85 対応
 
+def hex2hash(hexstr):
+    hashlist = []
+    for i in range(8):
+        hashlist.append(int('0x' + hexstr[i*2:i*2+2],0))
+    return np.array([hashlist], dtype='uint8')
+
+def calc_dist():
+    """
+    既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持
+    """
+    global item_priority
+    global dist_item
+    global item_name
+    
+    with open(Item_dist_file, encoding='UTF-8') as f:
+        reader = csv.DictReader(f)
+        lines = [row for row in reader]
+    for l in lines:
+        item_name[int(l["id"])] = l["name"]
+        item_priority[int(l["id"])] = int(l["priority"])
+        if l["phash"] != "":
+            dist_item[int(l["id"])] = hex2hash(l["phash"])
+##    print(dist_item)                  
+##        for row in reader:    
+##            item_priority[row[0]] = int(row[1])
+
 def get_output(filenames, debug=False):
     """
     出力内容を作成
     """
     calc_dist_local()
+    calc_dist()
     if train_item.exists() == False:
         print("[エラー]item.xml が存在しません")
         print("python makeitem.py を実行してください")
@@ -1602,10 +1657,14 @@ def get_output(filenames, debug=False):
     reisoulist = []
     qplist = []
     outputcsv = [] #出力
+    fileoutput = [] #出力
     prev_pages = 0
     prev_pagenum = 0
     ce_drop = False
 
+
+    all_new_list = []
+    
     for filename in filenames:
         if debug:
             print(filename)
@@ -1613,17 +1672,20 @@ def get_output(filenames, debug=False):
 
         if f.exists() == False:
             output = { 'filename': str(filename) + ': Not Found' }
+            newoutput = { 'filename': str(filename) + ': Not Found' }
         else:
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
 
 ##            try:
             sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
+            all_new_list = all_new_list + sc.newlist
 
             #2頁目以降のスクショが無い場合に migging と出力                
             if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
                or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
                 outputcsv.append({'filename': 'missing'})
+                newoutput = {'filename': 'missing'}
                 
             prev_pages = sc.pages
             prev_pagenum = sc.pagenum
@@ -1638,6 +1700,8 @@ def get_output(filenames, debug=False):
             qplist = qplist + sc.qplist
             output = { 'filename': str(filename),
                        'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist)}
+            newoutput = { 'filename': str(filename),
+                       'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist)}
             if sc.pagenum == 1 and len(set(sc.itemlist)-set(std_item_dic.keys())) > 0:
                 #とりあえずデータを入れて必要に応じてあとで抜く
                 output['礼装'] = 0
@@ -1645,14 +1709,19 @@ def get_output(filenames, debug=False):
             if sc.pagenum == 1:
                 if sc.lines >= 7:
                     output["ドロ数"] = str(output["ドロ数"]) + "++"
+                    newoutput["ドロ数"] = str(newoutput["ドロ数"]) + "++"
                 elif sc.lines >= 4:
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
+                    newoutput["ドロ数"] = str(newoutput["ドロ数"]) + "+"
             elif sc.pagenum == 2 and sc.lines >= 7:             
                 output["ドロ数"] = str(output["ドロ数"]) + "+"
+                newoutput["ドロ数"] = str(newoutput["ドロ数"]) + "+"
             output.update(sc.allitemdic)
 ##            except:
 ##                output = ({'filename': str(filename) + ': not valid'})
         outputcsv.append(output)
+        fileoutput.append(newoutput)
+    print(all_new_list)
     new_outputcsv = []
     if ce_drop == True:
         for o in outputcsv:
