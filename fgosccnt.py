@@ -897,7 +897,7 @@ class Item:
         new_pts.reverse()
         return new_pts
         
-    def detect_lower_yellow_char4jpg(self, mode, debug):
+    def detect_bonus_char4jpg(self, mode, debug):
         """
         戦利品数OCRで下段の黄文字の座標を抽出する
         PNGではない画像の認識用
@@ -967,7 +967,7 @@ class Item:
         
         return line, pts, font_size
 
-    def detect_lower_yellow_char(self):
+    def detect_bonus_char(self):
         """
         戦利品数OCRで下段の黄文字の座標を抽出する
 
@@ -998,7 +998,7 @@ class Item:
 
         contours = cv2.findContours(img_hsv_lower_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
 
-        item_pts_lower_yellow = []
+        bonus_pts = []
         # 物体検出マスクがうまくいっているかが成功の全て
         for cnt in contours:
             ret = cv2.boundingRect(cnt)
@@ -1008,15 +1008,15 @@ class Item:
             
             # ）が上下に割れることがあるので上の一つは消す
             if ret[2] < int(w/2) and ret[1] < int(h*3/5) and ret[1] + ret[3] > h*0.65 and area > 3:
-                item_pts_lower_yellow = self.conflictcheck(item_pts_lower_yellow, pt)
+                bonus_pts = self.conflictcheck(bonus_pts, pt)
 
-        item_pts_lower_yellow.sort()
-        if len(item_pts_lower_yellow) > 0:
-            if self.width - item_pts_lower_yellow[-1][2] > int((22*self.width/188)):
+        bonus_pts.sort()
+        if len(bonus_pts) > 0:
+            if self.width - bonus_pts[-1][2] > int((22*self.width/188)):
                 #黄文字は必ず右寄せなので最後の文字が画面端から離れている場合全部ゴミ
-                item_pts_lower_yellow = []
+                bonus_pts = []
 
-        return self.extension(item_pts_lower_yellow)
+        return self.extension(bonus_pts)
     
     def define_fontsize(self, font_size):
         if font_size == FONTSIZE_NORMAL:
@@ -1304,11 +1304,11 @@ class Item:
             flag_silver = True
 
         if self.fileextention.lower() == '.png':
-            item_pts_lower_yellow = self.detect_lower_yellow_char()
-            self.dropnum = self.read_item(item_pts_lower_yellow, debug)
+            bonus_pts = self.detect_lower_bonus_char()
+            self.dropnum = self.read_item(bonus_pts, debug)
             # フォントサイズを決定
-            if len(item_pts_lower_yellow) > 0:
-                y_height = item_pts_lower_yellow[-1][3] - item_pts_lower_yellow[-1][1]
+            if len(bonus_pts) > 0:
+                y_height = bonus_pts[-1][3] - bonus_pts[-1][1]
                 if y_height< 25:
                     font_size = FONTSIZE_TINY
                 elif y_height > 27:
@@ -1316,18 +1316,18 @@ class Item:
                 else:
                     font_size = FONTSIZE_SMALL
         else:
-            self.dropnum, item_pts_lower_yellow, font_size = self.detect_lower_yellow_char4jpg(mode, debug)
+            self.bonus, item_pts_lower_yellow, font_size = self.detect_bonus_char4jpg(mode, debug)
         if debug:
-            print("Bonus Font Size: {}\nBonus: {}".format(font_size, self.dropnum))
+            print("Bonus Font Size: {}\nBonus: {}".format(font_size, self.bonus))
 
 
         # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
         offsset_y = 2 if mode == 'na' else 0
-        if self.name in ["QP", "ポイント"] and len(self.dropnum) >= 5: #ボーナスは"(+*0)"なので
+        if self.name in ["QP", "ポイント"] and len(self.bonus) >= 5: #ボーナスは"(+*0)"なので
             # 末尾の括弧上部からの距離を設定
 ##            base_line = item_pts_lower_yellow[-1][1] -int(4/206*self.height)
             # 1桁目の上部からの距離を設定
-            base_line = item_pts_lower_yellow[-2][1] - 3 + offsset_y
+            base_line = bonus_pts[-2][1] - 3 + offsset_y
         else:
             base_line = int(180/206*self.height)
 
@@ -1336,16 +1336,16 @@ class Item:
         offset_x = -7 if mode=="na" else 0
         if self.name in ["QP", "ポイント"]:
             margin_right = 15 + offset_x           
-        elif len(item_pts_lower_yellow) > 0:
-            margin_right = self.width - item_pts_lower_yellow[0][0] + 2
+        elif len(bonus_pts) > 0:
+            margin_right = self.width - bonus_pts[0][0] + 2
         else:
             margin_right = 15 + offset_x
         if debug: print("margin_right: {}".format(margin_right))
 ##        self.dropnum =  self.detect_white_char(base_line, offset_x = x, cut_width = cut_width, comma_width = comma_width) + self.dropnum
-        self.dropnum =  self.detect_white_char(base_line, margin_right, font_size, debug=debug) + self.dropnum
-        self.dropnum =re.sub("\([^\(\)]*\)$", "", self.dropnum) #括弧除去
-        if self.dropnum != "":
-            self.dropnum = "(" + self.dropnum + ")"
+        self.dropnum =  self.detect_white_char(base_line, margin_right, font_size, debug=debug)
+##        self.dropnum =re.sub("\([^\(\)]*\)$", "", self.dropnum) #括弧除去
+##        if self.dropnum != "":
+##            self.dropnum = "(" + self.dropnum + ")"
 
     def classify_standard_item(self, img, debug=False):
         """
