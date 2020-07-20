@@ -29,7 +29,8 @@ class Ordering(Enum):
         return self.value
 
 
-Item_dir = Path(__file__).resolve().parent / Path("item/")
+Item_dir = Path(__file__).resolve().parent / Path("item/equip/")
+CE_dir = Path(__file__).resolve().parent / Path("item/ce/")
 train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
 train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
 train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
@@ -1521,6 +1522,30 @@ class Item:
             dist_item["ポイント"] = compute_hash(self.img_rgb) #画像の距離
 
         
+    def make_new_file4ce(self, img):
+        """
+        ファイル名候補を探す
+        """
+        for i in range(99999):
+            itemfile = CE_dir / ('item{:0=6}'.format(i + 1) + '.png')
+            if itemfile.is_file():
+                continue
+            else:
+                img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
+                cv2.imwrite(itemfile.as_posix(), img_gray)
+                # id 候補を決める
+                for j in range(99999):
+                    id = j + 5000000
+                    if id in dist_ce.keys():
+                        continue
+                    id = j
+                # priotiry は固定
+                dist_ce[id] = compute_hash(img)
+                item_name[id] = itemfile.stem
+                item_priority[id] =399999
+                break
+        return id
+
     def make_new_file(self, img):
         """
         ファイル名候補を探す
@@ -1539,7 +1564,6 @@ class Item:
                     id = j
                     break
                 # priotiry は固定
-                # 800000
                 dist_item[id] = compute_hash(img)
                 item_name[id] = itemfile.stem
                 item_priority[id] =800000
@@ -1586,7 +1610,7 @@ class Item:
         elif self.card == "Craft Essence":
             id = self.classify_ce(img, debug)
             if id == "":
-                id = self.make_new_file(img)
+                id = self.make_new_file4ce(img)
             return id            
         elif self.card == "Exp. UP":
             return self.classify_tanebi(img)
@@ -1674,6 +1698,22 @@ def calc_dist_local():
         dist_item[id] = compute_hash(img)
         item_name[id] = fname.stem
         item_priority[id] =800000
+
+    files = CE_dir.glob('**/*.png')
+    for fname in files:
+        img = imread(fname)
+        id = 0
+        # id 候補を決める
+        for j in range(99999):
+            id = j + 5000000
+            if id in dist_ce.keys():
+                continue
+            break
+        # priotiry は固定
+        # 800000
+        dist_ce[id] = compute_hash_ce(img)
+        item_name[id] = fname.stem
+        item_priority[id] =399999
 
 ##        dist_local[fname] = compute_hash(img)
 ##        dist_item[fname] = compute_hash(img) # #85 対応
@@ -1910,7 +1950,10 @@ if __name__ == '__main__':
     args = parser.parse_args()    # 引数を解析
 
     if not Item_dir.is_dir():
-        Item_dir.mkdir()
+        Item_dir.mkdir(parents=True)
+
+    if not CE_dir.is_dir():
+        CE_dir.mkdir(parents=True)
 
     if args.folder:
         inputs = [x for x in Path(args.folder).iterdir()]
@@ -1931,9 +1974,6 @@ if __name__ == '__main__':
 ##        writer.writerow(csvfieldnames)
 ##    for o in outputcsv:
 ##        writer.writerow(o)
-##    if 'ドロ数' in o.keys(): # issue: #55
-##        if len(outputcsv) > 1 and str(o['ドロ数']).endswith('+'):
-##            writer.writerow({'filename': 'missing'})
 
     writer = csv.DictWriter(sys.stdout, fieldnames=csv_heder, lineterminator='\n')
     writer.writeheader()
@@ -1943,3 +1983,6 @@ if __name__ == '__main__':
     for f, d in zip(fileoutput, csv_data):
         f.update(d)
         writer.writerow(f)
+    if 'ドロ数' in f.keys(): # issue: #55
+        if len(fileoutput) > 1 and str(f['ドロ数']).endswith('+'):
+            writer.writerow({'filename': 'missing'})
