@@ -617,10 +617,12 @@ class ScreenShot:
                 tmp['name'] = "クエストクリア報酬QP"
                 tmp['priority'] = 0
             else:
+                tmp['id'] = item.id
                 tmp['name'] = item.name
                 tmp['priority'] = item_priority[item.id]
             tmp['dropnum'] = int(item.dropnum[1:])
             tmp['bonus'] = item.bonus
+            tmp['card'] = item.card
             newitemlist.append(tmp)
         return newitemlist
 
@@ -1559,9 +1561,9 @@ class Item:
                 cv2.imwrite(itemfile.as_posix(), img_gray)
                 # id 候補を決める
                 for j in range(99999):
-                    if j in dist_item.keys():
+                    id = j + 10000
+                    if id in dist_item.keys():
                         continue
-                    id = j
                     break
                 # priotiry は固定
                 dist_item[id] = compute_hash(img)
@@ -1689,9 +1691,9 @@ def calc_dist_local():
         id = 0
         # id 候補を決める
         for j in range(99999):
-            if j in dist_item.keys():
+            id = j + 10000
+            if id in dist_item.keys():
                 continue
-            id = j
             break
         # priotiry は固定
         # 800000
@@ -1897,12 +1899,16 @@ def change_value(line):
 
 def make_csv_header(item_list):
     """
-    礼装0の問題が未解決
+    CSVのヘッダ情報を作成
+    礼装のドロップが無いかつ恒常以外のアイテムが有るとき礼装0をつける
     """
     # リストを一次元に
-    flat_list = itertools.chain.from_iterable(item_list)
+    flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
-    short_list = [{"name":a["name"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in list(flat_list)]
+    short_list = [{"name":a["name"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in flat_list]
+    ce0_flag = ("Craft Essence" not in  [d.get('card') for d in flat_list]) and \
+            (max([d.get("id") for d in flat_list]) > 8000)
+    if ce0_flag: short_list.append({"name":"礼装", "priority":1, "dropnum":0})
     # 重複する要素を除く
     unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
     # ソート
@@ -1916,9 +1922,9 @@ def make_csv_header(item_list):
         else:
             tmp = l['name']
         header.append(tmp)
-    return ['filename', 'ドロ数'] + header
+    return ['filename', 'ドロ数'] + header, ce0_flag
 
-def make_csv_data(sc_list):
+def make_csv_data(sc_list, ce0_flag):
     output = []
     allitem = []
     for sc in sc_list:
@@ -1933,6 +1939,7 @@ def make_csv_data(sc_list):
         allitem = allitem + tmp
         output.append(dict(Counter(tmp)))
     allitem_dic = dict(Counter(allitem))
+    if ce0_flag: allitem_dic.update({"礼装":0})
     return allitem_dic, output
         
     
@@ -1964,8 +1971,8 @@ if __name__ == '__main__':
     csvfieldnames, outputcsv, fileoutput, all_new_list = get_output(inputs, args.debug)
 
     # CSVヘッダーをつくる
-    csv_heder = make_csv_header(all_new_list)
-    csv_sum, csv_data = make_csv_data(all_new_list)
+    csv_heder, ce0_flag = make_csv_header(all_new_list)
+    csv_sum, csv_data = make_csv_data(all_new_list, ce0_flag)
 
 ##    fnames = csvfieldnames.keys()
 ##    writer = csv.DictWriter(sys.stdout, fieldnames=fnames, lineterminator='\n')
