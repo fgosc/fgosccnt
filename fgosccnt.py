@@ -9,6 +9,9 @@ from pathlib import Path
 from collections import Counter
 import csv
 from enum import Enum
+import itertools
+import json
+from operator import itemgetter
 
 progname = "FGOスクショカウント"
 version = "0.3.0"
@@ -30,7 +33,8 @@ Item_dir = Path(__file__).resolve().parent / Path("item/")
 train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
 train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
 train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
-Item_dist_file = Path(__file__).resolve().parent / Path("hash_item2.csv")
+Item_dist_file = Path(__file__).resolve().parent / Path("hash_item.csv")
+CE_dist_file = Path(__file__).resolve().parent / Path("hash_ce.csv")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -126,6 +130,8 @@ dist_item ={
 ##    '殺ピ':np.array([[102, 185, 204, 210,  53,  38, 153,  78]], dtype='uint8'),
 ##    '狂ピ':np.array([[14, 105, 163,  82,  89, 150, 116, 107]], dtype='uint8'),
 }
+
+dist_ce = {}
 
 #秘石を見分けるハッシュ値
 dist_hiseki = {
@@ -612,7 +618,7 @@ class ScreenShot:
             else:
                 tmp['name'] = item.name
                 tmp['priority'] = item_priority[item.id]
-            tmp['dropnum'] = item.dropnum
+            tmp['dropnum'] = int(item.dropnum[1:])
             tmp['bonus'] = item.bonus
             newitemlist.append(tmp)
         return newitemlist
@@ -1449,15 +1455,36 @@ class Item:
                 hist_s = cv2.calcHist([img_hsv],[1],None,[256],[0,256]) #Bのヒストグラムを計算
                 minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist_s)
                 if maxLoc[1] > 128:
-                    item = item_name[0].replace("モニュメント","").replace("ピース","") + "モニュメント"
+                    item = item_name[id].replace("モニュメント","").replace("ピース","") + "モニュメント"
                 else:
-                    item = item_name[0].replace("モニュメント","").replace("ピース","") + "ピース"
+                    item = item_name[id].replace("モニュメント","").replace("ピース","") + "ピース"
                 id = [k for k in ids.keys() if item_name[k] == item][0]
                 
 ##            if type(item[0]) is str or type(item[0]) is int: #ポイント登録用
 ##                return item[0]
 ##            return item[0].stem
             return id
+
+        return ""
+
+    def classify_ce(self, img, debug=False):
+        """
+        imgとの距離を比較して近いアイテムを求める
+        """
+        hash_item = compute_hash_ce(img) #画像の距離
+        itemfiles = {}
+        if debug == True:
+            print(":np.array([" + str(list(hash_item[0])) + "], dtype='uint8'),")
+        # 既存のアイテムとの距離を比較
+        for i in dist_ce.keys():
+            d = hasher.compare(hash_item, dist_ce[i])
+            if d <= 12:
+                itemfiles[i] = d
+        if len(itemfiles) > 0:
+            itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
+            item = next(iter(itemfiles))
+                 
+            return item[0]
 
         return ""
 
@@ -1505,9 +1532,19 @@ class Item:
             else:
                 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
                 cv2.imwrite(itemfile.as_posix(), img_gray)
-                dist_item[itemfile] = compute_hash(img)
+                # id 候補を決める
+                for j in range(99999):
+                    if j in dist_item.keys():
+                        continue
+                    id = j
+                    break
+                # priotiry は固定
+                # 800000
+                dist_item[id] = compute_hash(img)
+                item_name[id] = itemfile.stem
+                item_priority[id] =800000
                 break
-        return itemfile.stem
+        return id
 
     def classify_card(self, svm_card):
         """
@@ -1546,7 +1583,12 @@ class Item:
         elif self.card == "Quest Reward":
 ##            return "QP"
             return 5
-#        elif self.card == "Exp. UP":
+        elif self.card == "Craft Essence":
+            id = self.classify_ce(img, debug)
+            if id == "":
+                id = self.make_new_file(img)
+            return id            
+        elif self.card == "Exp. UP":
             return self.classify_tanebi(img)
         id = self.classify_standard_item(img, debug)
 ##        if item == "":
@@ -1602,6 +1644,16 @@ def compute_hash(img_rgb):
     img = img_rgb[int(17/135*height):int(77/135*height),
                     int(19/135*width):int(103/135*width)]
     return hasher.compute(img)
+
+def compute_hash_ce(img_rgb):
+    """
+    判別器
+    この判別器は下部のドロップ数を除いた部分を比較するもの
+    記述した比率はiPpd2018画像の実測値
+    """
+    height, width = img_rgb.shape[:2]
+    img = img_rgb[12:176,9:182]
+    return hasher.compute(img)
         
 def calc_dist_local():
     """
@@ -1610,8 +1662,21 @@ def calc_dist_local():
     files = Item_dir.glob('**/*.png')
     for fname in files:
         img = imread(fname)
+        id = 0
+        # id 候補を決める
+        for j in range(99999):
+            if j in dist_item.keys():
+                continue
+            id = j
+            break
+        # priotiry は固定
+        # 800000
+        dist_item[id] = compute_hash(img)
+        item_name[id] = fname.stem
+        item_priority[id] =800000
+
 ##        dist_local[fname] = compute_hash(img)
-        dist_item[fname] = compute_hash(img) # #85 対応
+##        dist_item[fname] = compute_hash(img) # #85 対応
 
 def hex2hash(hexstr):
     hashlist = []
@@ -1625,6 +1690,7 @@ def calc_dist():
     """
     global item_priority
     global dist_item
+    global dist_ce
     global item_name
     
     with open(Item_dist_file, encoding='UTF-8') as f:
@@ -1635,6 +1701,14 @@ def calc_dist():
         item_priority[int(l["id"])] = int(l["priority"])
         if l["phash"] != "":
             dist_item[int(l["id"])] = hex2hash(l["phash"])
+    with open(CE_dist_file, encoding='UTF-8') as f:
+        reader = csv.DictReader(f)
+        lines = [row for row in reader]
+    for l in lines:
+        item_name[int(l["id"])] = l["name"]
+        item_priority[int(l["id"])] = int(l["priority"])
+        if l["phash"] != "":
+            dist_ce[int(l["id"])] = hex2hash(l["phash"])
 ##    print(dist_item)                  
 ##        for row in reader:    
 ##            item_priority[row[0]] = int(row[1])
@@ -1643,8 +1717,8 @@ def get_output(filenames, debug=False):
     """
     出力内容を作成
     """
-##    calc_dist_local()
     calc_dist()
+    calc_dist_local()
     if train_item.exists() == False:
         print("[エラー]item.xml が存在しません")
         print("python makeitem.py を実行してください")
@@ -1689,7 +1763,7 @@ def get_output(filenames, debug=False):
 
 ##            try:
             sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
-            all_new_list = all_new_list + sc.newlist
+            all_new_list.append(sc.newlist)
 
             #2頁目以降のスクショが無い場合に migging と出力                
             if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
@@ -1731,7 +1805,6 @@ def get_output(filenames, debug=False):
 ##                output = ({'filename': str(filename) + ': not valid'})
         outputcsv.append(output)
         fileoutput.append(newoutput)
-    print(all_new_list)
     new_outputcsv = []
     if ce_drop == True:
         for o in outputcsv:
@@ -1762,7 +1835,7 @@ def get_output(filenames, debug=False):
                 del drop_item_dic[key]
         csvfieldnames.update(drop_item_dic)
         csvfieldnames.update(sorted(qp_dic.items()))
-    return csvfieldnames, outputcsv
+    return csvfieldnames, outputcsv, fileoutput, all_new_list
 
 
 def sort_files(files, ordering):
@@ -1775,6 +1848,54 @@ def sort_files(files, ordering):
     raise ValueError(f'Unsupported ordering: {ordering}')
 
 
+def change_value(line):
+    line = re.sub('000000$', "百万", str(line))
+    line = re.sub('0000$', "万", str(line))
+    if len(line) > 5:
+        line = re.sub('000$', "千", str(line))
+    return line
+
+def make_csv_header(item_list):
+    """
+    礼装0の問題が未解決
+    """
+    # リストを一次元に
+    flat_list = itertools.chain.from_iterable(item_list)
+    # 余計な要素を除く
+    short_list = [{"name":a["name"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in list(flat_list)]
+    # 重複する要素を除く
+    unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
+    # ソート
+    new_list = sorted(sorted(unique_list, key=itemgetter('dropnum')), key=itemgetter('priority'))
+    header = []
+    for l in new_list:
+        if l['name'] in [ 'クエストクリア報酬QP',  'QP', 'ポイント']:
+            tmp = l['name'] + "(+" + change_value(l["dropnum"]) + ")"
+        elif l["dropnum"] > 1:
+            tmp = l['name'] + "(x" + change_value(l["dropnum"]) + ")"
+        else:
+            tmp = l['name']
+        header.append(tmp)
+    return ['filename', 'ドロ数'] + header
+
+def make_csv_data(sc_list):
+    output = []
+    allitem = []
+    for sc in sc_list:
+        tmp = []
+        for l in sc:
+            if l['name'] in [ 'クエストクリア報酬QP',  'QP', 'ポイント']:
+                tmp.append(l['name'] + "(+" + change_value(l["dropnum"]) + ")")
+            elif l["dropnum"] > 1:
+                tmp.append(l['name'] + "(x" + change_value(l["dropnum"]) + ")")
+            else:
+                tmp.append(l['name'])
+        allitem = allitem + tmp
+        output.append(dict(Counter(tmp)))
+    allitem_dic = dict(Counter(allitem))
+    return allitem_dic, output
+        
+    
 if __name__ == '__main__':
     ## オプションの解析
     parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
@@ -1797,16 +1918,28 @@ if __name__ == '__main__':
         inputs = args.filenames
     
     inputs = sort_files(inputs, args.ordering)
-    csvfieldnames, outputcsv = get_output(inputs, args.debug)
+    csvfieldnames, outputcsv, fileoutput, all_new_list = get_output(inputs, args.debug)
 
-    fnames = csvfieldnames.keys()
-    writer = csv.DictWriter(sys.stdout, fieldnames=fnames, lineterminator='\n')
+    # CSVヘッダーをつくる
+    csv_heder = make_csv_header(all_new_list)
+    csv_sum, csv_data = make_csv_data(all_new_list)
+
+##    fnames = csvfieldnames.keys()
+##    writer = csv.DictWriter(sys.stdout, fieldnames=fnames, lineterminator='\n')
+##    writer.writeheader()
+##    if len(outputcsv) > 1: #ファイル一つのときは合計値は出さない
+##        writer.writerow(csvfieldnames)
+##    for o in outputcsv:
+##        writer.writerow(o)
+##    if 'ドロ数' in o.keys(): # issue: #55
+##        if len(outputcsv) > 1 and str(o['ドロ数']).endswith('+'):
+##            writer.writerow({'filename': 'missing'})
+
+    writer = csv.DictWriter(sys.stdout, fieldnames=csv_heder, lineterminator='\n')
     writer.writeheader()
-    if len(outputcsv) > 1: #ファイル一つのときは合計値は出さない
-        writer.writerow(csvfieldnames)
-    for o in outputcsv:
-        writer.writerow(o)
-    if 'ドロ数' in o.keys(): # issue: #55
-        if len(outputcsv) > 1 and str(o['ドロ数']).endswith('+'):
-            writer.writerow({'filename': 'missing'})
-
+    a = {'filename':'合計', 'ドロ数':''}
+    a.update(csv_sum)
+    writer.writerow(a)
+    for f, d in zip(fileoutput, csv_data):
+        f.update(d)
+        writer.writerow(f)
