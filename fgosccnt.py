@@ -1757,7 +1757,7 @@ def make_csv_header(item_list):
     # 余計な要素を除く
     short_list = [{"name":a["name"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in flat_list]
     ce0_flag = ("Craft Essence" not in  [d.get('card') for d in flat_list]) and \
-            (max([d.get("id") for d in flat_list]) > 8000)
+            (max([d.get("id") for d in flat_list]) > 9707500)
     if ce0_flag: short_list.append({"name":"礼装", "priority":1, "dropnum":0})
     # 重複する要素を除く
     unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
