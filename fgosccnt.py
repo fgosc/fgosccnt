@@ -1702,29 +1702,29 @@ def get_output(filenames, debug=False):
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
 
-##            try:
-            sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
-            all_list.append(sc.itemlist)
+            try:
+                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
+                all_list.append(sc.itemlist)
 
-            #2頁目以降のスクショが無い場合に migging と出力                
-            if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
-               or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                output = {'filename': 'missing'}
-                
-            prev_pages = sc.pages
-            prev_pagenum = sc.pagenum
+                #2頁目以降のスクショが無い場合に migging と出力                
+                if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
+                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                    output = {'filename': 'missing'}
+                    
+                prev_pages = sc.pages
+                prev_pagenum = sc.pagenum
 
-            sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
-            output = { 'filename': str(filename),'ドロ数':sumdrop}
-            if sc.pagenum == 1:
-                if sc.lines >= 7:
-                    output["ドロ数"] = str(output["ドロ数"]) + "++"
-                elif sc.lines >= 4:
+                sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
+                output = { 'filename': str(filename),'ドロ数':sumdrop}
+                if sc.pagenum == 1:
+                    if sc.lines >= 7:
+                        output["ドロ数"] = str(output["ドロ数"]) + "++"
+                    elif sc.lines >= 4:
+                        output["ドロ数"] = str(output["ドロ数"]) + "+"
+                elif sc.pagenum == 2 and sc.lines >= 7:             
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
-            elif sc.pagenum == 2 and sc.lines >= 7:             
-                output["ドロ数"] = str(output["ドロ数"]) + "+"
-##            except:
-##                output = ({'filename': str(filename) + ': not valid'})
+            except:
+                output = ({'filename': str(filename) + ': not valid'})
         fileoutput.append(output)
     return fileoutput, all_list
 
