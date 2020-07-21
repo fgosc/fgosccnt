@@ -14,7 +14,7 @@ import json
 from operator import itemgetter
 
 progname = "FGOスクショカウント"
-version = "0.3.0"
+version = "0.4.0"
 
 
 class Ordering(Enum):
@@ -36,6 +36,7 @@ train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ�
 train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
 Item_dist_file = Path(__file__).resolve().parent / Path("hash_item.csv")
 CE_dist_file = Path(__file__).resolve().parent / Path("hash_ce.csv")
+Item_nickname_file = Path(__file__).resolve().parent / Path("item_nickname.csv")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -46,6 +47,14 @@ FONTSIZE_TINY = 2
 
 item_name = {}
 item_priority = {}
+
+nickname_dic = {}
+with open(Item_nickname_file, encoding='UTF-8') as f:
+    reader = csv.reader(f)
+    for row in reader:
+        if row[0].strip() == '' or row[1].strip() == '':
+            continue
+        nickname_dic[row[0]] = row[1]
 
 #恒常アイテムのハッシュ値
 dist_item ={
@@ -329,31 +338,31 @@ dist_local = {
 #順番ルールにも使われる
 # 通常 弓→槍の順番だが、種火のみ槍→弓の順番となる
 # 同じレアリティの中での順番ルールは不明
-std_item = ['実', 'カケラ', '卵', '鏡','炉心', '神酒', '胆石', '産毛', 'スカラベ',    
-    'ランプ', '幼角', '根', '逆鱗', '心臓', '爪', '脂', '涙石' , 
-    '霊子', '冠', '矢尻', '鈴', 'オーロラ',  '指輪', '結氷', '勾玉','貝殻', '勲章', 
-    '八連', '蛇玉', '羽根', 'ホム', '蹄鉄', '頁', '歯車', 'ランタン', '種', 
-    '火薬', '鉄杭', '髄液', '毒針', '鎖', '塵', '牙', '骨', '証', 
-    '剣秘', '弓秘', '槍秘', '騎秘', '術秘', '殺秘', '狂秘',
-    '剣魔', '弓魔', '槍魔', '騎魔', '術魔', '殺魔', '狂魔',
-    '剣輝', '弓輝', '槍輝', '騎輝', '術輝', '殺輝', '狂輝',
-    '剣モ', '弓モ', '槍モ', '騎モ', '術モ', '殺モ', '狂モ',
-    '剣ピ', '弓ピ', '槍ピ', '騎ピ', '術ピ', '殺ピ', '狂ピ',
-    '全種火', '全灯火', '全大火', '"全猛火','全業火',
-    '剣種火', '剣灯火', '剣大火', '剣猛火', '剣業火',
-    '槍種火', '槍灯火', '槍大火', '槍猛火', '槍業火',
-    '弓種火', '弓灯火', '弓大火', '弓猛火', '弓業火',
-    '騎種火', '騎灯火', '騎大火', '騎猛火', '騎業火',
-    '術種火', '術灯火', '術大火', '術猛火', '術業火',
-    '殺種火', '殺灯火', '殺大火', '殺猛火', '殺業火',
-    '狂種火', '狂灯火', '狂大火', '狂猛火', '狂業火',
-]
-    
-std_item_dic = {}
-std_item_dic['礼装'] = 0 #イベント用
-for i in std_item:
-    std_item_dic[i] = 0
-drop_item_dic = std_item_dic.copy()
+##std_item = ['実', 'カケラ', '卵', '鏡','炉心', '神酒', '胆石', '産毛', 'スカラベ',    
+##    'ランプ', '幼角', '根', '逆鱗', '心臓', '爪', '脂', '涙石' , 
+##    '霊子', '冠', '矢尻', '鈴', 'オーロラ',  '指輪', '結氷', '勾玉','貝殻', '勲章', 
+##    '八連', '蛇玉', '羽根', 'ホム', '蹄鉄', '頁', '歯車', 'ランタン', '種', 
+##    '火薬', '鉄杭', '髄液', '毒針', '鎖', '塵', '牙', '骨', '証', 
+##    '剣秘', '弓秘', '槍秘', '騎秘', '術秘', '殺秘', '狂秘',
+##    '剣魔', '弓魔', '槍魔', '騎魔', '術魔', '殺魔', '狂魔',
+##    '剣輝', '弓輝', '槍輝', '騎輝', '術輝', '殺輝', '狂輝',
+##    '剣モ', '弓モ', '槍モ', '騎モ', '術モ', '殺モ', '狂モ',
+##    '剣ピ', '弓ピ', '槍ピ', '騎ピ', '術ピ', '殺ピ', '狂ピ',
+##    '全種火', '全灯火', '全大火', '"全猛火','全業火',
+##    '剣種火', '剣灯火', '剣大火', '剣猛火', '剣業火',
+##    '槍種火', '槍灯火', '槍大火', '槍猛火', '槍業火',
+##    '弓種火', '弓灯火', '弓大火', '弓猛火', '弓業火',
+##    '騎種火', '騎灯火', '騎大火', '騎猛火', '騎業火',
+##    '術種火', '術灯火', '術大火', '術猛火', '術業火',
+##    '殺種火', '殺灯火', '殺大火', '殺猛火', '殺業火',
+##    '狂種火', '狂灯火', '狂大火', '狂猛火', '狂業火',
+##]
+##    
+##std_item_dic = {}
+##std_item_dic['礼装'] = 0 #イベント用
+##for i in std_item:
+##    std_item_dic[i] = 0
+##drop_item_dic = std_item_dic.copy()
 
 def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
     """
@@ -436,19 +445,10 @@ class ScreenShot:
             self.reward = self.makereward()
             return
 
-        self.itemlist = self.makelist()
-        self.itemdic = dict(Counter(self.itemlist))
-        self.reward = self.makereward()
-        self.allitemlist = self.makelallist()
-        self.allitemdic = dict(Counter(self.allitemlist))
-        self.qplist = self.makeqplist()
-        self.qpdic =dict(Counter(self.qplist))
-        self.reisoulist = self.makereisoulist()
-        self.reisoudic =dict(Counter(self.reisoulist))
-        self.newlist = self.makenewlist()
+        self.itemlist = self.makeitemlist()
         # 複数ファイル対応のためポイントはその都度消す
         if "ポイント" in dist_item.keys():
-            del dist_item["ポイント"]
+            del dist_item[500000]
 
 
     def find_edge(self, img_th, reverse=False):
@@ -564,52 +564,12 @@ class ScreenShot:
         hashorder = sorted(hashorder.items(), key=lambda x:x[1])
         return next(iter(hashorder))[0]
 
-    def makelist(self):
-        """
-        QPと礼装以外のアイテムを出力
-        """
-        itemlist = []
-        for i, item in enumerate(self.items):
-##            if item.name[-1].isdigit():
-##                name = item.name + '_'
-##            else:
-##                name = item.name
-            name = item.name
-            if item.card == "Point":
-                drop_item_dic[name + item.dropnum] = 0
-            if name not in [ 'クエストクリア報酬QP', 'QP'] and not item.card == "Craft Essence":
-                itemlist.append(name + item.dropnum)
-        return itemlist
 
-    def makeqplist(self):
-        """
-        Quest RewardのQP以外のQPを出力
-        """
-        qplist = []
-        for i, item in enumerate(self.items):
-##            if i != 0 and item.name == 'QP':
-            if i == 0 and self.pagenum == 1:
-                continue
-            if  item.name == 'QP':
-                qplist.append(item.name + item.dropnum)
-        return qplist
-
-    def makereisoulist(self):
-        """
-        礼装を出力
-        """
-        reisoulist = []
-        for i, item in enumerate(self.items):
-            if item.card == "Craft Essence":
-                reisoulist.append(item.name)
-        return reisoulist
-
-
-    def makenewlist(self):
+    def makeitemlist(self):
         """
         アイテムを出力
         """
-        newitemlist = []
+        itemlist = []
         for i, item in enumerate(self.items):
             tmp = {}
             if item.card == "Quest Reward":
@@ -623,30 +583,8 @@ class ScreenShot:
             tmp['dropnum'] = int(item.dropnum[1:])
             tmp['bonus'] = item.bonus
             tmp['card'] = item.card
-            newitemlist.append(tmp)
-        return newitemlist
-
-    def makelallist(self):
-        """
-        アイテムを出力
-        """
-        itemlist = []
-        for i, item in enumerate(self.items):
-            if item.card == 'Craft Essence' or not item.name[-1].isdigit():
-                name = item.name
-            else:
-                name = item.name + '_'
-            itemlist.append(name + item.dropnum)
+            itemlist.append(tmp)
         return itemlist
-
-    def makereward(self):
-        """
-        Quest RewardのQPを出力
-        """
-        if len(self.items) != 0 and self.pagenum == 1:
-            return self.items[0].name + self.items[0].dropnum
-        return ""
-            
 
     def ocr_tresurechest(self, debug=False):
         """
@@ -736,7 +674,6 @@ class ScreenShot:
             ptl[3] = ptl[3] + offset_y
             ptl[2] = ptl[2] + offset_x
             item_pts.append(ptl)
-##        print(offset_y)
         return item_pts
 
     def img2points(self):
@@ -837,21 +774,16 @@ class Item:
         
         self.height, self.width = img_rgb.shape[:2]
         self.card = self.classify_card(svm_card)
-        self.id = self.classify_item(img_rgb)
+        self.id = self.classify_item(img_rgb, debug)
         self.name = item_name[self.id]
         if self.card == "":
             if self.name.endswith('火'): self.card ="Exp. UP"
         if debug == True:
             print("Card Type: {}".format(self.card))
             print("Name: {}".format(self.name))
-            if self.name not in std_item and self.card == "Item":
-                print('"' + self.name + '"', end="")
-                self.name = self.classify_item(img_rgb,debug)
-
 
         self.svm = svm
         self.bonus = ""
- ##       if self.name not in std_item and self.card != "Craft Essence" and self.card != "Exp. UP":
         if self.card != "Craft Essence" and self.card != "Exp. UP":
             self.ocr_digit(mode, debug)
         else:
@@ -862,20 +794,6 @@ class Item:
             self.card = "Point"
         if debug:
             print("Number of Drop: {}".format(self.dropnum))
-
-##    def is_silver_item(self):
-##        """
-##        銀アイテム検出
-##        戦利品数OCRで銀アイテム背景だけ挙動が違うので分けるため
-##        """
-##        img_hsv_top = self.img_hsv[int(38/257*self.height):int(48/257*self.height), 7:17]
-## 
-##        hist_s = cv2.calcHist([img_hsv_top],[1],None,[256],[0,256]) #Sのヒストグラムを計算
-##        # 最小値・最大値・最小値の位置・最大値の位置を取得
-##        minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist_s)
-##        if maxLoc[1] < 17:
-##            return True
-##        return False
 
     def conflictcheck(self, pts, pt):
         """
@@ -966,7 +884,6 @@ class Item:
         m_normal = re.match(pattern_normal,line)
         if m_normal:
             if debug: print("フォントサイズ: {}".format(font_size))
-##            line = self.change_value(line)
             return line, pts, font_size
         ############################################            
         # 6桁の読み込み
@@ -981,7 +898,6 @@ class Item:
         m_small = re.match(pattern_small,line)
         if m_small:
             if debug: print("フォントサイズ: {}".format(font_size))
-##            line = self.change_value(line)
             return line, pts, font_size
         ############################################            
         # 7桁読み込み
@@ -1175,12 +1091,12 @@ class Item:
 
         return line
 
-    def change_value(self, line):
-        line = re.sub('000000$', "百万", line)
-        line = re.sub('0000$', "万", line)
-        if len(line) > 5:
-            line = re.sub('000$', "千", line)
-        return line
+##    def change_value(self, line):
+##        line = re.sub('000000$', "百万", line)
+##        line = re.sub('0000$', "万", line)
+##        if len(line) > 5:
+##            line = re.sub('000$', "千", line)
+##        return line
 
     def detect_white_char(self, base_line, margin_right, font_size, debug=False):
         """
@@ -1341,16 +1257,11 @@ class Item:
         """
         戦利品OCR
         """
-##        cut_width = 20
-##        comma_width = 9
         font_size = FONTSIZE_UNDEFINED
-##        flag_silver = False
-##        if self.is_silver_item() == True:
-##            flag_silver = True
 
         if self.fileextention.lower() == '.png':
             bonus_pts = self.detect_bonus_char()
-            self.dropnum = self.read_item(bonus_pts, debug)
+            self.bonus = self.read_item(bonus_pts, debug)
             # フォントサイズを決定
             if len(bonus_pts) > 0:
                 y_height = bonus_pts[-1][3] - bonus_pts[-1][1]
@@ -1377,7 +1288,6 @@ class Item:
             base_line = int(180/206*self.height)
 
         # 実際の(ボーナス無し)ドロップ数の右端の位置を決定
-#        if mode=="na": offset_x = -6
         offset_x = -7 if mode=="na" else 0
         if self.name in ["QP", "ポイント"]:
             margin_right = 15 + offset_x           
@@ -1386,12 +1296,9 @@ class Item:
         else:
             margin_right = 15 + offset_x
         if debug: print("margin_right: {}".format(margin_right))
-##        self.dropnum =  self.detect_white_char(base_line, offset_x = x, cut_width = cut_width, comma_width = comma_width) + self.dropnum
         self.dropnum =  self.detect_white_char(base_line, margin_right, font_size, debug=debug)
-##        self.dropnum =re.sub("\([^\(\)]*\)$", "", self.dropnum) #括弧除去
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
-##            self.dropnum = "(" + self.dropnum + ")"
 
     def classify_standard_item(self, img, debug=False):
         """
@@ -1406,7 +1313,10 @@ class Item:
         hash_item = compute_hash(img) #画像の距離
         ids = {}
         if debug == True:
-            print(":np.array([" + str(list(hash_item[0])) + "], dtype='uint8'),")
+            hex = ""
+            for h in hash_item[0]:
+                hex = hex + "{:02x}".format(h)
+            print("hash :{}".format(hex))
         # 既存のアイテムとの距離を比較
         for i in dist_item.keys():
             d = hasher.compare(hash_item, dist_item[i])
@@ -1415,10 +1325,9 @@ class Item:
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に
                 ids[i] = d
         if len(ids) > 0:
-            idfiles = sorted(ids.items(), key=lambda x:x[1])
-            id = next(iter(ids))
- 
-##            if type(id[0]) is int:
+            ids = sorted(ids.items(), key=lambda x:x[1])
+            id_tupple = next(iter(ids))
+            id = id_tupple[0]
             if item_name[id].endswith("秘"):
                 hash_hi = self.compute_maseki_hash(img)
                 hisekifiles = {}
@@ -1428,7 +1337,7 @@ class Item:
                         hisekifiles[i] = d2
                 hisekifiles = sorted(hisekifiles.items(), key=lambda x:x[1])
                 item = next(iter(hisekifiles))
-                id = [k for k in ids.keys() if item_name[k] == item[0][0] + "の秘石"][0]
+                id = [k for k in item_name.keys() if item_name[k] == item[0][0] + "の秘石"][0]
             elif item_name[id].endswith("魔石"):
                 hash_ma = self.compute_maseki_hash(img)
                 masekifiles = {}
@@ -1438,7 +1347,7 @@ class Item:
                         masekifiles[i] = d2
                 masekifiles = sorted(masekifiles.items(), key=lambda x:x[1])
                 item = next(iter(masekifiles))
-                id = [k for k in ids.keys() if item_name[k] == item[0][0] + "の魔石"][0]
+                id = [k for k in item_name.keys() if item_name[k] == item[0][0] + "の魔石"][0]
             elif item_name[id].endswith("輝石"):
                 hash_ki = self.compute_maseki_hash(img)
                 kisekifiles = {}
@@ -1448,7 +1357,7 @@ class Item:
                         kisekifiles[i] = d2
                 kisekifiles = sorted(kisekifiles.items(), key=lambda x:x[1])
                 item = next(iter(kisekifiles))
-                id = [k for k in ids.keys() if item_name[k] == item[0][0] + "の輝石"][0]
+                id = [k for k in item_name.keys() if item_name[k] == item[0][0] + "の輝石"][0]
             elif item_name[id].endswith("モニュメント") \
                  or item_name[id].endswith("ピース"):
                 #ヒストグラム
@@ -1461,11 +1370,8 @@ class Item:
                     item = item_name[id].replace("モニュメント","").replace("ピース","") + "モニュメント"
                 else:
                     item = item_name[id].replace("モニュメント","").replace("ピース","") + "ピース"
-                id = [k for k in ids.keys() if item_name[k] == item][0]
+                id = [k for k in item_name.keys() if item_name[k] == item][0]
                 
-##            if type(item[0]) is str or type(item[0]) is int: #ポイント登録用
-##                return item[0]
-##            return item[0].stem
             return id
 
         return ""
@@ -1521,7 +1427,7 @@ class Item:
         Pointを登録しておく
         """
         if "ポイント" not in dist_item.keys():
-            dist_item["ポイント"] = compute_hash(self.img_rgb) #画像の距離
+            dist_item[500000] = compute_hash(self.img_rgb) #画像の距離
 
         
     def make_new_file4ce(self, img):
@@ -1544,7 +1450,7 @@ class Item:
                 # priotiry は固定
                 dist_ce[id] = compute_hash(img)
                 item_name[id] = itemfile.stem
-                item_priority[id] =399999
+                item_priority[id] =1000000
                 break
         return id
 
@@ -1568,7 +1474,7 @@ class Item:
                 # priotiry は固定
                 dist_item[id] = compute_hash(img)
                 item_name[id] = itemfile.stem
-                item_priority[id] =800000
+                item_priority[id] =1000000
                 break
         return id
 
@@ -1717,14 +1623,23 @@ def calc_dist_local():
         item_name[id] = fname.stem
         item_priority[id] =399999
 
-##        dist_local[fname] = compute_hash(img)
-##        dist_item[fname] = compute_hash(img) # #85 対応
 
 def hex2hash(hexstr):
     hashlist = []
     for i in range(8):
         hashlist.append(int('0x' + hexstr[i*2:i*2+2],0))
     return np.array([hashlist], dtype='uint8')
+
+def out_name(d):
+##    logger.debug('out_name before: %s', d)
+    if d[-1] == '_':
+        d = d[:-1]
+    if d in nickname_dic:
+        d = nickname_dic[d]
+    if d[-1].isdigit():
+        d = d + '_'
+##    logger.debug('out_name after: %s', d)
+    return d
 
 def calc_dist():
     """
@@ -1751,9 +1666,6 @@ def calc_dist():
         item_priority[int(l["id"])] = int(l["priority"])
         if l["phash"] != "":
             dist_ce[int(l["id"])] = hex2hash(l["phash"])
-##    print(dist_item)                  
-##        for row in reader:    
-##            item_priority[row[0]] = int(row[1])
 
 def get_output(filenames, debug=False):
     """
@@ -1777,19 +1689,11 @@ def get_output(filenames, debug=False):
     svm_chest = cv2.ml.SVM_load(str(train_chest))
     svm_card = cv2.ml.SVM_load(str(train_card))
 
-    csvfieldnames = { 'filename' : "合計", 'ドロ数': "" } #CSVフィールド名用 key しか使わない
-    wholelist = []
-    rewardlist = []
-    reisoulist = []
-    qplist = []
-    outputcsv = [] #出力
     fileoutput = [] #出力
     prev_pages = 0
     prev_pagenum = 0
-    ce_drop = False
 
-
-    all_new_list = []
+    all_list = []
     
     for filename in filenames:
         if debug:
@@ -1798,86 +1702,35 @@ def get_output(filenames, debug=False):
 
         if f.exists() == False:
             output = { 'filename': str(filename) + ': Not Found' }
-            newoutput = { 'filename': str(filename) + ': Not Found' }
         else:
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
 
 ##            try:
             sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
-            all_new_list.append(sc.newlist)
+            all_list.append(sc.itemlist)
 
             #2頁目以降のスクショが無い場合に migging と出力                
             if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
                or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                outputcsv.append({'filename': 'missing'})
-                newoutput = {'filename': 'missing'}
+                output = {'filename': 'missing'}
                 
             prev_pages = sc.pages
             prev_pagenum = sc.pagenum
 
-            #戦利品順番ルールに則った対応による出力処理
-            wholelist = wholelist + sc.itemlist
-            if sc.reward != "":
-                rewardlist = rewardlist + [sc.reward]
-            reisoulist = reisoulist + sc.reisoulist
-            if len(sc.reisoulist) > 0:
-                ce_drop = True
-            qplist = qplist + sc.qplist
-            output = { 'filename': str(filename),
-                       'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist)}
-            newoutput = { 'filename': str(filename),
-                       'ドロ数':len(sc.itemlist) + len(sc.qplist) + len(sc.reisoulist)}
-            if sc.pagenum == 1 and len(set(sc.itemlist)-set(std_item_dic.keys())) > 0:
-                #とりあえずデータを入れて必要に応じてあとで抜く
-                output['礼装'] = 0
-            output.update(sc.allitemdic)
+            sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
+            output = { 'filename': str(filename),'ドロ数':sumdrop}
             if sc.pagenum == 1:
                 if sc.lines >= 7:
                     output["ドロ数"] = str(output["ドロ数"]) + "++"
-                    newoutput["ドロ数"] = str(newoutput["ドロ数"]) + "++"
                 elif sc.lines >= 4:
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
-                    newoutput["ドロ数"] = str(newoutput["ドロ数"]) + "+"
             elif sc.pagenum == 2 and sc.lines >= 7:             
                 output["ドロ数"] = str(output["ドロ数"]) + "+"
-                newoutput["ドロ数"] = str(newoutput["ドロ数"]) + "+"
-            output.update(sc.allitemdic)
 ##            except:
 ##                output = ({'filename': str(filename) + ': not valid'})
-        outputcsv.append(output)
-        fileoutput.append(newoutput)
-    new_outputcsv = []
-    if ce_drop == True:
-        for o in outputcsv:
-            if "礼装" in o.keys():
-                del o["礼装"]
-            new_outputcsv.append(o)
-        outputcsv = new_outputcsv
-            
-    csvfieldnames.update(dict(Counter(rewardlist)))
-    if not output['filename'].endswith(': Not Found') and \
-       not output['filename'].endswith(': not valid'):
-
-        if ce_drop == False and len(set(wholelist) - set(std_item)) > 0:
-            if (len(filenames) == 1 and sc.pagenum == 1) or len(filenames) > 1:
-                csvfieldnames["礼装"] = 0
-                
-        reisou_dic = dict(Counter(reisoulist))
-        csvfieldnames.update(sorted(reisou_dic.items(), reverse=True))
-     
-        drop_item_dic.update(dict(Counter(wholelist)))
-        qp_dic = dict(Counter(qplist))
-        
-        for key in list(drop_item_dic.keys()):
-##            if key == "礼装" and ce_drop == True:
-##                del drop_item_dic[key]
-##            elif drop_item_dic[key] == 0:
-            if drop_item_dic[key] == 0:
-                del drop_item_dic[key]
-        csvfieldnames.update(drop_item_dic)
-        csvfieldnames.update(sorted(qp_dic.items()))
-    return csvfieldnames, outputcsv, fileoutput, all_new_list
+        fileoutput.append(output)
+    return fileoutput, all_list
 
 
 def sort_files(files, ordering):
@@ -1893,8 +1746,7 @@ def sort_files(files, ordering):
 def change_value(line):
     line = re.sub('000000$', "百万", str(line))
     line = re.sub('0000$', "万", str(line))
-    if len(line) > 5:
-        line = re.sub('000$', "千", str(line))
+    line = re.sub('000$', "千", str(line))
     return line
 
 def make_csv_header(item_list):
@@ -1902,6 +1754,8 @@ def make_csv_header(item_list):
     CSVのヘッダ情報を作成
     礼装のドロップが無いかつ恒常以外のアイテムが有るとき礼装0をつける
     """
+    if len(item_list) == 0:
+        return ['filename', 'ドロ数'], False
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
@@ -1916,31 +1770,32 @@ def make_csv_header(item_list):
     header = []
     for l in new_list:
         if l['name'] in [ 'クエストクリア報酬QP',  'QP', 'ポイント']:
-            tmp = l['name'] + "(+" + change_value(l["dropnum"]) + ")"
+            tmp = out_name(l['name']) + "(+" + change_value(l["dropnum"]) + ")"
         elif l["dropnum"] > 1:
-            tmp = l['name'] + "(x" + change_value(l["dropnum"]) + ")"
+            tmp = out_name(l['name']) + "(x" + change_value(l["dropnum"]) + ")"
         else:
-            tmp = l['name']
+            tmp = out_name(l['name'])
         header.append(tmp)
     return ['filename', 'ドロ数'] + header, ce0_flag
 
 def make_csv_data(sc_list, ce0_flag):
-    output = []
+    if sc_list == []: return [{}],[{}] 
+    csv_data = []
     allitem = []
     for sc in sc_list:
         tmp = []
         for l in sc:
             if l['name'] in [ 'クエストクリア報酬QP',  'QP', 'ポイント']:
-                tmp.append(l['name'] + "(+" + change_value(l["dropnum"]) + ")")
+                tmp.append(out_name(l['name']) + "(+" + change_value(l["dropnum"]) + ")")
             elif l["dropnum"] > 1:
-                tmp.append(l['name'] + "(x" + change_value(l["dropnum"]) + ")")
+                tmp.append(out_name(l['name']) + "(x" + change_value(l["dropnum"]) + ")")
             else:
-                tmp.append(l['name'])
+                tmp.append(out_name(l['name']))
         allitem = allitem + tmp
-        output.append(dict(Counter(tmp)))
-    allitem_dic = dict(Counter(allitem))
-    if ce0_flag: allitem_dic.update({"礼装":0})
-    return allitem_dic, output
+        csv_data.append(dict(Counter(tmp)))
+    csv_sum = dict(Counter(allitem))
+    if ce0_flag: csv_sum.update({"礼装":0})
+    return csv_sum, csv_data
         
     
 if __name__ == '__main__':
@@ -1968,28 +1823,21 @@ if __name__ == '__main__':
         inputs = args.filenames
     
     inputs = sort_files(inputs, args.ordering)
-    csvfieldnames, outputcsv, fileoutput, all_new_list = get_output(inputs, args.debug)
+    fileoutput, all_new_list = get_output(inputs, args.debug)
 
     # CSVヘッダーをつくる
     csv_heder, ce0_flag = make_csv_header(all_new_list)
     csv_sum, csv_data = make_csv_data(all_new_list, ce0_flag)
 
-##    fnames = csvfieldnames.keys()
-##    writer = csv.DictWriter(sys.stdout, fieldnames=fnames, lineterminator='\n')
-##    writer.writeheader()
-##    if len(outputcsv) > 1: #ファイル一つのときは合計値は出さない
-##        writer.writerow(csvfieldnames)
-##    for o in outputcsv:
-##        writer.writerow(o)
-
     writer = csv.DictWriter(sys.stdout, fieldnames=csv_heder, lineterminator='\n')
     writer.writeheader()
-    a = {'filename':'合計', 'ドロ数':''}
-    a.update(csv_sum)
-    writer.writerow(a)
-    for f, d in zip(fileoutput, csv_data):
-        f.update(d)
-        writer.writerow(f)
-    if 'ドロ数' in f.keys(): # issue: #55
-        if len(fileoutput) > 1 and str(f['ドロ数']).endswith('+'):
+    if len(all_new_list) > 1: #ファイル一つのときは合計値は出さない
+        a = {'filename':'合計', 'ドロ数':''}
+        a.update(csv_sum)
+        writer.writerow(a)
+    for fo, cd in zip(fileoutput, csv_data):
+        fo.update(cd)
+        writer.writerow(fo)
+    if 'ドロ数' in fo.keys(): # issue: #55
+        if len(fileoutput) > 1 and str(fo['ドロ数']).endswith('+'):
             writer.writerow({'filename': 'missing'})
