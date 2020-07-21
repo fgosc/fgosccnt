@@ -13,33 +13,23 @@ import cv2
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
-##import imagehash
 
 Image_dir = Path(__file__).resolve().parent / Path("data/equip/")
 Image_dir_ce = Path(__file__).resolve().parent / Path("data/ce/")
-##Image_dir_servant = Image_dir / Path("servant/")
-##Image_dir_ccode = Image_dir / Path("ccode/")
 CE_blacklist_file = Path(__file__).resolve().parent / Path("ce_bl.txt")
 Item_blacklist_file = Path(__file__).resolve().parent / Path("item_bl.txt")
 Item_nickname_file = Path(__file__).resolve().parent / Path("std_item_nickname.csv")
-##Servant_blacklist_file = Path(__file__).resolve().parent / Path("srv_bl.csv")
-##Servant_output_file = Path(__file__).resolve().parent / Path("hash_srv.csv")
+Misc_dir = Path(__file__).resolve().parent / Path("data/misc/")
 CE_output_file = Path(__file__).resolve().parent / Path("hash_ce.csv")
-##CE_center_output_file = Path(__file__).resolve().parent / Path("hash_ce_center.csv")
-##CCode_output_file = Path(__file__).resolve().parent / Path("hash_ccode.csv")
 Item_output_file = Path(__file__).resolve().parent / Path("hash_item.csv")
 if not Image_dir.is_dir():
     Image_dir.mkdir()
 if not Image_dir_ce.is_dir():
     Image_dir_ce.mkdir()
-##if not Image_dir_servant.is_dir():
-##    Image_dir_servant.mkdir()
-##if not Image_dir_ccode.is_dir():
-##    Image_dir_ccode.mkdir()
+if not Misc_dir .is_dir():
+    Misc_dir .mkdir()
 
 url_ce = "https://api.atlasacademy.io/export/JP/nice_equip.json"
-##url_servant = "https://api.atlasacademy.io/export/JP/nice_servant.json"
-##url_ccode = "https://api.atlasacademy.io/export/JP/nice_command_code.json"
 url_item= "https://api.atlasacademy.io/export/JP/nice_item.json"
 
 bg_files = {"zero":"listframes0_bg.png",
@@ -53,17 +43,21 @@ bg_rarity = {3:"silver",
              4:"gold",
              5:"gold"}
 
-bg_dir = Path("/Users/nono_000/Documents/git/aa-db/build/assets/list")
+bg_url = "https://raw.githubusercontent.com/atlasacademy/aa-db/master/build/assets/list/"
+star_url = "https://raw.githubusercontent.com/atlasacademy/aa-db/master/build/assets/"
 bg_image = {}
 for bg in bg_files.keys():
-    filename = str(bg_dir / bg_files[bg])
-    tmpimg = cv2.imread(filename)
+    filename = Misc_dir / bg_files[bg]
+    if filename.is_file() == False:
+        url_download = bg_url + bg_files[bg]
+        response = requests.get(url_download)
+        with open(filename, 'wb') as saveFile:
+            saveFile.write(response.content)
+    tmpimg = cv2.imread(str(filename))
     h, w = tmpimg.shape[:2]
     bg_image[bg] = tmpimg[5:h-5,5:w-5]
 
 hasher = cv2.img_hash.PHash_create()
-#hasher = cv2.img_hash.AverageHash_create()
-#hasher = cv2.img_hash.MarrHildrethHash_create()
 
 servant_class = {'saber':'剣',
                  'lancer':'槍',
@@ -156,11 +150,6 @@ class CvOverlayImage(object):
 
         return cv_bgr_result_image
     
-##def compute_hash_inner(img_rgb):
-##    img = img_rgb[34:104,:]    
-##
-##    return hasher.compute(img)
-
 def compute_hash(img_rgb):
     """
     判別器
@@ -168,22 +157,9 @@ def compute_hash(img_rgb):
     記述した比率はiPpd2018画像の実測値
     """
     height, width = img_rgb.shape[:2]
-##    img = img_rgb[int(17/135*height):int(77/135*height),
-##                    int(19/135*width):int(103/135*width)]
     img = img_rgb[24:108,
                     15:116]
-##    img = cv2pil(img)
-##    # 縮小 0.8倍
-##    resizeScale = 188/131
-####    img_rgb = cv2.resize(img_rgb, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
-##
-##cv2.imshow("img", cv2.resize(img, dsize=None, fx=2., fy=2.))
-##cv2.waitKey(0)
-##cv2.destroyAllWindows()
-##cv2.imwrite("full.png", img_rgb)
-##cv2.imwrite("cut.png", img)
     return hasher.compute(img)
-##    return imagehash.dhash(img)
 
 def compute_hash_ce(img_rgb):
     """
@@ -194,9 +170,6 @@ def compute_hash_ce(img_rgb):
     height, width = img_rgb.shape[:2]
     img = img_rgb[5:115,3:119]
 
-##    cv2.imshow("img", cv2.resize(img, dsize=None, fx=2., fy=2.))
-##    cv2.waitKey(0)
-##    cv2.destroyAllWindows()
     return hasher.compute(img)
 
 
@@ -208,8 +181,6 @@ def make_item_data():
     bronze_output =[]
     misc_output = []
     qp_output = []
-##    item_center_output =[]
-##    for i in range(5):
     r_get = requests.get(url_item)
 
     item_list = r_get.json()
@@ -220,26 +191,15 @@ def make_item_data():
         reader = csv.DictReader(f)
         item_nickname = [row for row in reader]
 
-##    for ce in ce_list:
     for item in tqdm(item_list):
 
         name = item["name"]
-##        if name != "AUOくじ2019":
-##            continue
-##        b = name.encode('cp932', "ignore")
-##        name_after = b.decode('cp932')
-##        if ce["atkMax"]-ce["atkBase"]+ce["hpMax"]-ce["hpBase"]==0:
-##            print(": exclude")
         if item["type"] not in ["qp", "questRewardQp", "skillLvUp", "tdLvUp", "eventItem", "dice"]:
             continue
-##        if ce["name"].startswith("概念礼装EXPカード："):
-##            continue
         # ここにファイルから召喚除外礼装を読み込む
         # イベント交換(ドロップ)礼装、マナプリ交換礼装
         if name in bl_item:
             continue
-##        id = ce["id"]
-##        mylist = item['icon']
         url_download = item['icon']
         tmp = url_download.split('/')
         savefilename = tmp[-1]
@@ -321,12 +281,52 @@ def make_item_data():
 ##        writer.writerows(qp_output)
         writer.writerow([qp_output[0][0]] + [999999] + qp_output[0][1:])
 
+def make_star_data():
+    for i in range(3):
+        filename = Misc_dir / ("star"  + str(i + 3) + ".png")
+        if filename.is_file() == False:
+            url_download = star_url + filename.name
+            response = requests.get(url_download)
+            with open(filename, 'wb') as savefile:
+                savefile.write(response.content)    
+def overray_ce(background, foreground):
+    bg_height, bg_width = background.shape[:2]
+    fg_height, fg_width = foreground.shape[:2]
+
+    point = (bg_width-fg_width-5, bg_height-fg_height-5)
+    # 合成
+    image = CvOverlayImage.overlay(background,
+                                   foreground,
+                                   point)
+    # 縮小 128→124
+    wscale = (1.0 * 128) / 124
+    resizeScale = 1 / wscale
+
+    image = cv2.resize(image, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
+
+    return image
+def search_item_file(url, savedir):
+    """
+    url に該当するファイルを返す
+    すでに存在したらダウンロードせずそれを使う
+    """
+    url_download = url
+    tmp = url_download.split('/')
+    savefilename = tmp[-1]
+    Image_file = savedir / Path(savefilename)
+    if savedir.is_dir() == False:
+        savedir.mkdir()
+    if Image_file.is_file() == False:
+        response = requests.get(url_download)
+        with open(Image_file, 'wb') as saveFile:
+            saveFile.write(response.content)
+    return Image_file
+
 def make_ce_data():
+    make_star_data()
     ce_output ={}
     for i in range(3):
         ce_output[i + 3] = []
-##    ce_center_output =[]
-##    for i in range(5):
     r_get = requests.get(url_ce)
 
     ce_list = r_get.json()
@@ -336,193 +336,39 @@ def make_ce_data():
         if ce["rarity"] <= 2:
             continue
         name = ce["name"]
-##        b = name.encode('cp932', "ignore")
-##        name_after = b.decode('cp932')
         if ce["atkMax"]-ce["atkBase"]+ce["hpMax"]-ce["hpBase"]==0 \
            and not ce["name"].startswith("概念礼装EXPカード："):
-##            print(": exclude")
             continue
-##        if ce["name"].startswith("概念礼装EXPカード："):
-##            continue
         # ここにファイルから召喚除外礼装を読み込む
         # イベント交換(ドロップ)礼装、マナプリ交換礼装
         if name in bl_ces:
             continue
-##        id = ce["id"]
         mylist = list(ce['extraAssets']['faces']['equip'].values())
-        url_download = mylist[0]
-        tmp = url_download.split('/')
-        savefilename = tmp[-1]
-        Image_dir_sub = Image_dir_ce / str(ce["rarity"]) 
-        Image_file = Image_dir_sub / Path(savefilename)
-        if Image_dir_sub.is_dir() == False:
-            Image_dir_sub.mkdir()
-        if Image_file.is_file() == False:
-            response = requests.get(url_download)
-            with open(Image_file, 'wb') as saveFile:
-                saveFile.write(response.content)
-        cv_background_image = cv2.imread(str(Image_file))
-        bg_height, bg_width = cv_background_image.shape[:2]
 
-        cv_overlay_image = cv2.imread(
-            "data/star" + str(ce["rarity"]) + ".png",
-            cv2.IMREAD_UNCHANGED)  # IMREAD_UNCHANGEDを指定しα込みで読み込む
-        fg_height, fg_width = cv_overlay_image.shape[:2]
-
-        point = (bg_width-fg_width-5, bg_height-fg_height-5)
-        # 合成
-        image = CvOverlayImage.overlay(cv_background_image,
-                                       cv_overlay_image,
-                                       point)
-        # 縮小 128→124
-        wscale = (1.0 * 128) / 124
-        resizeScale = 1 / wscale
-
-        image = cv2.resize(image, (0,0), fx=resizeScale, fy=resizeScale, interpolation=cv2.INTER_AREA)
-
-##        cv2.imshow("img", cv2.resize(image, dsize=None, fx=2., fy=2.))
-##        cv2.waitKey(0)
-##        cv2.destroyAllWindows()
+        Image_file =  search_item_file(mylist[0], Image_dir_ce /str(ce["rarity"]))
+        ce_image = cv2.imread(str(Image_file))
+        # IMREAD_UNCHANGEDを指定しα込みで読み込む
+        star_image = cv2.imread(str(Misc_dir / ("star" + str(ce["rarity"]) + ".png")), cv2.IMREAD_UNCHANGED)
+        image = overray_ce(ce_image, star_image)
                 
         hash = compute_hash_ce(image)
         out = ""
         for h in hash[0]:
             out = out + "{:02x}".format(h)
-#        tmp = [name] + [ce['rarity']] + list(hash[0])
         tmp = [ce['id']] + [name] + [out]
-#            print(hash[0][0])
-#            print(tmp)
         ce_output[ce['rarity']].append(tmp)
-##        if ce["rarity"] <= 3:
-##            hash_center = hasher.compute(img_rgb[35:77,40:88])
-##            tmp_center = [name] + [ce['rarity']] + list(hash_center[0])
-##            ce_center_output.append(tmp_center)
             
     with open(CE_output_file, 'w', encoding="UTF-8") as f:
         writer = csv.writer(f, lineterminator="\n")
         header = ["id", "name", "priority", "phash"]
         writer.writerow(header)
         for i in range(3):
-            priority = 10000 + 110000 * (i + 1)
+            priority = 10000 + 100000 * (i + 1)
             for n in ce_output[5 - i]:
-                writer.writerow(n[:2] + [100000*(i+1) + priority*10] + n[2:])
-                priority = priority + 1
-##        writer.writerows(ce_output)
-
-##    with open(CE_center_output_file, 'w', encoding="UTF-8") as f:
-##        writer = csv.writer(f, lineterminator="\n")
-##        writer.writerows(ce_center_output)
-
-##        hash = compute_hash_inner(img_rgb)
-##        tmp = [name] + [ce['rarity']] + list(hash[0])
-###            print(hash[0][0])
-###            print(tmp)
-##        ce_output.append(tmp)
-##        if ce["rarity"] <= 3:
-##            hash_center = hasher.compute(img_rgb[35:77,40:88])
-##            tmp_center = [name] + [ce['rarity']] + list(hash_center[0])
-##            ce_center_output.append(tmp_center)
-##            
-##
-##    with open(CE_output_file, 'w', encoding="UTF-8") as f:
-##        writer = csv.writer(f, lineterminator="\n")
-##        writer.writerows(ce_output)
-##
-##    with open(CE_center_output_file, 'w', encoding="UTF-8") as f:
-##        writer = csv.writer(f, lineterminator="\n")
-##        writer.writerows(ce_center_output)
-
-##def make_servant_data():
-##    srv_output =[]
-##
-##    r_get = requests.get(url_servant)
-##
-##    seravnt_list = r_get.json()
-##    with open(Servant_blacklist_file, encoding='UTF-8') as f:
-##
-##        reader = csv.DictReader(f)
-##        bl_sarvants = [row for row in reader]
-##
-##    for servant in seravnt_list:
-##        name = servant["name"]
-##        if name == "哪吒": # "Windows の cp932 でエラーになる問題
-##            name = "ナタ" 
-##        b = name.encode('cp932', "ignore")
-##        # ここにファイルから召喚除外礼装を読み込む
-##        # イベント交換(ドロップ)礼装、マナプリ交換礼装
-##        distribution = False
-##        for l in bl_sarvants:
-##            if name == l['name'] and servant['rarity'] == int(l['rarity']) \
-##               and servant['className'] == l['className']:
-##                distribution = True
-##                continue
-##        if distribution:
-##            continue
-##
-##        mylist = list(servant['extraAssets']['faces']['ascension'].values())
-##        url_download = mylist[0]
-##        tmp = url_download.split('/')
-##        savefilename = tmp[-1]
-##        Image_dir_sub = Image_dir_servant / str(servant["rarity"]) 
-##        Image_file = Image_dir_sub / Path(savefilename)
-##        if Image_dir_sub.is_dir() == False:
-##            Image_dir_sub.mkdir()
-##        if Image_file.is_file() == False:
-##            # ファイルがなければデータダウンロード
-##            response = requests.get(url_download)
-##            with open(Image_file, 'wb') as saveFile:
-##                saveFile.write(response.content)
-##        img_rgb = cv2.imread(str(Image_file))
-##        name = name + "【"  + servant_class[servant['className']] + "】"
-##        hash = compute_hash_inner(img_rgb)
-##        tmp = [name] + [servant['rarity']] + list(hash[0])
-###            print(hash[0][0])
-###            print(tmp)
-##        srv_output.append(tmp)
-##    with open(Servant_output_file, 'w', encoding="UTF-8") as f:
-##        writer = csv.writer(f, lineterminator="\n")
-##        writer.writerows(srv_output)
-##
-##def make_ccode_data():
-##    ccode_output =[]
-##    ccode_center_output =[]
-####    for i in range(5):
-##    r_get = requests.get(url_ccode)
-##
-##    ccode_list = r_get.json()
-####    with open(CCode_blacklist_file, encoding='UTF-8') as f:
-####        bl_ccodes = [s.strip() for s in f.readlines()]
-##    for ccode in ccode_list:
-##        if ccode["rarity"] <= 2:
-##            name = ccode["name"]
-##            mylist = list(ccode['extraAssets']['faces']['cc'].values())
-##            url_download = mylist[0]
-##            tmp = url_download.split('/')
-##            savefilename = tmp[-1]
-##            Image_dir_sub = Image_dir_ccode / str(ccode["rarity"]) 
-##            Image_file = Image_dir_sub / Path(savefilename)
-##            if Image_dir_sub.is_dir() == False:
-##                Image_dir_sub.mkdir()
-##            if Image_file.is_file() == False:
-##                response = requests.get(url_download)
-##                with open(Image_file, 'wb') as saveFile:
-##                    saveFile.write(response.content)
-##            img_rgb = cv2.imread(str(Image_file))
-##            h, w = img_rgb.shape[:2]
-##            size = 54
-##            hash = hasher.compute(img_rgb[int(h/2-size/2):int(h/2+size/2),
-##                                                int(w/2-size/2):int(w/2+size/2)])
-##            tmp = [name] + [ccode['rarity']] + list(hash[0])
-##    #            print(hash[0][0])
-##    #            print(tmp)
-##            ccode_output.append(tmp)
-##
-##    with open(CCode_output_file, 'w', encoding="UTF-8") as f:
-##        writer = csv.writer(f, lineterminator="\n")
-##        writer.writerows(ccode_output)
+                writer.writerow(n[:2] + [ priority] + n[2:])
+                priority = priority + 10
 
 
 if __name__ == '__main__':
     make_ce_data()
-##    make_servant_data()
 ##    make_item_data()
