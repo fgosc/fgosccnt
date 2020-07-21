@@ -440,10 +440,6 @@ class ScreenShot:
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0]  + lx :  pt[2] + lx ]
             if debug: cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card, fileextention, mode, debug))
-                
-        if reward_only == True:
-            self.reward = self.makereward()
-            return
 
         self.itemlist = self.makeitemlist()
         # 複数ファイル対応のためポイントはその都度消す
