@@ -9,6 +9,7 @@ train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下
 train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
 train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
 
+
 def file_Assignment(files):
     svm = cv2.ml.SVM_load(str(train_item))
     svm_chest = cv2.ml.SVM_load(str(train_chest))
@@ -25,8 +26,9 @@ def file_Assignment(files):
             img_rgb = fgosccnt.imread(filename)
             fileextention = f.suffix
             try:
+                fgosccnt.item_name = {5:"クエストクリア報酬QP"}
                 a = fgosccnt.ScreenShot(img_rgb, svm, svm_chest, svm_card,
-                                    fileextention, reward_only=True)
+                                        fileextention, reward_only=True)
             except:
                 print(Path(f).name, end=": ")
                 print("正常なFGOのバトルリザルトのスクショではありません")
@@ -34,8 +36,8 @@ def file_Assignment(files):
 ##            print(a.qplist)
 ##            print(a.chestnum)
 ##            print(a.pagenum)
-            if a.reward != "":
-                Qp_dir = Path(a.reward)
+            if a.itemlist != "":
+                Qp_dir = Path("QP" + "(+" + str(a.itemlist[0]["dropnum"]) + ")")
                 if not Qp_dir.is_dir():
                     Qp_dir.mkdir()
                 dstfile = Qp_dir / Path(f).name
