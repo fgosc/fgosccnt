@@ -1630,13 +1630,14 @@ def get_output(filenames, debug=False):
 
             try:
                 sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
-                all_list.append(sc.itemlist)
 
                 #2頁目以降のスクショが無い場合に migging と出力                
                 if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
                    or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    output = {'filename': 'missing'}
+                    fileoutput.append({'filename': 'missing'})
+                    all_list.append([])
                     
+                all_list.append(sc.itemlist)
                 prev_pages = sc.pages
                 prev_pagenum = sc.pagenum
 
@@ -1683,7 +1684,7 @@ def make_csv_header(item_list):
     # 余計な要素を除く
     short_list = [{"name":a["name"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in flat_list]
     ce0_flag = ("Craft Essence" not in  [d.get('card') for d in flat_list]) and \
-            (max([d.get("id") for d in flat_list]) > 8000)
+            (max([d.get("id") for d in flat_list]) > 9707500)
     if ce0_flag: short_list.append({"name":"礼装", "priority":1, "dropnum":0})
     # 重複する要素を除く
     unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
