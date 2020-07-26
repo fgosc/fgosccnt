@@ -1704,13 +1704,14 @@ def get_output(filenames, debug=False):
 
             try:
                 sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
-                all_list.append(sc.itemlist)
 
                 #2頁目以降のスクショが無い場合に migging と出力                
                 if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
                    or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    output = {'filename': 'missing'}
+                    fileoutput.append({'filename': 'missing'})
+                    all_list.append([])
                     
+                all_list.append(sc.itemlist)
                 prev_pages = sc.pages
                 prev_pagenum = sc.pagenum
 
