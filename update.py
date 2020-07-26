@@ -176,6 +176,7 @@ def compute_hash_ce(img_rgb):
 def make_item_data():
     rewardqp_output = []
     stditem_output = []
+    point_output = [] # Point & QP &抽選券
     gold_output =[]
     silver_output =[]
     bronze_output =[]
@@ -194,7 +195,7 @@ def make_item_data():
     for item in tqdm(item_list):
 
         name = item["name"]
-        if item["type"] not in ["qp", "questRewardQp", "skillLvUp", "tdLvUp", "eventItem", "dice"]:
+        if item["type"] not in ["qp", "questRewardQp", "skillLvUp", "tdLvUp", "eventItem", "eventPoint", "dice"]:
             continue
         # ここにファイルから召喚除外礼装を読み込む
         # イベント交換(ドロップ)礼装、マナプリ交換礼装
@@ -248,6 +249,8 @@ def make_item_data():
 ##        tmp = [name] + [hash_item]
         if item['background'] == 'questClearQPReward':
             rewardqp_output.append(tmp)
+        elif item["type"] in ["eventPoint", "dice"]:
+            point_output.append(tmp)
         elif item['name'] in stditem:
             stditem_output.append(tmp)
         elif item['background'] == 'gold':
@@ -267,7 +270,7 @@ def make_item_data():
     with open(Item_output_file, 'w', encoding="UTF-8") as f:
         writer = csv.writer(f, lineterminator="\n")
         # 優先順位(priority)をつける
-        for output in [rewardqp_output, stditem_output, gold_output,
+        for output in [rewardqp_output, stditem_output, point_output, gold_output,
                        silver_output, bronze_output, misc_output]:
             for n in output:
                 writer.writerow([n[0]] + [priority*10] + n[1:])
@@ -370,5 +373,5 @@ def make_ce_data():
 
 
 if __name__ == '__main__':
-    make_ce_data()
-##    make_item_data()
+##    make_ce_data()
+    make_item_data()
