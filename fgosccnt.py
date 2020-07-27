@@ -31,13 +31,11 @@ class Ordering(Enum):
 
 Item_dir = Path(__file__).resolve().parent / Path("item/equip/")
 CE_dir = Path(__file__).resolve().parent / Path("item/ce/")
+Point_dir = Path(__file__).resolve().parent / Path("item/point/")
 train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
 train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
 train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
 drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
-##Item_dist_file = Path(__file__).resolve().parent / Path("hash_item.csv")
-##CE_dist_file = Path(__file__).resolve().parent / Path("hash_ce.csv")
-##Item_nickname_file = Path(__file__).resolve().parent / Path("item_nickname.csv")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -47,17 +45,10 @@ FONTSIZE_SMALL = 1
 FONTSIZE_TINY = 2
 
 
-##nickname_dic = {}
-##with open(Item_nickname_file, encoding='UTF-8') as f:
-##    reader = csv.reader(f)
-##    for row in reader:
-##        if row[0].strip() == '' or row[1].strip() == '':
-##            continue
-##        nickname_dic[row[0]] = row[1]
-
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
-#恒常アイテムのハッシュ値
+
+# JSONファイルから各辞書を作成
 item_name = {item["id"]:item["name"] for item in drop_item}
 item_shortname = {item["id"]:item["shortname"] for item in drop_item if "shortname" in item.keys()}
 item_priority = {item["id"]:item["priority"] for item in drop_item}
@@ -76,41 +67,7 @@ dist_exp_rarity.update(dist_exp_rarity_sold)
 dist_exp_class = {item["phash_class"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_class" in item.keys()}
 dist_exp_class_sold = {item["phash_class_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_class_sold" in item.keys()}
 dist_exp_class.update(dist_exp_class_sold)
-
-
-dist_local = {
-}
-
-#恒常アイテム
-#ここに記述したものはドロップ数を読み込まない
-#順番ルールにも使われる
-# 通常 弓→槍の順番だが、種火のみ槍→弓の順番となる
-# 同じレアリティの中での順番ルールは不明
-##std_item = ['実', 'カケラ', '卵', '鏡','炉心', '神酒', '胆石', '産毛', 'スカラベ',    
-##    'ランプ', '幼角', '根', '逆鱗', '心臓', '爪', '脂', '涙石' , 
-##    '霊子', '冠', '矢尻', '鈴', 'オーロラ',  '指輪', '結氷', '勾玉','貝殻', '勲章', 
-##    '八連', '蛇玉', '羽根', 'ホム', '蹄鉄', '頁', '歯車', 'ランタン', '種', 
-##    '火薬', '鉄杭', '髄液', '毒針', '鎖', '塵', '牙', '骨', '証', 
-##    '剣秘', '弓秘', '槍秘', '騎秘', '術秘', '殺秘', '狂秘',
-##    '剣魔', '弓魔', '槍魔', '騎魔', '術魔', '殺魔', '狂魔',
-##    '剣輝', '弓輝', '槍輝', '騎輝', '術輝', '殺輝', '狂輝',
-##    '剣モ', '弓モ', '槍モ', '騎モ', '術モ', '殺モ', '狂モ',
-##    '剣ピ', '弓ピ', '槍ピ', '騎ピ', '術ピ', '殺ピ', '狂ピ',
-##    '全種火', '全灯火', '全大火', '"全猛火','全業火',
-##    '剣種火', '剣灯火', '剣大火', '剣猛火', '剣業火',
-##    '槍種火', '槍灯火', '槍大火', '槍猛火', '槍業火',
-##    '弓種火', '弓灯火', '弓大火', '弓猛火', '弓業火',
-##    '騎種火', '騎灯火', '騎大火', '騎猛火', '騎業火',
-##    '術種火', '術灯火', '術大火', '術猛火', '術業火',
-##    '殺種火', '殺灯火', '殺大火', '殺猛火', '殺業火',
-##    '狂種火', '狂灯火', '狂大火', '狂猛火', '狂業火',
-##]
-##    
-##std_item_dic = {}
-##std_item_dic['礼装'] = 0 #イベント用
-##for i in std_item:
-##    std_item_dic[i] = 0
-##drop_item_dic = std_item_dic.copy()
+dist_point = {item["id"]:item["phash_battle"] for item in drop_item if item["type"] == "Point" and "phash_battle" in item.keys()}
 
 def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
     """
@@ -190,10 +147,6 @@ class ScreenShot:
             self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card, fileextention, mode, debug))
 
         self.itemlist = self.makeitemlist()
-        # 複数ファイル対応のためポイントはその都度消す
-        if "ポイント" in dist_item.keys():
-            del dist_item[500000]
-
 
     def find_edge(self, img_th, reverse=False):
         """
@@ -535,10 +488,6 @@ class Item:
             self.ocr_digit(mode, debug)
         else:
             self.dropnum = "x1"
-        if self.category == "Point":
-            self.make_point_dist()
-        elif self.name == "ポイント":
-            self.category = "Point"
         if debug:
             print("Number of Drop: {}".format(self.dropnum))
 
@@ -1026,7 +975,7 @@ class Item:
 
         # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
         offsset_y = 2 if mode == 'na' else 0
-        if self.name in ["QP", "ポイント"] and len(self.bonus) >= 5: #ボーナスは"(+*0)"なので
+        if self.category in ["Quest Reward", "QP", "Point"] and len(self.bonus) >= 5: #ボーナスは"(+*0)"なので
             # 末尾の括弧上部からの距離を設定
 ##            base_line = item_pts_lower_yellow[-1][1] -int(4/206*self.height)
             # 1桁目の上部からの距離を設定
@@ -1036,7 +985,7 @@ class Item:
 
         # 実際の(ボーナス無し)ドロップ数の右端の位置を決定
         offset_x = -7 if mode=="na" else 0
-        if self.name in ["QP", "ポイント"]:
+        if self.category in ["Quest Reward", "QP", "Point"]:
             margin_right = 15 + offset_x           
         elif len(bonus_pts) > 0:
             margin_right = self.width - bonus_pts[0][0] + 2
@@ -1137,6 +1086,30 @@ class Item:
 
         return ""
 
+    def classify_point(self, img, debug=False):
+        """
+        imgとの距離を比較して近いアイテムを求める
+        """
+        hash_item = compute_hash(img) #画像の距離
+        itemfiles = {}
+        if debug == True:
+            hex = ""
+            for h in hash_item[0]:
+                hex = hex + "{:02x}".format(h)
+            print("phash :{}".format(hex))
+        # 既存のアイテムとの距離を比較
+        for i in dist_point.keys():
+            d = hasher.compare(hash_item, hex2hash(dist_point[i]))
+            if d <= 12:
+                itemfiles[i] = d
+        if len(itemfiles) > 0:
+            itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
+            item = next(iter(itemfiles))
+                 
+            return item[0]
+
+        return ""
+
     def classify_exp(self, img):
         hash_item = self.compute_exp_rarity_hash(img) #画像の距離
         exps = {}
@@ -1163,21 +1136,12 @@ class Item:
 
         return ""
 
-    def make_point_dist(self):
-        """
-        3行目に現れ、Point表示が削れているアイテムのために
-        Pointを登録しておく
-        """
-        if "ポイント" not in dist_item.keys():
-            dist_item[500000] = compute_hash(self.img_rgb) #画像の距離
-
-        
-    def make_new_file4ce(self, img):
+    def make_new_file(self, img, search_dir, dist_dic, priority, initial):
         """
         ファイル名候補を探す
         """
-        for i in range(99999):
-            itemfile = CE_dir / ('item{:0=6}'.format(i + 1) + '.png')
+        for i in range(999):
+            itemfile = search_dir / (initial + '{:0=3}'.format(i + 1) + '.png')
             if itemfile.is_file():
                 continue
             else:
@@ -1185,46 +1149,22 @@ class Item:
                 cv2.imwrite(itemfile.as_posix(), img_gray)
                 # id 候補を決める
                 for j in range(99999):
-                    id = j + 5000000
-                    if id in dist_ce.keys():
-                        continue
-                    id = j
-                # priotiry は固定
-                hash = compute_hash(img)
-                hash_hex = ""
-                for h in hash[0]:
-                    hash_hex = hash_hex + "{:02x}".format(h)
-                dist_ce[id] = hash_hex
-                item_name[id] = itemfile.stem
-                item_priority[id] =1000000
-                break
-        return id
-
-    def make_new_file(self, img):
-        """
-        ファイル名候補を探す
-        """
-        for i in range(99999):
-            itemfile = Item_dir / ('item{:0=6}'.format(i + 1) + '.png')
-            if itemfile.is_file():
-                continue
-            else:
-                img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
-                cv2.imwrite(itemfile.as_posix(), img_gray)
-                # id 候補を決める
-                for j in range(99999):
-                    id = j + 10000
-                    if id in dist_item.keys():
+                    id = j + 95000000
+                    if id in dist_dic.keys():
                         continue
                     break
-                # priotiry は固定
                 hash = compute_hash(img)
                 hash_hex = ""
                 for h in hash[0]:
                     hash_hex = hash_hex + "{:02x}".format(h)
-                dist_item[id] = hash_hex
+                dist_dic[id] = hash_hex
                 item_name[id] = itemfile.stem
-                item_priority[id] =1000000
+                for k in range(99999):
+                    priority = k + priority
+                    if priority in item_priority.values():
+                        continue
+                    break
+                item_priority[id] = priority
                 break
         return id
 
@@ -1261,14 +1201,16 @@ class Item:
         アイテム判別器
         """
         if self.category == "Point":
-            return 900000
+            id = self.classify_point(img, debug)
+            if id == "":
+                id = self. make_new_file(img, Point_dir, dist_point, 500000, "point")
+            return id            
         elif self.category == "Quest Reward":
-##            return "QP"
             return 5
         elif self.category == "Craft Essence":
             id = self.classify_ce(img, debug)
             if id == "":
-                id = self.make_new_file4ce(img)
+                id = self. make_new_file(img, CE_dir, dist_ce, 399999, "ce")
             return id            
         elif self.category == "Exp. UP":
             return self.classify_exp(img)
@@ -1280,12 +1222,8 @@ class Item:
             id = self.classify_item(img, debug)
             if id == "":
                 id = self.classify_exp(img)
-        ## この下に unknown を作る
-##        id = self.classify_standard_item(img, debug)
-##        if item == "":
-##            item = self.classify_local_item(img)
         if id == "":
-            id = self.make_new_file(img)
+            id = self. make_new_file(img, Item_dir, dist_item, 1000000, "item")
         return id
 
     def compute_exp_hash(self, img_rgb):
@@ -1315,15 +1253,6 @@ class Item:
                       int(5/135*self.width):int(30/135*self.width)]
         return hasher.compute(img)
 
-##    def compute_gem_hash(self, img_rgb):
-##        """
-##        魔石クラス判別器
-##        中央のクラスマークぎりぎりのハッシュを取る
-##        記述した比率はiPhone6S画像の実測値
-##        """
-##        img = img_rgb[int(41/135*self.height):int(84/135*self.height),
-##                      int(44/124*self.width):int(79/124*self.width)]
-##        return hasher.compute(img)
     def compute_gem_hash(self, img_rgb):
         """
         スキル石クラス判別器
@@ -1331,10 +1260,6 @@ class Item:
         記述した比率はiPhone6S画像の実測値
         """
         height, width = img_rgb.shape[:2]
-    ##    img = img_rgb[int(41/135*height):int(84/135*height),
-    ##                  int(44/124*width):int(79/124*width)]
-    ##    img = img_rgb[int((145-16-30/145*height):int(84/145*height),
-    ##                  int(44/132*width):int(79/132*width)]
 
         img = img_rgb[int((145-16-60*0.8)/2/145*height)+3:int((145-16+60*0.8)/2/145*height)+3,
                       int((132-52*0.8)/2/132*width):int((132+52*0.8)/2/132*width)]
@@ -1362,18 +1287,19 @@ def compute_hash_ce(img_rgb):
     img = img_rgb[12:176,9:182]
     return hasher.compute(img)
         
-def calc_dist_local():
+
+def search_file(search_dir, dist_dic, start_id, priority, category):
     """
-    既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持
+    Item, Craft Essence, Pointの各ファイルを探す
     """
-    files = Item_dir.glob('**/*.png')
+    files = search_dir.glob('**/*.png')
     for fname in files:
         img = imread(fname)
-        id = 0
+##        id = 0
         # id 候補を決める
         for j in range(99999):
-            id = j + 10000
-            if id in dist_item.keys():
+            id = j + start_id
+            if id in dist_dic.keys():
                 continue
             break
         # priotiry は固定
@@ -1382,29 +1308,23 @@ def calc_dist_local():
         hash_hex = ""
         for h in hash[0]:
             hash_hex = hash_hex + "{:02x}".format(h)
-        dist_item[id] = hash_hex
+        dist_dic[id] = hash_hex
         item_name[id] = fname.stem
-        item_priority[id] =800000
-
-    files = CE_dir.glob('**/*.png')
-    for fname in files:
-        img = imread(fname)
-        id = 0
-        # id 候補を決める
-        for j in range(99999):
-            id = j + 5000000
-            if id in dist_ce.keys():
+        for p in range(99999):
+            priority = p + priority
+            if priority in item_priority.items():
                 continue
             break
-        # priotiry は固定
-        # 800000
-        hash = compute_hash_ce(img)
-        hash_hex = ""
-        for h in hash[0]:
-            hash_hex = hash_hex + "{:02x}".format(h)
-        dist_ce[id] = hash_hex
-        item_name[id] = fname.stem
-        item_priority[id] =399999
+        item_priority[id] =priority
+        item_type[id] = category
+
+def calc_dist_local():
+    """
+    既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持
+    """
+    search_file(Item_dir, dist_item, 94100000, 800000, "Item")
+    search_file(CE_dir, dist_ce, 990000, 399999, "Craft Essence")
+    search_file(Point_dir, dist_point, 95100000, 590001, "Point")
 
 
 def hex2hash(hexstr):
@@ -1414,43 +1334,11 @@ def hex2hash(hexstr):
     return np.array([hashlist], dtype='uint8')
 
 def out_name(id):
-##    logger.debug('out_name before: %s', d)
-##    if d[-1] == '_':
-##        d = d[:-1]
     if id in item_shortname.keys():
         name = item_shortname[id]
     else:
         name = item_name[id]
-##    if d[-1].isdigit():
-##        d = d + '_'
-##    logger.debug('out_name after: %s', d)
     return name
-
-def calc_dist():
-    """
-    既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持
-    """
-    global item_priority
-    global dist_item
-    global dist_ce
-    global item_name
-    
-    with open(Item_dist_file, encoding='UTF-8') as f:
-        reader = csv.DictReader(f)
-        lines = [row for row in reader]
-    for l in lines:
-        item_name[int(l["id"])] = l["name"]
-        item_priority[int(l["id"])] = int(l["priority"])
-        if l["phash"] != "":
-            dist_item[int(l["id"])] = hex2hash(l["phash"])
-    with open(CE_dist_file, encoding='UTF-8') as f:
-        reader = csv.DictReader(f)
-        lines = [row for row in reader]
-    for l in lines:
-        item_name[int(l["id"])] = l["name"]
-        item_priority[int(l["id"])] = int(l["priority"])
-        if l["phash"] != "":
-            dist_ce[int(l["id"])] = hex2hash(l["phash"])
 
 def get_output(filenames, debug=False):
     """
@@ -1491,30 +1379,30 @@ def get_output(filenames, debug=False):
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
 
-##            try:
-            sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
+            try:
+                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
 
-            #2頁目以降のスクショが無い場合に migging と出力                
-            if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
-               or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                fileoutput.append({'filename': 'missing'})
-                all_list.append([])
-                
-            all_list.append(sc.itemlist)
-            prev_pages = sc.pages
-            prev_pagenum = sc.pagenum
+                #2頁目以降のスクショが無い場合に migging と出力                
+                if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
+                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                    fileoutput.append({'filename': 'missing'})
+                    all_list.append([])
+                    
+                all_list.append(sc.itemlist)
+                prev_pages = sc.pages
+                prev_pagenum = sc.pagenum
 
-            sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
-            output = { 'filename': str(filename),'ドロ数':sumdrop}
-            if sc.pagenum == 1:
-                if sc.lines >= 7:
-                    output["ドロ数"] = str(output["ドロ数"]) + "++"
-                elif sc.lines >= 4:
+                sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
+                output = { 'filename': str(filename),'ドロ数':sumdrop}
+                if sc.pagenum == 1:
+                    if sc.lines >= 7:
+                        output["ドロ数"] = str(output["ドロ数"]) + "++"
+                    elif sc.lines >= 4:
+                        output["ドロ数"] = str(output["ドロ数"]) + "+"
+                elif sc.pagenum == 2 and sc.lines >= 7:             
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
-            elif sc.pagenum == 2 and sc.lines >= 7:             
-                output["ドロ数"] = str(output["ドロ数"]) + "+"
-##            except:
-##                output = ({'filename': str(filename) + ': not valid'})
+            except:
+                output = ({'filename': str(filename) + ': not valid'})
         fileoutput.append(output)
     return fileoutput, all_list
 
@@ -1545,20 +1433,22 @@ def make_csv_header(item_list):
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
-    short_list = [{"id":a["id"], "name":a["name"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in flat_list]
+    short_list = [{"id":a["id"], "name":a["name"], "category":a["category"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in flat_list]
     ce0_flag = ("Craft Essence" not in  [d.get('category') for d in flat_list]) and \
             (max([d.get("id") for d in flat_list]) > 9707500)
-    if ce0_flag: short_list.append({"name":"礼装", "priority":1, "dropnum":0})
+    if ce0_flag: short_list.append({"name":"礼装", "category":"Craft Essence", "priority":1, "dropnum":0})
     # 重複する要素を除く
     unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
     # ソート
     new_list = sorted(sorted(unique_list, key=itemgetter('dropnum')), key=itemgetter('priority'))
     header = []
     for l in new_list:
-        if l['name'] in [ 'クエストクリア報酬QP',  'QP', 'ポイント']:
+        if l['category'] in [ 'Quest Reward',  'QP', 'Point']:
             tmp = out_name(l['id']) + "(+" + change_value(l["dropnum"]) + ")"
         elif l["dropnum"] > 1:
             tmp = out_name(l['id']) + "(x" + change_value(l["dropnum"]) + ")"
+        elif l["name"] == "礼装":
+            tmp = "礼装"
         else:
             tmp = out_name(l['id'])
         header.append(tmp)
@@ -1571,7 +1461,7 @@ def make_csv_data(sc_list, ce0_flag):
     for sc in sc_list:
         tmp = []
         for l in sc:
-            if l['name'] in [ 'クエストクリア報酬QP',  'QP', 'ポイント']:
+            if l['category'] in [ 'Quest Reward',  'QP', 'Point']:
                 tmp.append(out_name(l['id']) + "(+" + change_value(l["dropnum"]) + ")")
             elif l["dropnum"] > 1:
                 tmp.append(out_name(l['id']) + "(x" + change_value(l["dropnum"]) + ")")
@@ -1597,11 +1487,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()    # 引数を解析
 
-    if not Item_dir.is_dir():
-        Item_dir.mkdir(parents=True)
-
-    if not CE_dir.is_dir():
-        CE_dir.mkdir(parents=True)
+    for ndir in [Item_dir, CE_dir, Point_dir]:
+        if not ndir.is_dir():
+            ndir.mkdir(parents=True)
 
     if args.folder:
         inputs = [x for x in Path(args.folder).iterdir()]
