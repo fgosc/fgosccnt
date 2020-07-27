@@ -46,8 +46,6 @@ FONTSIZE_NORMAL = 0
 FONTSIZE_SMALL = 1
 FONTSIZE_TINY = 2
 
-item_name = {}
-item_priority = {}
 
 ##nickname_dic = {}
 ##with open(Item_nickname_file, encoding='UTF-8') as f:
@@ -60,201 +58,25 @@ item_priority = {}
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
 #恒常アイテムのハッシュ値
+item_name = {item["id"]:item["name"] for item in drop_item}
+item_shortname = {item["id"]:item["shortname"] for item in drop_item if "shortname" in item.keys()}
+item_priority = {item["id"]:item["priority"] for item in drop_item}
+item_type = {item["id"]:item["type"] for item in drop_item}
 dist_item = {item["id"]:item["phash_battle"] for item in drop_item if item["type"] == "Item" and "phash_battle" in item.keys()}
 dist_ce = {item["id"]:item["phash"] for item in drop_item if item["type"] == "Craft Essence"}
+dist_secret_gem = {item["id"]:item["phash_class"] for item in drop_item if 6200 < item["id"] < 6208 and "phash_class" in item.keys()}
+dist_magic_gem = {item["id"]:item["phash_class"] for item in drop_item if 6100 < item["id"] < 6108 and "phash_class" in item.keys()}
+dist_gem = {item["id"]:item["phash_class"] for item in drop_item if 6000 < item["id"] < 6008 and "phash_class" in item.keys()}
 dist_exp = {item["phash"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash" in item.keys()}
 dist_exp_sold = {item["phash_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_sold" in item.keys()}
 dist_exp.update(dist_exp_sold)
-print(dist_ce)
-print(dist_exp)
-exit()
+dist_exp_rarity = {item["phash_rarity"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_rarity" in item.keys()}
+dist_exp_rarity_sold = {item["phash_rarity_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_rarity_sold" in item.keys()}
+dist_exp_rarity.update(dist_exp_rarity_sold)
+dist_exp_class = {item["phash_class"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_class" in item.keys()}
+dist_exp_class_sold = {item["phash_class_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_class_sold" in item.keys()}
+dist_exp_class.update(dist_exp_class_sold)
 
-#秘石を見分けるハッシュ値
-dist_hiseki = {
-##    '剣秘':np.array([[101, 225,  88, 190, 105, 145,  88, 225]], dtype='uint8'),
-##    '弓秘':np.array([[ 29, 240, 102, 190, 122, 197,  25, 240]], dtype='uint8'),
-##    '槍秘':np.array([[121, 252,  88, 243,  38,  79, 148, 174]], dtype='uint8'),
-##    '騎秘':np.array([[ 70,  49,  73, 234, 121, 156,  24, 196]], dtype='uint8'),
-##    '術秘':np.array([[107, 102,  16, 157,  86, 113,  13, 192]], dtype='uint8'),
-##    '殺秘':np.array([[ 95, 121,  73, 238,  90, 165,  20,  80]], dtype='uint8'),
-##    '狂秘':np.array([[126, 153,  89, 230, 137, 165,  16, 112]], dtype='uint8'),
-}
-
-#魔石を見分けるハッシュ値
-dist_maseki = {
-##    '剣魔':np.array([[153, 158, 230, 103, 126, 111, 175, 92]], dtype='uint8'),
-##    '弓魔':np.array([[227, 242, 24, 254, 141, 255, 230, 189]], dtype='uint8'),
-##    '槍魔':np.array([[131, 2, 60, 252, 248, 181, 106, 209]], dtype='uint8'),
-##    '騎魔':np.array([[185, 202, 118, 52, 206, 227, 247, 56]], dtype='uint8'),
-##    '術魔':np.array([[145, 153, 110, 98, 120, 158, 242, 59]], dtype='uint8'),
-##    '殺魔':np.array([[233, 230, 94, 27, 239, 251, 235, 165]], dtype='uint8'),
-##    '狂魔':np.array([[1, 230, 238, 154, 126, 91, 175, 167]], dtype='uint8'),
-}
-
-#輝石を見分けるハッシュ値
-dist_kiseki = {
-##    '剣輝':np.array([[152, 191, 158, 101,  30, 102, 165,  62]], dtype='uint8'),
-##    '弓輝':np.array([[ 96, 171, 154,  86, 143,  18, 230, 185]], dtype='uint8'),
-##    '槍輝':np.array([[  0,  11, 126,  92, 218, 180,  34,  89]], dtype='uint8'),
-##    '騎輝':np.array([[ 56, 203, 118,  20, 142, 163, 103,  56]], dtype='uint8'),
-##    '術輝':np.array([[ 16, 153,  78,  98,  58, 150, 242,  59]], dtype='uint8'),
-##    '殺輝':np.array([[224, 175,  94,  81, 175,  90,  97, 166]], dtype='uint8'),
-##    '狂輝':np.array([[ 17, 239, 254,  90, 126,  91, 166, 175]], dtype='uint8'),
-}
-
-#種火を見分けるハッシュ値
-dist_tanebi = {
-##    '全種火':np.array([[241,  88, 142, 178,  78, 205, 238,  43]], dtype='uint8'),
-##    '剣種火':np.array([[241,  42,  46, 187,  79, 253, 110, 172]], dtype='uint8'),
-##    '弓種火':np.array([[241, 248, 174, 186,  79, 253,  78, 172]], dtype='uint8'),
-##    '槍種火':np.array([[241, 248, 174, 186,  15, 253,  79, 172]], dtype='uint8'),
-##    '騎種火':np.array([[241,  43,  46, 187,  79, 249, 238, 172]], dtype='uint8'),
-##    '術種火':np.array([[241,  40,  46, 187,  15, 253, 110, 172]], dtype='uint8'),
-##    '殺種火':np.array([[241,  42,  46, 186, 111, 249, 238, 172]], dtype='uint8'),
-##    '狂種火':np.array([[241,  43,  46, 187, 111, 249, 238, 168]], dtype='uint8'),
-##    '剣灯火':np.array([[243, 222,  46,  99, 207, 153, 126, 237]], dtype='uint8'),
-##    '弓灯火':np.array([[243, 220,  46, 227, 207, 153, 126, 205]], dtype='uint8'),
-##    '槍灯火':np.array([[241, 220,  46,  99, 207,  27, 126, 205]], dtype='uint8'),
-##    '騎灯火':np.array([[115,  94,  46,  99, 207, 153, 254, 237]], dtype='uint8'),
-##    '術灯火':np.array([[243, 222,  46,  99, 207, 153, 126, 237]], dtype='uint8'),
-##    '殺灯火':np.array([[243, 222,  46, 227, 207, 185, 254, 237]], dtype='uint8'),
-##    '狂灯火':np.array([[123,  94,  46,  99, 207, 185, 246, 237]], dtype='uint8'),
-##    '剣大火':np.array([[ 51, 120,  78, 147, 182, 104,  43, 230]], dtype='uint8'),
-##    '弓大火':np.array([[243, 248,  74, 147, 182, 106,  43, 166]], dtype='uint8'),
-##    '槍大火':np.array([[243, 248,  74, 147, 182, 110,  47, 166]], dtype='uint8'),
-##    '騎大火':np.array([[ 51, 120,  14, 147, 182, 104,  43, 230]], dtype='uint8'),
-##    '術大火':np.array([[ 51, 120,  74, 147, 182, 110,  43, 230]], dtype='uint8'),
-##    '殺大火':np.array([[ 51, 120,  78, 147, 182, 104,  43, 230]], dtype='uint8'),
-##    '狂大火':np.array([[ 51, 120,  14, 147, 182, 232,  41, 230]], dtype='uint8'),
-##    '剣猛火':np.array([[ 11,  40, 244, 186, 158, 243, 207, 163]], dtype='uint8'),
-##    '弓猛火':np.array([[ 11,  40, 244, 186, 158, 211, 207, 163]], dtype='uint8'),
-##    '槍猛火':np.array([[ 11,  40, 244, 186, 158, 211, 207, 163]], dtype='uint8'),
-##    '騎猛火':np.array([[ 11,  42, 252, 186, 158, 243, 207, 161]], dtype='uint8'),
-##    '術猛火':np.array([[ 11,  40, 244, 186, 158, 243, 207, 163]], dtype='uint8'),
-##    '殺猛火':np.array([[ 11,  40, 244, 186, 190, 243, 207, 161]], dtype='uint8'),
-##    '狂猛火':np.array([[ 11,  42, 252, 186, 158, 243, 207, 160]], dtype='uint8'),
-##    '剣業火':np.array([[ 41,  47, 254, 248,  47,  94, 123, 175]], dtype='uint8'),
-##    '弓業火':np.array([[ 41, 175, 254, 248,  47,  94, 123, 175]], dtype='uint8'),
-##    '槍業火':np.array([[ 41,  47, 254, 248,  47,  94, 123, 175]], dtype='uint8'),
-####    '騎業火':np.array(, dtype='uint8'),
-##    '術業火':np.array([[ 41,  47, 254, 248,  47,  94, 123, 175,]], dtype='uint8'),
-##    '殺業火':np.array([[ 41,  47, 238, 248,  47, 222, 123, 175,]], dtype='uint8'),
-##    '狂業火':np.array([[ 41,  47, 190, 248,  47, 222, 115, 160,]], dtype='uint8'),
-##    '全種火変換':np.array([[ 75, 248, 248,   7, 244, 172,   6, 182]], dtype='uint8'),
-##    '剣種火変換':np.array([[ 11, 248, 248,  15, 244, 172,   6, 150]], dtype='uint8'),
-##    '弓種火変換':np.array([[ 75, 248, 248,  15, 244, 172,   6, 150]], dtype='uint8'),
-##    '槍種火変換':np.array([[ 75, 248, 248,  15, 244, 172,   6, 150]], dtype='uint8'),
-##
-##
-##    '騎種火変換':np.array([[ 11, 248, 248,  15, 244, 172,   6, 150]], dtype='uint8'),
-##    '術種火変換':np.array([[ 75, 248, 248,  15, 244, 172,   6, 150]], dtype='uint8'),
-##    '殺種火変換':np.array([[ 11, 248, 249,  15, 244, 172,   6, 150]], dtype='uint8'),
-##    '狂種火変換':np.array([[ 11, 248, 249,  15, 244, 172,   6, 150]], dtype='uint8'),
-##    '剣灯火変換':np.array([[ 11, 248, 248,   7, 244, 172,   6, 134]], dtype='uint8'),
-##    '弓灯火変換':np.array([[139, 248, 248,   7, 244, 172,   6, 134]], dtype='uint8'),
-##    '槍灯火変換':np.array([[139, 248, 248,   7, 116, 172,   6, 134]], dtype='uint8'),
-##
-##
-##    '騎灯火変換':np.array([[ 11, 248, 248,   7, 244, 172,   6, 134]], dtype='uint8'),
-##    '術灯火変換':np.array([[139, 248, 249,   7, 116, 172,   6, 134]], dtype='uint8'),
-##    '殺灯火変換':np.array([[139, 248, 249,   7, 244, 172,   6, 134]], dtype='uint8'),
-##    '狂灯火変換':np.array([[ 11, 248, 249,   7, 244, 172,   6, 134]], dtype='uint8'),
-##    '剣大火変換':np.array([[  7, 249, 248, 191, 166, 143,  46, 244]], dtype='uint8'),
-##    '弓大火変換':np.array([[  7, 249, 248, 191, 166, 143,  46, 244]], dtype='uint8'),
-##    '槍大火変換':np.array([[  3, 249, 248, 191, 166, 143,  46, 244]], dtype='uint8'),
-##    '騎大火変換':np.array([[  7, 249, 248, 191, 166, 143,  46, 244]], dtype='uint8'),
-##    '術大火変換':np.array([[  3, 249, 248, 191, 166, 143,  46, 244]], dtype='uint8'),
-##    '殺大火変換':np.array([[  3, 249, 248, 191, 166, 143,  46, 244]], dtype='uint8'),
-##    '狂大火変換':np.array([[  7, 249, 248, 191, 166, 143, 174, 244]], dtype='uint8'),
-##    '剣猛火変換':np.array([[ 11, 248, 248, 159,  38, 143, 206, 240]], dtype='uint8'),
-##    '弓猛火変換':np.array([[ 11, 248, 248, 159,  38, 143, 206, 240]], dtype='uint8'),
-##    '槍猛火変換':np.array([[ 11, 248, 248, 159,  38, 143, 206, 240]], dtype='uint8'),
-##    '騎猛火変換':np.array([[ 11, 248, 248, 159,  38, 135, 206, 240]], dtype='uint8'),
-##    '術猛火変換':np.array([[ 11, 248, 248, 159,  38, 143, 206, 240]], dtype='uint8'),
-##    '殺猛火変換':np.array([[ 11, 248, 248, 159,  38, 143, 206, 240]], dtype='uint8'),
-##    '狂猛火変換':np.array([[ 11, 122, 248, 159,  38, 135, 206, 240]], dtype='uint8'),
-}
-
-#種火のレアリティを見分けるハッシュ値
-dist_tanebi_rarity = {
-##    '種火':np.array([[161,  37, 182, 205, 217, 217,  89, 190]], dtype='uint8'),
-##    '灯火':np.array([[233, 108,  54, 198, 219, 123, 189, 181]], dtype='uint8'),
-##    '大火':np.array([[211, 180,  61,   6, 188, 171,  45, 231]], dtype='uint8'),
-##    '猛火':np.array([[157,  51, 164, 180, 114,  92,  88, 161]], dtype='uint8'),
-##    '業火':np.array([[225, 127, 240,  27,  46, 218,  24,   2]], dtype='uint8'),
-##    '種火変換':np.array([[ 15, 224, 159, 112, 217,  31, 224, 159]], dtype='uint8'),
-##    '灯火変換':np.array([[143, 224,  63,  68, 216,  63, 240, 159]], dtype='uint8'),
-##    '大火変換':np.array([[ 30,  30,  32,  96, 136,  63, 240, 244]], dtype='uint8'),
-##    '猛火変換':np.array([[158,  30, 164,  64, 160,  95, 240, 122]], dtype='uint8'),
-}
-#種火のクラス見分けるハッシュ値
-dist_tanebi_class = {
-##    '全種火':np.array([[161, 223,  56,  15,  62,  41, 199,   5]], dtype='uint8'),
-##    '剣種火':np.array([[217,  95, 229,  49,  62,  39,  30,  10]], dtype='uint8'),
-##    '弓種火':np.array([[115,  63, 137,  53, 173,  42, 106,   5]], dtype='uint8'),
-##    '槍種火':np.array([[227,  51,  37,  44, 120, 178,  43,  65]], dtype='uint8'),
-##    '騎種火':np.array([[153, 111,  22,  22, 230,  35,  63,   8]], dtype='uint8'),
-##    '術種火':np.array([[213, 157,  39,  35,  60,  86,  58, 141]], dtype='uint8'),
-##    '殺種火':np.array([[249,  54,  22,  57, 177,  41,  39,  74]], dtype='uint8'),
-##    '狂種火':np.array([[ 73, 167, 246,  30,  58,  25, 247,  33]], dtype='uint8'),
-##    '剣灯火':np.array([[217, 223, 167,  33,  62,  35,  30,  10]], dtype='uint8'),
-##    '弓灯火':np.array([[119, 191, 137,  37, 141,  42, 106,   5]], dtype='uint8'),
-##    '槍灯火':np.array([[227, 243,   5,  44, 120, 178,  43,  73]], dtype='uint8'),
-##    '騎灯火':np.array([[153, 111,  22,  22, 230,  35,  59,   8]], dtype='uint8'),
-##    '術灯火':np.array([[221, 157,  39,  35,  60,  86,  58,  13]], dtype='uint8'),
-##    '殺灯火':np.array([[249,  54,  22,  57, 176,  41,  39,  74]], dtype='uint8'),
-##    '狂灯火':np.array([[ 73, 167, 246,  30,  42,  25, 247,  33]], dtype='uint8'),
-##    '剣大火':np.array([[217,  91, 229,  33,  58,  35,  62,  10]], dtype='uint8'),
-##    '弓大火':np.array([[115,  45, 137,  53, 173,  42, 106,   5]], dtype='uint8'),
-##    '槍大火':np.array([[227,  51,  37,  44, 120, 178,  43,  72]], dtype='uint8'),
-##    '騎大火':np.array([[185, 105,  22,  60, 230,  35,  63,   8]], dtype='uint8'),
-##    '術大火':np.array([[149, 141,  38,  51, 188,  86,  58, 141]], dtype='uint8'),
-##    '殺大火':np.array([[249,  38,  22,  57, 248,  41,  55,  74]], dtype='uint8'),
-##    '狂大火':np.array([[ 73, 167, 246,  94,  58,  27, 255,  33]], dtype='uint8'),
-##    '剣猛火':np.array([[217,  95, 245,  49,  62,  47,  30,  10]], dtype='uint8'),
-##    '弓猛火':np.array([[113,  55, 152,  55, 125,  43, 106,   7]], dtype='uint8'),
-##    '槍猛火':np.array([[225,  35,  20,  44, 120,  62,  59,  72]], dtype='uint8'),
-##    '騎猛火':np.array([[217, 109,  22,  54, 238,  43,  63,   8]], dtype='uint8'),
-##    '術猛火':np.array([[ 81, 221,  38,  35,  60,  86,  26, 141]], dtype='uint8'),
-##    '殺猛火':np.array([[249,  39,  86,  57, 244,  43,  39,  74]], dtype='uint8'),
-##    '狂猛火':np.array([[ 89,  39, 246,  94,  58,  27, 119,  33]], dtype='uint8'),
-##    '剣業火':np.array([[217, 223, 161,  57,  62,  43,  30,  10]], dtype='uint8'),
-##    '弓業火':np.array([[115, 191, 136,  63,  45,  42,  42,   5]], dtype='uint8'),
-##    '槍業火':np.array([[225, 179,   4,  44, 120,  58,  59,  72]], dtype='uint8'),
-####    '騎業火':np.array(, dtype='uint8'),
-##    '術業火':np.array([[ 17, 253,  38,  43,  60,  82,  26, 141]], dtype='uint8'),
-##    '殺業火':np.array([[169, 182,  22,  57, 254,  43,  55,  74]], dtype='uint8'),
-##    '狂業火':np.array([[ 73, 167, 246, 126,  58,  27, 119,  32]], dtype='uint8'),
-##    '全種火変換':np.array([[224, 223,  57,  15,  62,  41,   7,   5]], dtype='uint8'),
-##    '剣種火変換':np.array([[216, 223, 229,  53,  62,  37,  30,   8]], dtype='uint8'),
-##    '弓種火変換':np.array([[118,  63, 137,  53,  44,  43,  42,   5]], dtype='uint8'),
-##    '槍種火変換':np.array([[226,  51,  37,  45, 120,  49,  42,  64]], dtype='uint8'),
-##    '騎種火変換':np.array([[152, 111,  22,  22, 230,  35,  62,   8]], dtype='uint8'),
-##    '術種火変換':np.array([[ 92, 157,  39,  35,  60,  87,  26,  13]], dtype='uint8'),
-##    '殺種火変換':np.array([[249,  54,  22,  57, 184,  41,  39,  10]], dtype='uint8'),
-##    '狂種火変換':np.array([[ 73,  39, 246,  30,  58,  25,  55,  33]], dtype='uint8'),
-##    '剣灯火変換':np.array([[216, 223, 167,  49,  62,  37,  30,  10]], dtype='uint8'),
-##    '弓灯火変換':np.array([[118,  63, 137,  53,  44,  43,  42,   5]], dtype='uint8'),
-##    '槍灯火変換':np.array([[ 98, 179,  37,  45,  56,  49,  42,  72]], dtype='uint8'),
-##    '騎灯火変換':np.array([[152, 111,  22,  22, 166,  35,  58,   8]], dtype='uint8'),
-##    '術灯火変換':np.array([[ 28, 159,  39,  35,  60,  87,  26,  13]], dtype='uint8'),
-##    '殺灯火変換':np.array([[249,  54,  22,  57, 184,  41,  38,  10]], dtype='uint8'),
-##    '狂灯火変換':np.array([[ 73, 167, 246,  30,  58,  25, 247,  33]], dtype='uint8'),
-##    '剣大火変換':np.array([[216,  91, 229,  49,  58,  39,  62,  10]], dtype='uint8'),
-##    '弓大火変換':np.array([[114,  63, 137,  61, 173,  42,  42,   5]], dtype='uint8'),
-##    '槍大火変換':np.array([[226,  51,  37,  44, 120,  51,  43,  72]], dtype='uint8'),
-##    '騎大火変換':np.array([[185, 111,  54,  62, 230,  35,  63,   8]], dtype='uint8'),
-##    '術大火変換':np.array([[156, 141,  38,  51,  60,  86,  58,  13]], dtype='uint8'),
-##    '殺大火変換':np.array([[249,  38,  22,  57, 184,  41,  55,  10]], dtype='uint8'),
-##    '狂大火変換':np.array([[ 73,  39, 246,  62,  58,  27, 127,  33]], dtype='uint8'),
-##    '剣猛火変換':np.array([[216,  95, 245,  53,  62,  47,  30,  10]], dtype='uint8'),
-##    '弓猛火変換':np.array([[112,  63, 153,  63, 124,  43,  42,   7]], dtype='uint8'),
-##    '槍猛火変換':np.array([[224,  55,  21,  45, 120,  63,  58,  72]], dtype='uint8'),
-##    '騎猛火変換':np.array([[217, 111,  22,  54, 238,  35,  58,   8]], dtype='uint8'),
-##    '術猛火変換':np.array([[ 93, 253,  39,  43,  60,  86,  26,  13]], dtype='uint8'),
-##    '殺猛火変換':np.array([[249,  54,  86,  57, 248,  43,  39,  10]], dtype='uint8'),
-##    '狂猛火変換':np.array([[ 89,  39, 246,  30,  58,  27,  23,  33]], dtype='uint8'),
-}
 
 dist_local = {
 }
@@ -494,7 +316,7 @@ class ScreenShot:
         itemlist = []
         for i, item in enumerate(self.items):
             tmp = {}
-            if item.card == "Quest Reward":
+            if item.category == "Quest Reward":
                 tmp['id'] = 5
                 tmp['name'] = "クエストクリア報酬QP"
                 tmp['priority'] = 0
@@ -504,7 +326,7 @@ class ScreenShot:
                 tmp['priority'] = item_priority[item.id]
             tmp['dropnum'] = int(item.dropnum[1:])
             tmp['bonus'] = item.bonus
-            tmp['card'] = item.card
+            tmp['category'] = item.category
             itemlist.append(tmp)
         return itemlist
 
@@ -695,25 +517,28 @@ class Item:
         self.fileextention = fileextention
         
         self.height, self.width = img_rgb.shape[:2]
-        self.card = self.classify_card(svm_card)
-        self.id = self.classify_item(img_rgb, debug)
+        self.category = self.classify_category(svm_card)
+        self.id = self.classify_card(img_rgb, debug)
         self.name = item_name[self.id]
-        if self.card == "":
-            if self.name.endswith('火'): self.card ="Exp. UP"
+        if self.category == "":
+            if self.id in item_type:
+                self.category = item_type[self.id]
+            else:
+                self.category = "Item"
         if debug == True:
-            print("Card Type: {}".format(self.card))
+            print("Category: {}".format(self.category))
             print("Name: {}".format(self.name))
 
         self.svm = svm
         self.bonus = ""
-        if self.card != "Craft Essence" and self.card != "Exp. UP":
+        if self.category != "Craft Essence" and self.category != "Exp. UP":
             self.ocr_digit(mode, debug)
         else:
             self.dropnum = "x1"
-        if self.card == "Point":
+        if self.category == "Point":
             self.make_point_dist()
         elif self.name == "ポイント":
-            self.card = "Point"
+            self.category = "Point"
         if debug:
             print("Number of Drop: {}".format(self.dropnum))
 
@@ -1222,15 +1047,28 @@ class Item:
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
 
-    def classify_standard_item(self, img, debug=False):
+    def gem_img2id(self, img, gem_dict):
+        hash_gem = self.compute_gem_hash(img)
+        gems = {}
+        for i in gem_dict.keys():
+            d2 = hasher.compare(hash_gem, hex2hash(gem_dict[i]))
+            if d2 <= 20:
+                gems[i] = d2
+        gems = sorted(gems.items(), key=lambda x:x[1])
+        gem = next(iter(gems))
+        return gem[0]
+
+##    def classify_standard_item(self, img, debug=False):
+    def classify_item(self, img, debug=False):
+
         """
         imgとの距離を比較して近いアイテムを求める
         id を返すように変更
         """
-        # 種火かどうかの判別
-        id = self.classify_tanebi(img)
-        if id != "":
-            return id
+##        # 種火かどうかの判別
+##        id = self.classify_exp(img)
+##        if id != "":
+##            return id
 
         hash_item = compute_hash(img) #画像の距離
         ids = {}
@@ -1238,10 +1076,10 @@ class Item:
             hex = ""
             for h in hash_item[0]:
                 hex = hex + "{:02x}".format(h)
-            print("hash :{}".format(hex))
+            print("phash :{}".format(hex))
         # 既存のアイテムとの距離を比較
         for i in dist_item.keys():
-            d = hasher.compare(hash_item, dist_item[i])
+            d = hasher.compare(hash_item, hex2hash(dist_item[i]))
             if d <= 12:
             #ポイントと種の距離が8という例有り(IMG_0274)→16に
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に
@@ -1250,38 +1088,13 @@ class Item:
             ids = sorted(ids.items(), key=lambda x:x[1])
             id_tupple = next(iter(ids))
             id = id_tupple[0]
-            if item_name[id].endswith("秘"):
-                hash_hi = self.compute_maseki_hash(img)
-                hisekifiles = {}
-                for i in dist_hiseki.keys():
-                    d2 = hasher.compare(hash_hi, dist_hiseki[i])
-                    if d2 <= 20:
-                        hisekifiles[i] = d2
-                hisekifiles = sorted(hisekifiles.items(), key=lambda x:x[1])
-                item = next(iter(hisekifiles))
-                id = [k for k in item_name.keys() if item_name[k] == item[0][0] + "の秘石"][0]
-            elif item_name[id].endswith("魔石"):
-                hash_ma = self.compute_maseki_hash(img)
-                masekifiles = {}
-                for i in dist_maseki.keys():
-                    d2 = hasher.compare(hash_ma, dist_maseki[i])
-                    if d2 <= 20:
-                        masekifiles[i] = d2
-                masekifiles = sorted(masekifiles.items(), key=lambda x:x[1])
-                item = next(iter(masekifiles))
-                id = [k for k in item_name.keys() if item_name[k] == item[0][0] + "の魔石"][0]
-            elif item_name[id].endswith("輝石"):
-                hash_ki = self.compute_maseki_hash(img)
-                kisekifiles = {}
-                for i in dist_kiseki.keys():
-                    d2 = hasher.compare(hash_ki, dist_kiseki[i])
-                    if d2 <= 20:
-                        kisekifiles[i] = d2
-                kisekifiles = sorted(kisekifiles.items(), key=lambda x:x[1])
-                item = next(iter(kisekifiles))
-                id = [k for k in item_name.keys() if item_name[k] == item[0][0] + "の輝石"][0]
-            elif item_name[id].endswith("モニュメント") \
-                 or item_name[id].endswith("ピース"):
+            if 6200 < id < 6208:
+                id = self.gem_img2id(img, dist_secret_gem)
+            elif 6100 < id < 6108:
+                id = self.gem_img2id(img, dist_magic_gem)
+            elif 6000 < id < 6008:
+                id = self.gem_img2id(img, dist_gem)
+            elif 7000 < id < 7108:
                 #ヒストグラム
                 img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
                 h, w = img_hsv.shape[:2]
@@ -1289,10 +1102,12 @@ class Item:
                 hist_s = cv2.calcHist([img_hsv],[1],None,[256],[0,256]) #Bのヒストグラムを計算
                 minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist_s)
                 if maxLoc[1] > 128:
-                    item = item_name[id].replace("モニュメント","").replace("ピース","") + "モニュメント"
+##                    item = item_name[id].replace("モニュメント","").replace("ピース","") + "モニュメント"
+                    id = int(str(id)[0] + "1" + str(id)[2:])
                 else:
-                    item = item_name[id].replace("モニュメント","").replace("ピース","") + "ピース"
-                id = [k for k in item_name.keys() if item_name[k] == item][0]
+##                    item = item_name[id].replace("モニュメント","").replace("ピース","") + "ピース"
+                    id = int(str(id)[0] + "0" + str(id)[2:])
+##                id = [k for k in item_name.keys() if item_name[k] == item][0]
                 
             return id
 
@@ -1305,10 +1120,13 @@ class Item:
         hash_item = compute_hash_ce(img) #画像の距離
         itemfiles = {}
         if debug == True:
-            print(":np.array([" + str(list(hash_item[0])) + "], dtype='uint8'),")
+            hex = ""
+            for h in hash_item[0]:
+                hex = hex + "{:02x}".format(h)
+            print("phash :{}".format(hex))
         # 既存のアイテムとの距離を比較
         for i in dist_ce.keys():
-            d = hasher.compare(hash_item, dist_ce[i])
+            d = hasher.compare(hash_item, hex2hash(dist_ce[i]))
             if d <= 12:
                 itemfiles[i] = d
         if len(itemfiles) > 0:
@@ -1319,27 +1137,29 @@ class Item:
 
         return ""
 
-    def classify_tanebi(self, img):
-        hash_item = self.compute_tanebi_rarity_hash(img) #画像の距離
-        itemfiles = {}
-        for i in dist_tanebi_rarity.keys():
-            dt = hasher.compare(hash_item, dist_tanebi_rarity[i])
+    def classify_exp(self, img):
+        hash_item = self.compute_exp_rarity_hash(img) #画像の距離
+        exps = {}
+        for i in dist_exp_rarity.keys():
+            dt = hasher.compare(hash_item, hex2hash(i))
             if dt <= 15: #IMG_1833で11 IMG_1837で15
-                itemfiles[i] = dt
-        itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
-        if len(itemfiles) > 0:
-            item = next(iter(itemfiles))
-            hash_tanebi_class = self.compute_tanebi_class_hash(img)
-            tanebiclassfiles = {}
-            for i in dist_tanebi_class.keys():
-                dtc = hasher.compare(hash_tanebi_class, dist_tanebi_class[i])
-                tanebiclassfiles[i] = dtc
-            tanebiclassfiles = sorted(tanebiclassfiles.items(), key=lambda x:x[1])
-            tanebiclass = next(iter(tanebiclassfiles))
+                exps[i] = dt
+        exps = sorted(exps.items(), key=lambda x:x[1])
+        if len(exps) > 0:
+            exp = next(iter(exps))
 
-            item = tanebiclass[0][0] + item[0].replace('変換', '')
-            id = [k for k in item_name.keys() if item_name[k] == item][0]
-            return id
+            hash_exp_class = self.compute_exp_class_hash(img)
+            exp_classes = {}
+            for j in dist_exp_class.keys():
+                dtc = hasher.compare(hash_exp_class, hex2hash(j))
+                exp_classes[j] = dtc
+            exp_classes = sorted(exp_classes.items(), key=lambda x:x[1])
+            exp_class = next(iter(exp_classes))
+
+            return int(str(dist_exp_class[exp_class[0]])[:4] + str(dist_exp_rarity[exp[0]])[4] + "00")
+##            item = tanebiclass[0][0] + item[0].replace('変換', '')
+##            id = [k for k in item_name.keys() if item_name[k] == item][0]
+##            return id
 
         return ""
 
@@ -1370,7 +1190,11 @@ class Item:
                         continue
                     id = j
                 # priotiry は固定
-                dist_ce[id] = compute_hash(img)
+                hash = compute_hash(img)
+                hash_hex = ""
+                for h in hash[0]:
+                    hash_hex = hash_hex + "{:02x}".format(h)
+                dist_ce[id] = hash_hex
                 item_name[id] = itemfile.stem
                 item_priority[id] =1000000
                 break
@@ -1394,13 +1218,17 @@ class Item:
                         continue
                     break
                 # priotiry は固定
-                dist_item[id] = compute_hash(img)
+                hash = compute_hash(img)
+                hash_hex = ""
+                for h in hash[0]:
+                    hash_hex = hash_hex + "{:02x}".format(h)
+                dist_item[id] = hash_hex
                 item_name[id] = itemfile.stem
                 item_priority[id] =1000000
                 break
         return id
 
-    def classify_card(self, svm_card):
+    def classify_category(self, svm_card):
         """
         カード判別器
        """
@@ -1428,37 +1256,46 @@ class Item:
 
         return carddic[pred[1][0][0]]
         
-    def classify_item(self, img, debug=False):
+    def classify_card(self, img, debug=False):
         """
         アイテム判別器
         """
-        if self.card == "Point":
+        if self.category == "Point":
             return 900000
-        elif self.card == "Quest Reward":
+        elif self.category == "Quest Reward":
 ##            return "QP"
             return 5
-        elif self.card == "Craft Essence":
+        elif self.category == "Craft Essence":
             id = self.classify_ce(img, debug)
             if id == "":
                 id = self.make_new_file4ce(img)
             return id            
-        elif self.card == "Exp. UP":
-            return self.classify_tanebi(img)
-        id = self.classify_standard_item(img, debug)
+        elif self.category == "Exp. UP":
+            return self.classify_exp(img)
+        elif self.category == "Item":
+            id = self.classify_item(img, debug)
+        else:
+            ## ここで category が判別できないのは三行目かつ
+            ## スクロール位置の関係で下部表示が消えている場合
+            id = self.classify_item(img, debug)
+            if id == "":
+                id = self.classify_exp(img)
+        ## この下に unknown を作る
+##        id = self.classify_standard_item(img, debug)
 ##        if item == "":
 ##            item = self.classify_local_item(img)
         if id == "":
             id = self.make_new_file(img)
         return id
 
-    def compute_tanebi_hash(self, img_rgb):
+    def compute_exp_hash(self, img_rgb):
         """
         種火レアリティ判別器
         この場合は画像全域のハッシュをとる
         """
         return hasher.compute(img_rgb)
 
-    def compute_tanebi_rarity_hash(self, img_rgb):
+    def compute_exp_rarity_hash(self, img_rgb):
         """
         種火レアリティ判別器
         この場合は画像全域のハッシュをとる
@@ -1468,7 +1305,7 @@ class Item:
 
         return hasher.compute(img)
 
-    def compute_tanebi_class_hash(self, img_rgb):
+    def compute_exp_class_hash(self, img_rgb):
         """
         種火クラス判別器
         左上のクラスマークぎりぎりのハッシュを取る
@@ -1478,14 +1315,30 @@ class Item:
                       int(5/135*self.width):int(30/135*self.width)]
         return hasher.compute(img)
 
-    def compute_maseki_hash(self, img_rgb):
+##    def compute_gem_hash(self, img_rgb):
+##        """
+##        魔石クラス判別器
+##        中央のクラスマークぎりぎりのハッシュを取る
+##        記述した比率はiPhone6S画像の実測値
+##        """
+##        img = img_rgb[int(41/135*self.height):int(84/135*self.height),
+##                      int(44/124*self.width):int(79/124*self.width)]
+##        return hasher.compute(img)
+    def compute_gem_hash(self, img_rgb):
         """
-        魔石クラス判別器
+        スキル石クラス判別器
         中央のクラスマークぎりぎりのハッシュを取る
         記述した比率はiPhone6S画像の実測値
         """
-        img = img_rgb[int(41/135*self.height):int(84/135*self.height),
-                      int(44/124*self.width):int(79/124*self.width)]
+        height, width = img_rgb.shape[:2]
+    ##    img = img_rgb[int(41/135*height):int(84/135*height),
+    ##                  int(44/124*width):int(79/124*width)]
+    ##    img = img_rgb[int((145-16-30/145*height):int(84/145*height),
+    ##                  int(44/132*width):int(79/132*width)]
+
+        img = img_rgb[int((145-16-60*0.8)/2/145*height)+3:int((145-16+60*0.8)/2/145*height)+3,
+                      int((132-52*0.8)/2/132*width):int((132+52*0.8)/2/132*width)]
+
         return hasher.compute(img)
 
 def compute_hash(img_rgb):
@@ -1525,7 +1378,11 @@ def calc_dist_local():
             break
         # priotiry は固定
         # 800000
-        dist_item[id] = compute_hash(img)
+        hash = compute_hash(img)
+        hash_hex = ""
+        for h in hash[0]:
+            hash_hex = hash_hex + "{:02x}".format(h)
+        dist_item[id] = hash_hex
         item_name[id] = fname.stem
         item_priority[id] =800000
 
@@ -1541,7 +1398,11 @@ def calc_dist_local():
             break
         # priotiry は固定
         # 800000
-        dist_ce[id] = compute_hash_ce(img)
+        hash = compute_hash_ce(img)
+        hash_hex = ""
+        for h in hash[0]:
+            hash_hex = hash_hex + "{:02x}".format(h)
+        dist_ce[id] = hash_hex
         item_name[id] = fname.stem
         item_priority[id] =399999
 
@@ -1552,16 +1413,18 @@ def hex2hash(hexstr):
         hashlist.append(int('0x' + hexstr[i*2:i*2+2],0))
     return np.array([hashlist], dtype='uint8')
 
-def out_name(d):
+def out_name(id):
 ##    logger.debug('out_name before: %s', d)
-    if d[-1] == '_':
-        d = d[:-1]
-    if d in nickname_dic:
-        d = nickname_dic[d]
-    if d[-1].isdigit():
-        d = d + '_'
+##    if d[-1] == '_':
+##        d = d[:-1]
+    if id in item_shortname.keys():
+        name = item_shortname[id]
+    else:
+        name = item_name[id]
+##    if d[-1].isdigit():
+##        d = d + '_'
 ##    logger.debug('out_name after: %s', d)
-    return d
+    return name
 
 def calc_dist():
     """
@@ -1593,7 +1456,7 @@ def get_output(filenames, debug=False):
     """
     出力内容を作成
     """
-    calc_dist()
+##    calc_dist()
     calc_dist_local()
     if train_item.exists() == False:
         print("[エラー]item.xml が存在しません")
@@ -1628,30 +1491,30 @@ def get_output(filenames, debug=False):
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
 
-            try:
-                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
+##            try:
+            sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
 
-                #2頁目以降のスクショが無い場合に migging と出力                
-                if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
-                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    fileoutput.append({'filename': 'missing'})
-                    all_list.append([])
-                    
-                all_list.append(sc.itemlist)
-                prev_pages = sc.pages
-                prev_pagenum = sc.pagenum
+            #2頁目以降のスクショが無い場合に migging と出力                
+            if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
+               or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                fileoutput.append({'filename': 'missing'})
+                all_list.append([])
+                
+            all_list.append(sc.itemlist)
+            prev_pages = sc.pages
+            prev_pagenum = sc.pagenum
 
-                sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
-                output = { 'filename': str(filename),'ドロ数':sumdrop}
-                if sc.pagenum == 1:
-                    if sc.lines >= 7:
-                        output["ドロ数"] = str(output["ドロ数"]) + "++"
-                    elif sc.lines >= 4:
-                        output["ドロ数"] = str(output["ドロ数"]) + "+"
-                elif sc.pagenum == 2 and sc.lines >= 7:             
+            sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
+            output = { 'filename': str(filename),'ドロ数':sumdrop}
+            if sc.pagenum == 1:
+                if sc.lines >= 7:
+                    output["ドロ数"] = str(output["ドロ数"]) + "++"
+                elif sc.lines >= 4:
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
-            except:
-                output = ({'filename': str(filename) + ': not valid'})
+            elif sc.pagenum == 2 and sc.lines >= 7:             
+                output["ドロ数"] = str(output["ドロ数"]) + "+"
+##            except:
+##                output = ({'filename': str(filename) + ': not valid'})
         fileoutput.append(output)
     return fileoutput, all_list
 
@@ -1682,8 +1545,8 @@ def make_csv_header(item_list):
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
-    short_list = [{"name":a["name"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in flat_list]
-    ce0_flag = ("Craft Essence" not in  [d.get('card') for d in flat_list]) and \
+    short_list = [{"id":a["id"], "name":a["name"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in flat_list]
+    ce0_flag = ("Craft Essence" not in  [d.get('category') for d in flat_list]) and \
             (max([d.get("id") for d in flat_list]) > 9707500)
     if ce0_flag: short_list.append({"name":"礼装", "priority":1, "dropnum":0})
     # 重複する要素を除く
@@ -1693,11 +1556,11 @@ def make_csv_header(item_list):
     header = []
     for l in new_list:
         if l['name'] in [ 'クエストクリア報酬QP',  'QP', 'ポイント']:
-            tmp = out_name(l['name']) + "(+" + change_value(l["dropnum"]) + ")"
+            tmp = out_name(l['id']) + "(+" + change_value(l["dropnum"]) + ")"
         elif l["dropnum"] > 1:
-            tmp = out_name(l['name']) + "(x" + change_value(l["dropnum"]) + ")"
+            tmp = out_name(l['id']) + "(x" + change_value(l["dropnum"]) + ")"
         else:
-            tmp = out_name(l['name'])
+            tmp = out_name(l['id'])
         header.append(tmp)
     return ['filename', 'ドロ数'] + header, ce0_flag
 
@@ -1709,11 +1572,11 @@ def make_csv_data(sc_list, ce0_flag):
         tmp = []
         for l in sc:
             if l['name'] in [ 'クエストクリア報酬QP',  'QP', 'ポイント']:
-                tmp.append(out_name(l['name']) + "(+" + change_value(l["dropnum"]) + ")")
+                tmp.append(out_name(l['id']) + "(+" + change_value(l["dropnum"]) + ")")
             elif l["dropnum"] > 1:
-                tmp.append(out_name(l['name']) + "(x" + change_value(l["dropnum"]) + ")")
+                tmp.append(out_name(l['id']) + "(x" + change_value(l["dropnum"]) + ")")
             else:
-                tmp.append(out_name(l['name']))
+                tmp.append(out_name(l['id']))
         allitem = allitem + tmp
         csv_data.append(dict(Counter(tmp)))
     csv_sum = dict(Counter(allitem))
