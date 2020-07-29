@@ -58,9 +58,9 @@ dist_ce = {item["id"]:item["phash"] for item in drop_item if item["type"] == "Cr
 dist_secret_gem = {item["id"]:item["phash_class"] for item in drop_item if 6200 < item["id"] < 6208 and "phash_class" in item.keys()}
 dist_magic_gem = {item["id"]:item["phash_class"] for item in drop_item if 6100 < item["id"] < 6108 and "phash_class" in item.keys()}
 dist_gem = {item["id"]:item["phash_class"] for item in drop_item if 6000 < item["id"] < 6008 and "phash_class" in item.keys()}
-dist_exp = {item["phash"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash" in item.keys()}
-dist_exp_sold = {item["phash_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_sold" in item.keys()}
-dist_exp.update(dist_exp_sold)
+##dist_exp = {item["phash"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash" in item.keys()}
+##dist_exp_sold = {item["phash_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_sold" in item.keys()}
+##dist_exp.update(dist_exp_sold)
 dist_exp_rarity = {item["phash_rarity"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_rarity" in item.keys()}
 dist_exp_rarity_sold = {item["phash_rarity_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_rarity_sold" in item.keys()}
 dist_exp_rarity.update(dist_exp_rarity_sold)
@@ -1014,11 +1014,15 @@ class Item:
         imgとの距離を比較して近いアイテムを求める
         id を返すように変更
         """
-##        # 種火かどうかの判別
-##        id = self.classify_exp(img)
-##        if id != "":
-##            return id
-
+        ID_GEM_MIN = 6001
+        ID_GEM_MAX = 6007
+        ID_MAGIC_GEM_MIN = 6101
+        ID_MAGIC_GEM_MAX = 6107
+        ID_SECRET_GEM_MIN = 6201
+        ID_SECRET_GEM_MAX = 6207
+        ID_PIECE_MIN = 7001
+        ID_MONUMENT_MAX = 7107
+        
         hash_item = compute_hash(img) #画像の距離
         ids = {}
         if debug == True:
@@ -1037,13 +1041,13 @@ class Item:
             ids = sorted(ids.items(), key=lambda x:x[1])
             id_tupple = next(iter(ids))
             id = id_tupple[0]
-            if 6200 < id < 6208:
+            if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
                 id = self.gem_img2id(img, dist_secret_gem)
-            elif 6100 < id < 6108:
+            elif ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
                 id = self.gem_img2id(img, dist_magic_gem)
-            elif 6000 < id < 6008:
+            elif ID_GEM_MIN <= id <= ID_GEM_MAX:
                 id = self.gem_img2id(img, dist_gem)
-            elif 7000 < id < 7108:
+            elif ID_PIECE_MIN <= id <= ID_MONUMENT_MAX:
                 #ヒストグラム
                 img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
                 h, w = img_hsv.shape[:2]
@@ -1226,12 +1230,12 @@ class Item:
             id = self. make_new_file(img, Item_dir, dist_item, 1000000, "item")
         return id
 
-    def compute_exp_hash(self, img_rgb):
-        """
-        種火レアリティ判別器
-        この場合は画像全域のハッシュをとる
-        """
-        return hasher.compute(img_rgb)
+##    def compute_exp_hash(self, img_rgb):
+##        """
+##        種火レアリティ判別器
+##        この場合は画像全域のハッシュをとる
+##        """
+##        return hasher.compute(img_rgb)
 
     def compute_exp_rarity_hash(self, img_rgb):
         """
