@@ -43,7 +43,12 @@ FONTSIZE_UNDEFINED = -1
 FONTSIZE_NORMAL = 0
 FONTSIZE_SMALL = 1
 FONTSIZE_TINY = 2
-
+PRIORITY_CE = 9000
+PRIORITY_POINT = 3000
+PRIORITY_ITEM = 700
+PRIORITY_REWARD_QP = 9012
+ID_START = 9500000
+ID_REWARD_QP = 5
 
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
@@ -51,16 +56,13 @@ with open(drop_file, encoding='UTF-8') as f:
 # JSONファイルから各辞書を作成
 item_name = {item["id"]:item["name"] for item in drop_item}
 item_shortname = {item["id"]:item["shortname"] for item in drop_item if "shortname" in item.keys()}
-item_priority = {item["id"]:item["priority"] for item in drop_item}
+item_dropPriority = {item["id"]:item["dropPriority"] for item in drop_item}
 item_type = {item["id"]:item["type"] for item in drop_item}
 dist_item = {item["id"]:item["phash_battle"] for item in drop_item if item["type"] == "Item" and "phash_battle" in item.keys()}
 dist_ce = {item["id"]:item["phash"] for item in drop_item if item["type"] == "Craft Essence"}
 dist_secret_gem = {item["id"]:item["phash_class"] for item in drop_item if 6200 < item["id"] < 6208 and "phash_class" in item.keys()}
 dist_magic_gem = {item["id"]:item["phash_class"] for item in drop_item if 6100 < item["id"] < 6108 and "phash_class" in item.keys()}
 dist_gem = {item["id"]:item["phash_class"] for item in drop_item if 6000 < item["id"] < 6008 and "phash_class" in item.keys()}
-##dist_exp = {item["phash"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash" in item.keys()}
-##dist_exp_sold = {item["phash_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_sold" in item.keys()}
-##dist_exp.update(dist_exp_sold)
 dist_exp_rarity = {item["phash_rarity"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_rarity" in item.keys()}
 dist_exp_rarity_sold = {item["phash_rarity_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_rarity_sold" in item.keys()}
 dist_exp_rarity.update(dist_exp_rarity_sold)
@@ -93,6 +95,7 @@ class ScreenShot:
     """
     戦利品スクリーンショットを表すクラス
     """
+
     def __init__(self, img_rgb, svm, svm_chest, svm_card,  fileextention, debug=False, reward_only=False):
         TRAINING_IMG_WIDTH = 1755
         threshold = 80
@@ -135,6 +138,7 @@ class ScreenShot:
             item_pts = self.img2points()
 
         self.items = []
+        self.curret_dropPriority = PRIORITY_REWARD_QP
         if reward_only == True:
             # qpsplit.py で利用
             item_pts = item_pts[0:1]
@@ -144,7 +148,9 @@ class ScreenShot:
             item_img_rgb = self.img_rgb[pt[1] :  pt[3],  pt[0] + lx :  pt[2] + lx]
             item_img_gray = self.img_gray[pt[1] :  pt[3],  pt[0]  + lx :  pt[2] + lx ]
             if debug: cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
-            self.items.append(Item(item_img_rgb, item_img_gray, svm, svm_card, fileextention, mode, debug))
+            dropitem = Item(item_img_rgb, item_img_gray, svm, svm_card, fileextention, self.curret_dropPriority, mode, debug)
+            self.curret_dropPriority = item_dropPriority[dropitem.id]
+            self.items.append(dropitem)
 
         self.itemlist = self.makeitemlist()
 
@@ -270,13 +276,13 @@ class ScreenShot:
         for i, item in enumerate(self.items):
             tmp = {}
             if item.category == "Quest Reward":
-                tmp['id'] = 5
+                tmp['id'] = ID_REWARD_QP
                 tmp['name'] = "クエストクリア報酬QP"
-                tmp['priority'] = 0
+                tmp['dropPriority'] = PRIORITY_REWARD_QP
             else:
                 tmp['id'] = item.id
                 tmp['name'] = item.name
-                tmp['priority'] = item_priority[item.id]
+                tmp['dropPriority'] = item_dropPriority[item.id]
             tmp['dropnum'] = int(item.dropnum[1:])
             tmp['bonus'] = item.bonus
             tmp['category'] = item.category
@@ -458,7 +464,7 @@ def generate_booty_pts(criteria_left, criteria_top, item_width, item_height, mar
 
 
 class Item:
-    def __init__(self, img_rgb, img_gray, svm, svm_card, fileextention, mode='jp', debug=False):
+    def __init__(self, img_rgb, img_gray, svm, svm_card, fileextention, curret_dropPriority, mode='jp', debug=False):
         self.img_rgb = img_rgb
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
@@ -471,7 +477,10 @@ class Item:
         
         self.height, self.width = img_rgb.shape[:2]
         self.category = self.classify_category(svm_card)
-        self.id = self.classify_card(img_rgb, debug)
+        self.id = self.classify_card(img_rgb, curret_dropPriority, debug)
+        if debug:
+            print("id: {}".format(self.id))
+            print("dropPriority: {}".format(item_dropPriority[self.id]))
         self.name = item_name[self.id]
         if self.category == "":
             if self.id in item_type:
@@ -975,7 +984,7 @@ class Item:
 
         # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
         offsset_y = 2 if mode == 'na' else 0
-        if self.category in ["Quest Reward", "QP", "Point"] and len(self.bonus) >= 5: #ボーナスは"(+*0)"なので
+        if (self.category in ["Quest Reward", "Point"] or self.name == "QP") and len(self.bonus) >= 5: #ボーナスは"(+*0)"なので
             # 末尾の括弧上部からの距離を設定
 ##            base_line = item_pts_lower_yellow[-1][1] -int(4/206*self.height)
             # 1桁目の上部からの距離を設定
@@ -985,7 +994,7 @@ class Item:
 
         # 実際の(ボーナス無し)ドロップ数の右端の位置を決定
         offset_x = -7 if mode=="na" else 0
-        if self.category in ["Quest Reward", "QP", "Point"]:
+        if self.category in ["Quest Reward", "Point"]  or self.name == "QP":
             margin_right = 15 + offset_x           
         elif len(bonus_pts) > 0:
             margin_right = self.width - bonus_pts[0][0] + 2
@@ -1008,7 +1017,7 @@ class Item:
         return gem[0]
 
 ##    def classify_standard_item(self, img, debug=False):
-    def classify_item(self, img, debug=False):
+    def classify_item(self, img, currnet_dropPriority, debug=False):
 
         """
         imgとの距離を比較して近いアイテムを求める
@@ -1022,6 +1031,10 @@ class Item:
         ID_SECRET_GEM_MAX = 6207
         ID_PIECE_MIN = 7001
         ID_MONUMENT_MAX = 7107
+        PRIORITY_GEM_MIN = 6094
+        PRIORITY_MAGIC_GEM_MIN = 6194
+        PRIORITY_SECRET_GEM_MIN = 6294
+        PRIORITY_PIECE_MIN = 5194
         
         hash_item = compute_hash(img) #画像の距離
         ids = {}
@@ -1042,12 +1055,22 @@ class Item:
             id_tupple = next(iter(ids))
             id = id_tupple[0]
             if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
-                id = self.gem_img2id(img, dist_secret_gem)
+                if currnet_dropPriority >= PRIORITY_SECRET_GEM_MIN:
+                    id = self.gem_img2id(img, dist_secret_gem)
+                else:
+                    return ""
             elif ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
-                id = self.gem_img2id(img, dist_magic_gem)
+                if currnet_dropPriority >= PRIORITY_MAGIC_GEM_MIN:
+                    id = self.gem_img2id(img, dist_magic_gem)
+                else: return ""
             elif ID_GEM_MIN <= id <= ID_GEM_MAX:
-                id = self.gem_img2id(img, dist_gem)
+                if currnet_dropPriority >= PRIORITY_GEM_MIN:
+                    id = self.gem_img2id(img, dist_gem)
+                else:
+                    return ""
             elif ID_PIECE_MIN <= id <= ID_MONUMENT_MAX:
+                if currnet_dropPriority < PRIORITY_PIECE_MIN:
+                    return ""
                 #ヒストグラム
                 img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
                 h, w = img_hsv.shape[:2]
@@ -1140,7 +1163,7 @@ class Item:
 
         return ""
 
-    def make_new_file(self, img, search_dir, dist_dic, priority, initial):
+    def make_new_file(self, img, search_dir, dist_dic, dropPriority, initial):
         """
         ファイル名候補を探す
         """
@@ -1153,7 +1176,7 @@ class Item:
                 cv2.imwrite(itemfile.as_posix(), img_gray)
                 # id 候補を決める
                 for j in range(99999):
-                    id = j + 95000000
+                    id = j + ID_START
                     if id in dist_dic.keys():
                         continue
                     break
@@ -1163,12 +1186,7 @@ class Item:
                     hash_hex = hash_hex + "{:02x}".format(h)
                 dist_dic[id] = hash_hex
                 item_name[id] = itemfile.stem
-                for k in range(99999):
-                    priority = k + priority
-                    if priority in item_priority.values():
-                        continue
-                    break
-                item_priority[id] = priority
+                item_dropPriority[id] = dropPriority
                 break
         return id
 
@@ -1200,34 +1218,34 @@ class Item:
 
         return carddic[pred[1][0][0]]
         
-    def classify_card(self, img, debug=False):
+    def classify_card(self, img, currnet_dropPriority, debug=False):
         """
         アイテム判別器
         """
         if self.category == "Point":
             id = self.classify_point(img, debug)
             if id == "":
-                id = self. make_new_file(img, Point_dir, dist_point, 500000, "point")
+                id = self. make_new_file(img, Point_dir, dist_point, PRIORITY_POINT, "point")
             return id            
         elif self.category == "Quest Reward":
             return 5
         elif self.category == "Craft Essence":
             id = self.classify_ce(img, debug)
             if id == "":
-                id = self. make_new_file(img, CE_dir, dist_ce, 399999, "ce")
+                id = self. make_new_file(img, CE_dir, dist_ce, PRIORITY_CE, "ce")
             return id            
         elif self.category == "Exp. UP":
             return self.classify_exp(img)
         elif self.category == "Item":
-            id = self.classify_item(img, debug)
+            id = self.classify_item(img, currnet_dropPriority, debug)
         else:
             ## ここで category が判別できないのは三行目かつ
             ## スクロール位置の関係で下部表示が消えている場合
-            id = self.classify_item(img, debug)
+            id = self.classify_item(img, currnet_dropPriority, debug)
             if id == "":
                 id = self.classify_exp(img)
         if id == "":
-            id = self. make_new_file(img, Item_dir, dist_item, 1000000, "item")
+            id = self. make_new_file(img, Item_dir, dist_item, PRIORITY_ITEM, "item")
         return id
 
 ##    def compute_exp_hash(self, img_rgb):
@@ -1292,7 +1310,7 @@ def compute_hash_ce(img_rgb):
     return hasher.compute(img)
         
 
-def search_file(search_dir, dist_dic, start_id, priority, category):
+def search_file(search_dir, dist_dic, dropPriority, category):
     """
     Item, Craft Essence, Pointの各ファイルを探す
     """
@@ -1302,33 +1320,27 @@ def search_file(search_dir, dist_dic, start_id, priority, category):
 ##        id = 0
         # id 候補を決める
         for j in range(99999):
-            id = j + start_id
-            if id in dist_dic.keys():
+            id = j + ID_START
+            if id in item_name.keys():
                 continue
             break
         # priotiry は固定
-        # 800000
         hash = compute_hash(img)
         hash_hex = ""
         for h in hash[0]:
             hash_hex = hash_hex + "{:02x}".format(h)
         dist_dic[id] = hash_hex
         item_name[id] = fname.stem
-        for p in range(99999):
-            priority = p + priority
-            if priority in item_priority.items():
-                continue
-            break
-        item_priority[id] =priority
+        item_dropPriority[id] = dropPriority
         item_type[id] = category
 
 def calc_dist_local():
     """
     既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持
     """
-    search_file(Item_dir, dist_item, 94100000, 800000, "Item")
-    search_file(CE_dir, dist_ce, 990000, 399999, "Craft Essence")
-    search_file(Point_dir, dist_point, 95100000, 590001, "Point")
+    search_file(Item_dir, dist_item, PRIORITY_ITEM, "Item")
+    search_file(CE_dir, dist_ce, PRIORITY_CE, "Craft Essence")
+    search_file(Point_dir, dist_point, PRIORITY_POINT, "Point")
 
 
 def hex2hash(hexstr):
@@ -1434,22 +1446,22 @@ def make_csv_header(item_list):
     CSVのヘッダ情報を作成
     礼装のドロップが無いかつ恒常以外のアイテムが有るとき礼装0をつける
     """
-    if len(item_list) == 0:
+    if item_list == [[]]:
         return ['filename', 'ドロ数'], False
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
-    short_list = [{"id":a["id"], "name":a["name"], "category":a["category"], "priority":a["priority"], "dropnum":a["dropnum"]} for a in flat_list]
+    short_list = [{"id":a["id"], "name":a["name"], "category":a["category"], "dropPriority":a["dropPriority"], "dropnum":a["dropnum"]} for a in flat_list]
     ce0_flag = ("Craft Essence" not in  [d.get('category') for d in flat_list]) and \
             (max([d.get("id") for d in flat_list]) > 9707500)
-    if ce0_flag: short_list.append({"name":"礼装", "category":"Craft Essence", "priority":1, "dropnum":0})
+    if ce0_flag: short_list.append({"id":99999990, "name":"礼装", "category":"Craft Essence", "dropPriority":9000, "dropnum":0})
     # 重複する要素を除く
     unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
     # ソート
-    new_list = sorted(sorted(unique_list, key=itemgetter('dropnum')), key=itemgetter('priority'))
+    new_list = sorted(sorted(sorted(unique_list, key=itemgetter('dropnum')), key=itemgetter('id'), reverse=True), key=itemgetter('dropPriority'), reverse=True)
     header = []
     for l in new_list:
-        if l['category'] in [ 'Quest Reward',  'QP', 'Point']:
+        if l['category'] in [ 'Quest Reward', 'Point'] or l["name"] == "QP":
             tmp = out_name(l['id']) + "(+" + change_value(l["dropnum"]) + ")"
         elif l["dropnum"] > 1:
             tmp = out_name(l['id']) + "(x" + change_value(l["dropnum"]) + ")"
@@ -1467,7 +1479,7 @@ def make_csv_data(sc_list, ce0_flag):
     for sc in sc_list:
         tmp = []
         for l in sc:
-            if l['category'] in [ 'Quest Reward',  'QP', 'Point']:
+            if l['category'] in [ 'Quest Reward', 'Point'] or l["name"] == "QP":
                 tmp.append(out_name(l['id']) + "(+" + change_value(l["dropnum"]) + ")")
             elif l["dropnum"] > 1:
                 tmp.append(out_name(l['id']) + "(x" + change_value(l["dropnum"]) + ")")

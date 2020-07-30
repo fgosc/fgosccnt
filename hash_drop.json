@@ -5,7 +5,6 @@
         "phash": "f61b4db44927d806",
         "name": "クエストクリア報酬QP",
         "shortname": "報酬QP",
-        "priority": 0,
         "dropPriority": 9012
     },
     {
@@ -14,7 +13,6 @@
         "rarity": 5,
         "name": "不夜の薔薇",
         "phash": "0b0abe94fefcf566",
-        "priority": 110000,
         "dropPriority": 9005
     },
     {
@@ -23,7 +21,6 @@
         "rarity": 5,
         "name": "ムーンライト・フェスト",
         "phash": "d77118b930b8ffef",
-        "priority": 110010,
         "dropPriority": 9005
     },
     {
@@ -32,7 +29,6 @@
         "rarity": 5,
         "name": "ハロウィン・プリンセス",
         "phash": "e9b80e24de74f4f4",
-        "priority": 110020,
         "dropPriority": 9005
     },
     {
@@ -41,7 +37,6 @@
         "rarity": 5,
         "name": "ぐだお",
         "phash": "dc0d0390621d9420",
-        "priority": 110030,
         "dropPriority": 9005
     },
     {
@@ -50,7 +45,6 @@
         "rarity": 5,
         "name": "ホーリーナイト・サイン",
         "phash": "a9e8c04e4eca7672",
-        "priority": 110040,
         "dropPriority": 9005
     },
     {
@@ -59,7 +53,6 @@
         "rarity": 5,
         "name": "ピュアリー・ブルーム",
         "phash": "f41b3a25f09206e6",
-        "priority": 110050,
         "dropPriority": 9005
     },
     {
@@ -68,7 +61,6 @@
         "rarity": 5,
         "name": "アルトリアの星",
         "phash": "adb2d1ba32537c6d",
-        "priority": 110060,
         "dropPriority": 9005
     },
     {
@@ -77,7 +69,6 @@
         "rarity": 5,
         "name": "メルティ・スイートハート",
         "phash": "0ee3124c79748d4c",
-        "priority": 110070,
         "dropPriority": 9005
     },
     {
@@ -86,7 +77,6 @@
         "rarity": 5,
         "name": "首切りバニー2016",
         "phash": "7c3c436191c1b54c",
-        "priority": 110080,
         "dropPriority": 9005
     },
     {
@@ -95,7 +85,6 @@
         "rarity": 5,
         "name": "三重結界",
         "phash": "f89d380ba7726927",
-        "priority": 110090,
         "dropPriority": 9005
     },
     {
@@ -104,7 +93,6 @@
         "rarity": 5,
         "name": "カルデアの顕学",
         "phash": "38232f0199f7407c",
-        "priority": 110100,
         "dropPriority": 9005
     },
     {
@@ -113,7 +101,6 @@
         "rarity": 5,
         "name": "カルデアを導く乙女",
         "phash": "935accb69366aff2",
-        "priority": 110110,
         "dropPriority": 9005
     },
     {
@@ -122,7 +109,6 @@
         "rarity": 5,
         "name": "慈悲無き者",
         "phash": "a623811fecf1298c",
-        "priority": 110120,
         "dropPriority": 9005
     },
     {
@@ -131,7 +117,6 @@
         "rarity": 5,
         "name": "至るべき場所",
         "phash": "ccf9c0429e2f4a96",
-        "priority": 110130,
         "dropPriority": 9005
     },
     {
@@ -140,7 +125,6 @@
         "rarity": 5,
         "name": "遮那王流離譚",
         "phash": "0a4771f9938e8c0c",
-        "priority": 110140,
         "dropPriority": 9005
     },
     {
@@ -149,7 +133,6 @@
         "rarity": 5,
         "name": "ゴールデン捕鯉魚図",
         "phash": "cbdf0539a22c7aba",
-        "priority": 110150,
         "dropPriority": 9005
     },
     {
@@ -158,7 +141,6 @@
         "rarity": 5,
         "name": "風雲仙姫",
         "phash": "56d998b64068cd76",
-        "priority": 110160,
         "dropPriority": 9005
     },
     {
@@ -167,7 +149,6 @@
         "rarity": 5,
         "name": "九首牛魔羅王",
         "phash": "19d59587b196813a",
-        "priority": 110170,
         "dropPriority": 9005
     },
     {
@@ -176,7 +157,6 @@
         "rarity": 5,
         "name": "ゴールデン相撲～岩場所～",
         "phash": "f362319f4b6bcb8b",
-        "priority": 110180,
         "dropPriority": 9005
     },
     {
@@ -185,7 +165,6 @@
         "rarity": 5,
         "name": "月の湯治",
         "phash": "a57c1a0f75926eb0",
-        "priority": 110190,
         "dropPriority": 9005
     },
     {
@@ -194,7 +173,6 @@
         "rarity": 5,
         "name": "サマータイム・ミストレス",
         "phash": "2f1aeee6c814d6ec",
-        "priority": 110200,
         "dropPriority": 9005
     },
     {
@@ -203,7 +181,6 @@
         "rarity": 5,
         "name": "カルデア・ライフセーバーズ",
         "phash": "e160f2f3e21efe76",
-        "priority": 110210,
         "dropPriority": 9005
     },
     {
@@ -212,7 +189,6 @@
         "rarity": 5,
         "name": "ジョイント・リサイタル",
         "phash": "e38832f6b17b1db2",
-        "priority": 110220,
         "dropPriority": 9005
     },
     {
@@ -221,7 +197,6 @@
         "rarity": 5,
         "name": "勇者エリちゃんの冒険",
         "phash": "9af7e1021f5b5980",
-        "priority": 110230,
         "dropPriority": 9005
     },
     {
@@ -230,7 +205,6 @@
         "rarity": 5,
         "name": "スイート・クリスタル",
         "phash": "f97ec69cf6e76cde",
-        "priority": 110240,
         "dropPriority": 9005
     },
     {
@@ -239,7 +213,6 @@
         "rarity": 5,
         "name": "聖夜の晩餐",
         "phash": "6b4ab4e3d9a61996",
-        "priority": 110250,
         "dropPriority": 9005
     },
     {
@@ -248,7 +221,6 @@
         "rarity": 5,
         "name": "フォンダン・オ・ショコラ",
         "phash": "8e3473c386078078",
-        "priority": 110260,
         "dropPriority": 9005
     },
     {
@@ -257,7 +229,6 @@
         "rarity": 5,
         "name": "日輪の城",
         "phash": "157105cdc9eeebf3",
-        "priority": 110270,
         "dropPriority": 9005
     },
     {
@@ -266,7 +237,6 @@
         "rarity": 5,
         "name": "壬生狼",
         "phash": "e0261a369f076122",
-        "priority": 110280,
         "dropPriority": 9005
     },
     {
@@ -275,7 +245,6 @@
         "rarity": 5,
         "name": "いつかの夏",
         "phash": "42299b518d2529b4",
-        "priority": 110290,
         "dropPriority": 9005
     },
     {
@@ -284,7 +253,6 @@
         "rarity": 5,
         "name": "シーサイド・ラグジュアリー",
         "phash": "1787297a9cf8d9fe",
-        "priority": 110300,
         "dropPriority": 9005
     },
     {
@@ -293,7 +261,6 @@
         "rarity": 5,
         "name": "ダイブ・トゥ・ブルー",
         "phash": "2b17d8e23dd97453",
-        "priority": 110310,
         "dropPriority": 9005
     },
     {
@@ -302,7 +269,6 @@
         "rarity": 5,
         "name": "チア・フォー・マスター",
         "phash": "9963709e944be3b1",
-        "priority": 110320,
         "dropPriority": 9005
     },
     {
@@ -311,7 +277,6 @@
         "rarity": 5,
         "name": "エアリアル・ドライブ",
         "phash": "bc86d368aad144e4",
-        "priority": 110330,
         "dropPriority": 9005
     },
     {
@@ -320,7 +285,6 @@
         "rarity": 5,
         "name": "メリー・シープ",
         "phash": "690ae169db925e73",
-        "priority": 110340,
         "dropPriority": 9005
     },
     {
@@ -329,7 +293,6 @@
         "rarity": 5,
         "name": "スイート・デイズ",
         "phash": "0382eee6d7fdf9fe",
-        "priority": 110350,
         "dropPriority": 9005
     },
     {
@@ -338,7 +301,6 @@
         "rarity": 5,
         "name": "トゥリファスにて",
         "phash": "c0199fe61b7ca64e",
-        "priority": 110360,
         "dropPriority": 9005
     },
     {
@@ -347,7 +309,6 @@
         "rarity": 5,
         "name": "城塞の午後",
         "phash": "0a1dd97266339140",
-        "priority": 110370,
         "dropPriority": 9005
     },
     {
@@ -356,7 +317,6 @@
         "rarity": 5,
         "name": "白い服の水兵さん",
         "phash": "923824193d8b9d2d",
-        "priority": 110380,
         "dropPriority": 9005
     },
     {
@@ -365,7 +325,6 @@
         "rarity": 5,
         "name": "ペインティング・サマー",
         "phash": "7776c4192c26ff73",
-        "priority": 110390,
         "dropPriority": 9005
     },
     {
@@ -374,7 +333,6 @@
         "rarity": 5,
         "name": "レディ・フォクシー",
         "phash": "95fac2f7bfb442ce",
-        "priority": 110400,
         "dropPriority": 9005
     },
     {
@@ -383,7 +341,6 @@
         "rarity": 5,
         "name": "ウォーター・シャイン",
         "phash": "777c930f46c3dc4d",
-        "priority": 110410,
         "dropPriority": 9005
     },
     {
@@ -392,7 +349,6 @@
         "rarity": 5,
         "name": "リターン・マッチ",
         "phash": "88bb085eb44bd286",
-        "priority": 110420,
         "dropPriority": 9005
     },
     {
@@ -401,7 +357,6 @@
         "rarity": 5,
         "name": "C・K・T",
         "phash": "6cc9886271626336",
-        "priority": 110430,
         "dropPriority": 9005
     },
     {
@@ -410,7 +365,6 @@
         "rarity": 5,
         "name": "ロイヤル・アイシング",
         "phash": "b6951667a6b90864",
-        "priority": 110440,
         "dropPriority": 9005
     },
     {
@@ -419,7 +373,6 @@
         "rarity": 5,
         "name": "スリー・アングラー",
         "phash": "fd872466f861796b",
-        "priority": 110450,
         "dropPriority": 9005
     },
     {
@@ -428,7 +381,6 @@
         "rarity": 5,
         "name": "氷結闘熊",
         "phash": "d1dced638e32dd2e",
-        "priority": 110460,
         "dropPriority": 9005
     },
     {
@@ -436,8 +388,8 @@
         "type": "Craft Essence",
         "rarity": 5,
         "name": "聖女の教示",
+        "shortname": "礼装",
         "phash": "2a067dcd4909b27b",
-        "priority": 110470,
         "dropPriority": 9005
     },
     {
@@ -446,7 +398,6 @@
         "rarity": 5,
         "name": "銀雪の女神たち",
         "phash": "32f6d67adf51c4ac",
-        "priority": 110480,
         "dropPriority": 9005
     },
     {
@@ -455,7 +406,6 @@
         "rarity": 5,
         "name": "ビューティフル・ドリーマー",
         "phash": "ba376d42d90a0152",
-        "priority": 110490,
         "dropPriority": 9005
     },
     {
@@ -465,7 +415,6 @@
         "name": "錦上添花",
         "shortname": "礼装",
         "phash": "07f01e06310ea172",
-        "priority": 110500,
         "dropPriority": 9005
     },
     {
@@ -475,7 +424,6 @@
         "name": "次期当主会議",
         "shortname": "礼装",
         "phash": "4887d7a5b5780f12",
-        "priority": 110510,
         "dropPriority": 9005
     },
     {
@@ -484,7 +432,6 @@
         "rarity": 5,
         "name": "腹が減っては戦ができぬ",
         "phash": "9ded991269d7ec1c",
-        "priority": 110520,
         "dropPriority": 9005
     },
     {
@@ -493,7 +440,6 @@
         "rarity": 5,
         "name": "天鬼姫",
         "phash": "09e0e89ef69ce7ec",
-        "priority": 110530,
         "dropPriority": 9005
     },
     {
@@ -502,7 +448,6 @@
         "rarity": 5,
         "name": "盛夏の思い出",
         "phash": "4fc4957d7df2e27d",
-        "priority": 110540,
         "dropPriority": 9005
     },
     {
@@ -512,7 +457,6 @@
         "name": "シーニック・ビューティー",
         "shortname": "礼装",
         "phash": "1b79c9ca1953c136",
-        "priority": 110550,
         "dropPriority": 9005
     },
     {
@@ -522,7 +466,6 @@
         "name": "双つ星の歌姫",
         "shortname": "礼装",
         "phash": "a1f8acadba8f66cc",
-        "priority": 110560,
         "dropPriority": 9005
     },
     {
@@ -532,7 +475,6 @@
         "name": "ベスティア・デル・ソル",
         "shortname": "礼装",
         "phash": "d238c76e84633cce",
-        "priority": 110570,
         "dropPriority": 9005
     },
     {
@@ -542,7 +484,6 @@
         "name": "クリスマスの軌跡",
         "shortname": "礼装",
         "phash": "8d34a0fcd5c4f7d8",
-        "priority": 110580,
         "dropPriority": 9005
     },
     {
@@ -551,7 +492,6 @@
         "rarity": 5,
         "name": "ニット・ザ・ラブ",
         "phash": "cfcc6cfafe69a7fa",
-        "priority": 110590,
         "dropPriority": 9005
     },
     {
@@ -561,7 +501,6 @@
         "name": "見上げた空の星に",
         "shortname": "礼装",
         "phash": "872899e2f9529df5",
-        "priority": 110600,
         "dropPriority": 9005
     },
     {
@@ -570,7 +509,6 @@
         "rarity": 4,
         "name": "カレイドサファイア",
         "phash": "96e9e3846bfc1063",
-        "priority": 210000,
         "dropPriority": 9004
     },
     {
@@ -579,7 +517,6 @@
         "rarity": 4,
         "name": "カレイドルビー",
         "phash": "6178ceeed634f1ab",
-        "priority": 210010,
         "dropPriority": 9004
     },
     {
@@ -588,7 +525,6 @@
         "rarity": 4,
         "name": "ウィザード＆プリースト",
         "phash": "a9a3610ccaea72fe",
-        "priority": 210020,
         "dropPriority": 9004
     },
     {
@@ -597,7 +533,6 @@
         "rarity": 4,
         "name": "黄金の翼",
         "phash": "61e29d2df2d76bb7",
-        "priority": 210030,
         "dropPriority": 9004
     },
     {
@@ -606,7 +541,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：ノッブ",
         "phash": "3e27cc2ba1380d46",
-        "priority": 210040,
         "dropPriority": 9004
     },
     {
@@ -615,7 +549,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：謎の物質α",
         "phash": "bc5d99130d024142",
-        "priority": 210050,
         "dropPriority": 9004
     },
     {
@@ -624,7 +557,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：ぐだぐだ明治維新",
         "phash": "d70cb5336cf2e3f8",
-        "priority": 210060,
         "dropPriority": 9004
     },
     {
@@ -633,7 +565,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：ＢＢショット！",
         "phash": "625e2a05f3c85738",
-        "priority": 210070,
         "dropPriority": 9004
     },
     {
@@ -642,7 +573,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：宇宙犬",
         "phash": "4f629c3efde6a192",
-        "priority": 210080,
         "dropPriority": 9004
     },
     {
@@ -651,7 +581,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：フランの花",
         "phash": "4647c7a19930efe5",
-        "priority": 210090,
         "dropPriority": 9004
     },
     {
@@ -660,7 +589,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：ぐだぐだまじんさん",
         "phash": "465358ae99524f26",
-        "priority": 210100,
         "dropPriority": 9004
     },
     {
@@ -669,7 +597,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：ドルセント・ショップ",
         "phash": "3ce3cbd2b0323953",
-        "priority": 210110,
         "dropPriority": 9004
     },
     {
@@ -678,7 +605,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：猪王",
         "phash": "7261b137c9c58836",
-        "priority": 210120,
         "dropPriority": 9004
     },
     {
@@ -687,7 +613,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：ぐだぐだ天魔王×３",
         "phash": "5a03e4f2195eac73",
-        "priority": 210130,
         "dropPriority": 9004
     },
     {
@@ -697,7 +622,6 @@
         "name": "概念礼装EXPカード：はじめてのカレー",
         "shortname": "★4EXP礼装",
         "phash": "3f00f85e67aea3a2",
-        "priority": 210140,
         "dropPriority": 9004
     },
     {
@@ -706,7 +630,6 @@
         "rarity": 4,
         "name": "概念礼装EXPカード：窮鼠",
         "phash": "694287995a63e689",
-        "priority": 210150,
         "dropPriority": 9004
     },
     {
@@ -715,7 +638,6 @@
         "rarity": 3,
         "name": "トリック・オア・トリート",
         "phash": "9df0ccbc30d3e4d5",
-        "priority": 310000,
         "dropPriority": 9003
     },
     {
@@ -724,7 +646,6 @@
         "rarity": 3,
         "name": "概念礼装EXPカード：マジカルルビー",
         "phash": "3ee132a57a6d729d",
-        "priority": 310010,
         "dropPriority": 9003
     },
     {
@@ -733,7 +654,6 @@
         "rarity": 3,
         "name": "マタ・ハリの酒場",
         "phash": "3d65f0c693926edb",
-        "priority": 310020,
         "dropPriority": 9003
     },
     {
@@ -742,7 +662,6 @@
         "rarity": 3,
         "name": "ノスタルジック・フォーム",
         "phash": "a5933f4163006952",
-        "priority": 310030,
         "dropPriority": 9003
     },
     {
@@ -751,7 +670,6 @@
         "rarity": 3,
         "name": "概念礼装EXPカード：おき太",
         "phash": "e10997441e7f77f0",
-        "priority": 310040,
         "dropPriority": 9003
     },
     {
@@ -760,7 +678,6 @@
         "rarity": 3,
         "name": "概念礼装EXPカード：謎の物質β",
         "phash": "ee5d353b528528c3",
-        "priority": 310050,
         "dropPriority": 9003
     },
     {
@@ -769,7 +686,6 @@
         "rarity": 3,
         "name": "概念礼装EXPカード：九字兼定",
         "phash": "dbe1c30b969428db",
-        "priority": 310060,
         "dropPriority": 9003
     },
     {
@@ -778,7 +694,6 @@
         "rarity": 3,
         "name": "概念礼装EXPカード：刻印虫",
         "phash": "a163e6ca66dadbf1",
-        "priority": 310070,
         "dropPriority": 9003
     },
     {
@@ -787,7 +702,6 @@
         "rarity": 3,
         "name": "概念礼装EXPカード：ぐだぐだウェルカム",
         "phash": "ce6565f909c69566",
-        "priority": 310080,
         "dropPriority": 9003
     },
     {
@@ -796,7 +710,6 @@
         "rarity": 3,
         "name": "概念礼装EXPカード：ぐだぐだ土佐同盟",
         "phash": "44570f866c6fe22a",
-        "priority": 310090,
         "dropPriority": 9003
     },
     {
@@ -805,7 +718,6 @@
         "rarity": 3,
         "name": "概念礼装EXPカード：毘沙門天ぞ是にあり！",
         "phash": "045bfac47960143e",
-        "priority": 310100,
         "dropPriority": 9003
     },
     {
@@ -815,7 +727,6 @@
         "name": "概念礼装EXPカード：謎の物質γ",
         "shortname": "★3EXP礼装",
         "phash": "89f4cc1c9e3e35e9",
-        "priority": 310110,
         "dropPriority": 9003
     },
     {
@@ -825,7 +736,6 @@
         "phash": "7c031316a16c2b0e",
         "name": "悠久の実",
         "shortname": "実",
-        "priority": 410001,
         "dropPriority": 8407,
         "phash_battle": "7e8152658c0a781e"
     },
@@ -840,7 +750,6 @@
             "煌星の欠片",
             "煌星のかけら"
         ],
-        "priority": 410011,
         "dropPriority": 8508,
         "phash_battle": "1a816658059a052c"
     },
@@ -851,7 +760,6 @@
         "phash": "2632498cd8c43343",
         "name": "真理の卵",
         "shortname": "卵",
-        "priority": 410021,
         "dropPriority": 8507,
         "phash_battle": "16a1ed4819094948"
     },
@@ -862,7 +770,6 @@
         "phash": "76c3318c2487caa4",
         "name": "九十九鏡",
         "shortname": "鏡",
-        "priority": 410031,
         "dropPriority": 8506,
         "phash_battle": "fe03c456a3a52929"
     },
@@ -873,7 +780,6 @@
         "phash": "d6330d2c43221189",
         "name": "暁光炉心",
         "shortname": "炉心",
-        "priority": 410041,
         "dropPriority": 8406,
         "phash_battle": "7a0524ab19581188"
     },
@@ -888,7 +794,6 @@
             "奇々神酒",
             "酒"
         ],
-        "priority": 410051,
         "dropPriority": 8505,
         "phash_battle": "3e8425a95959644e"
     },
@@ -899,7 +804,6 @@
         "phash": "5601894c52023cb1",
         "name": "呪獣胆石",
         "shortname": "胆石",
-        "priority": 410061,
         "dropPriority": 8504,
         "phash_battle": "168161a29c632694"
     },
@@ -913,7 +817,6 @@
         "alias": [
             "毛"
         ],
-        "priority": 410071,
         "dropPriority": 8405,
         "phash_battle": "1e33d929a4169a4a"
     },
@@ -924,7 +827,6 @@
         "phash": "74038986c3e07378",
         "name": "智慧のスカラベ",
         "shortname": "スカラベ",
-        "priority": 410081,
         "dropPriority": 8503,
         "phash_battle": "be0d437118808400"
     },
@@ -935,7 +837,6 @@
         "phash": "6659cb98a44324d4",
         "name": "封魔のランプ",
         "shortname": "ランプ",
-        "priority": 410091,
         "dropPriority": 8404,
         "phash_battle": "b629c57215cc8378"
     },
@@ -949,7 +850,6 @@
         "alias": [
             "角"
         ],
-        "priority": 415001,
         "dropPriority": 8401,
         "phash_battle": "92295629d649a5d2"
     },
@@ -960,7 +860,6 @@
         "phash": "9ec2790c9319a6b4",
         "name": "精霊根",
         "shortname": "根",
-        "priority": 415011,
         "dropPriority": 8502,
         "phash_battle": "5629a949a4162909"
     },
@@ -971,7 +870,6 @@
         "phash": "1e0ee9fc21b987e1",
         "name": "竜の逆鱗",
         "shortname": "逆鱗",
-        "priority": 415021,
         "dropPriority": 8501,
         "phash_battle": "8e79399367074e0b"
     },
@@ -982,7 +880,6 @@
         "phash": "f40623e14b239919",
         "name": "蛮神の心臓",
         "shortname": "心臓",
-        "priority": 415031,
         "dropPriority": 8500,
         "phash_battle": "5e833189494c005a"
     },
@@ -993,7 +890,6 @@
         "phash": "7606a38114f9091c",
         "name": "混沌の爪",
         "shortname": "爪",
-        "priority": 415041,
         "dropPriority": 8400,
         "phash_battle": "fe0751bc0dc67312"
     },
@@ -1008,7 +904,6 @@
             "獣脂",
             "油"
         ],
-        "priority": 415051,
         "dropPriority": 8403,
         "phash_battle": "5e05a1611b581484"
     },
@@ -1022,7 +917,6 @@
         "alias": [
             "血涙"
         ],
-        "priority": 415061,
         "dropPriority": 8402,
         "phash_battle": "162158a66813994c"
     },
@@ -1036,7 +930,6 @@
         "alias": [
             "神脈"
         ],
-        "priority": 420001,
         "dropPriority": 8317,
         "phash_battle": "fa063db98b5256d4"
     },
@@ -1050,7 +943,6 @@
         "alias": [
             "光銀"
         ],
-        "priority": 420011,
         "dropPriority": 8316,
         "phash_battle": "e91dea413e45fae9"
     },
@@ -1065,7 +957,6 @@
             "禍罪の鏃",
             "鏃"
         ],
-        "priority": 420021,
         "dropPriority": 8315,
         "phash_battle": "be0168a84d42b482"
     },
@@ -1076,7 +967,6 @@
         "phash": "de228d7c934c619c",
         "name": "閑古鈴",
         "shortname": "鈴",
-        "priority": 420031,
         "dropPriority": 8314,
         "phash_battle": "7a05c1833c2a5216"
     },
@@ -1087,7 +977,6 @@
         "phash": "5ea9054aa976c913",
         "name": "巨人の指輪",
         "shortname": "指輪",
-        "priority": 420041,
         "dropPriority": 8312,
         "phash_battle": "7a07c5b17b0b5118"
     },
@@ -1098,7 +987,6 @@
         "phash": "9cd269a41c649969",
         "name": "オーロラ鋼",
         "shortname": "オーロラ",
-        "priority": 420051,
         "dropPriority": 8313,
         "phash_battle": "5ea35514a9892469"
     },
@@ -1112,7 +1000,6 @@
         "alias": [
             "氷"
         ],
-        "priority": 420061,
         "dropPriority": 8311,
         "phash_battle": "7e816cc6936ac936"
     },
@@ -1123,7 +1010,6 @@
         "phash": "5ea42b5ae44b98b4",
         "name": "枯淡勾玉",
         "shortname": "勾玉",
-        "priority": 420071,
         "dropPriority": 8310,
         "phash_battle": "fe0562e95cb60dcc"
     },
@@ -1134,7 +1020,6 @@
         "phash": "765229a989cc1f94",
         "name": "追憶の貝殻",
         "shortname": "貝殻",
-        "priority": 420081,
         "dropPriority": 8308,
         "phash_battle": "1aa5d5488cd6b049"
     },
@@ -1145,7 +1030,6 @@
         "phash": "b692d2dc4969a925",
         "name": "大騎士勲章",
         "shortname": "勲章",
-        "priority": 420091,
         "dropPriority": 8309,
         "phash_battle": "96526dadb5146c2b"
     },
@@ -1156,7 +1040,6 @@
         "phash": "deb82d6ea1527116",
         "name": "八連双晶",
         "shortname": "八連",
-        "priority": 425001,
         "dropPriority": 8301,
         "phash_battle": "7e05a5c919966224"
     },
@@ -1170,7 +1053,6 @@
         "alias": [
             "宝玉"
         ],
-        "priority": 425011,
         "dropPriority": 8307,
         "phash_battle": "56a5c372b9b18972"
     },
@@ -1185,7 +1067,6 @@
             "鳳凰の羽",
             "羽"
         ],
-        "priority": 425021,
         "dropPriority": 8306,
         "phash_battle": "a6bb4d44691444a2"
     },
@@ -1199,7 +1080,6 @@
         "alias": [
             "ホムベビ"
         ],
-        "priority": 425031,
         "dropPriority": 8304,
         "phash_battle": "56e16a84b119ad65"
     },
@@ -1210,7 +1090,6 @@
         "phash": "5cc887d2e33c5b0c",
         "name": "隕蹄鉄",
         "shortname": "蹄鉄",
-        "priority": 425041,
         "dropPriority": 8305,
         "phash_battle": "788573b918c46422"
     },
@@ -1221,7 +1100,6 @@
         "phash": "b51a4bd44a3fe26c",
         "name": "禁断の頁",
         "shortname": "頁",
-        "priority": 425051,
         "dropPriority": 8303,
         "phash_battle": "df09f61cb2ec5ba8"
     },
@@ -1232,7 +1110,6 @@
         "phash": "7c162791e9b93969",
         "name": "無間の歯車",
         "shortname": "歯車",
-        "priority": 425061,
         "dropPriority": 8302,
         "phash_battle": "5e12e179198d0ce4"
     },
@@ -1243,7 +1120,6 @@
         "phash": "4e58891392b966c4",
         "name": "ゴーストランタン",
         "shortname": "ランタン",
-        "priority": 425071,
         "dropPriority": 8300,
         "phash_battle": "a6c9599aa6647926"
     },
@@ -1254,7 +1130,6 @@
         "phash": "7e2009184306d384",
         "name": "世界樹の種",
         "shortname": "種",
-        "priority": 425081,
         "dropPriority": 8203,
         "phash_battle": "3e85a9295a948620"
     },
@@ -1265,7 +1140,6 @@
         "phash": "5627a159391d89e9",
         "name": "励振火薬",
         "shortname": "火薬",
-        "priority": 430001,
         "dropPriority": 8105,
         "phash_battle": "6e93399d4535c22a"
     },
@@ -1280,7 +1154,6 @@
             "宵哭の鉄杭",
             "杭"
         ],
-        "priority": 430011,
         "dropPriority": 8104,
         "phash_battle": "4c8d3363e3633030"
     },
@@ -1291,7 +1164,6 @@
         "phash": "7609b266c8900090",
         "name": "魔術髄液",
         "shortname": "髄液",
-        "priority": 430021,
         "dropPriority": 8103,
         "phash_battle": "261972cd9a070264"
     },
@@ -1305,7 +1177,6 @@
         "alias": [
             "針"
         ],
-        "priority": 430031,
         "dropPriority": 8202,
         "phash_battle": "5ab5294bd3b2346c"
     },
@@ -1316,7 +1187,6 @@
         "phash": "5e07a1e129b18909",
         "name": "愚者の鎖",
         "shortname": "鎖",
-        "priority": 430041,
         "dropPriority": 8102,
         "phash_battle": "0e53b119cca92616"
     },
@@ -1327,7 +1197,6 @@
         "phash": "54050140411d9001",
         "name": "虚影の塵",
         "shortname": "塵",
-        "priority": 435001,
         "dropPriority": 8201,
         "phash_battle": "de01681a86a42a11"
     },
@@ -1338,7 +1207,6 @@
         "phash": "565724a53199c9a9",
         "name": "竜の牙",
         "shortname": "牙",
-        "priority": 435011,
         "dropPriority": 8200,
         "phash_battle": "3a8315d9ed652cb0"
     },
@@ -1349,7 +1217,6 @@
         "phash": "56d358cd24b585f0",
         "name": "凶骨",
         "shortname": "骨",
-        "priority": 435021,
         "dropPriority": 8101,
         "phash_battle": "524b25955521a8a5"
     },
@@ -1360,7 +1227,6 @@
         "phash": "5607a1a158181606",
         "name": "英雄の証",
         "shortname": "証",
-        "priority": 435031,
         "dropPriority": 8100,
         "phash_battle": "5e05a15806462119"
     },
@@ -1372,7 +1238,6 @@
         "phash_class": "4de158be59b13061",
         "name": "剣の秘石",
         "shortname": "剣秘",
-        "priority": 440001,
         "dropPriority": 6300,
         "phash_battle": "6a96e6611fd899ae"
     },
@@ -1384,7 +1249,6 @@
         "phash_class": "1df066fe72a519c0",
         "name": "弓の秘石",
         "shortname": "弓秘",
-        "priority": 440011,
         "dropPriority": 6299,
         "phash_battle": "681666e33fd8cdea"
     },
@@ -1396,7 +1260,6 @@
         "phash_class": "59fc5af7668bb46e",
         "name": "槍の秘石",
         "shortname": "槍秘",
-        "priority": 440021,
         "dropPriority": 6298,
         "phash_battle": "e80632619fb0cf9a"
     },
@@ -1408,7 +1271,6 @@
         "phash_class": "c7315852399c18c4",
         "name": "騎の秘石",
         "shortname": "騎秘",
-        "priority": 440031,
         "dropPriority": 6297,
         "phash_battle": "2a8e76611f99cf3a"
     },
@@ -1420,7 +1282,6 @@
         "phash_class": "5b76b0bcd6e908c4",
         "name": "術の秘石",
         "shortname": "術秘",
-        "priority": 440041,
         "dropPriority": 6296,
         "phash_battle": "7a0646331fe8996e"
     },
@@ -1432,7 +1293,6 @@
         "phash_class": "1df159ee5ca5b4d0",
         "name": "殺の秘石",
         "shortname": "殺秘",
-        "priority": 440051,
         "dropPriority": 6295,
         "phash_battle": "6a9e66e31be08f9a"
     },
@@ -1444,7 +1304,6 @@
         "phash_class": "5cb119ee01a410d4",
         "name": "狂の秘石",
         "shortname": "狂秘",
-        "priority": 440061,
         "dropPriority": 6294,
         "phash_battle": "ea1e66c21bc80f9a"
     },
@@ -1456,7 +1315,6 @@
         "phash_class": "3bb6ceeffeefefb4",
         "name": "剣の魔石",
         "shortname": "剣魔",
-        "priority": 450001,
         "dropPriority": 6200,
         "phash_battle": "5ea1298909484c42"
     },
@@ -1468,7 +1326,6 @@
         "phash_class": "e3fa18f68d77e63d",
         "name": "弓の魔石",
         "shortname": "弓魔",
-        "priority": 450011,
         "dropPriority": 6199,
         "phash_battle": "16e1292988485c42"
     },
@@ -1480,7 +1337,6 @@
         "phash_class": "83027c7cf8f56ad1",
         "name": "槍の魔石",
         "shortname": "槍魔",
-        "priority": 450021,
         "dropPriority": 6198,
         "phash_battle": "56a1a93909481842"
     },
@@ -1492,7 +1348,6 @@
         "phash_class": "39d276bcce63f778",
         "name": "騎の魔石",
         "shortname": "騎魔",
-        "priority": 450031,
         "dropPriority": 6197,
         "phash_battle": "5ea52919094c58c6"
     },
@@ -1504,7 +1359,6 @@
         "phash_class": "a9b84e627c96f639",
         "name": "術の魔石",
         "shortname": "術魔",
-        "priority": 450041,
         "dropPriority": 6196,
         "phash_battle": "5ea1312909086442"
     },
@@ -1516,7 +1370,6 @@
         "phash_class": "6be6bebbeffbebac",
         "name": "殺の魔石",
         "shortname": "殺魔",
-        "priority": 450051,
         "dropPriority": 6195,
         "phash_battle": "5ea5b9290c485c42"
     },
@@ -1528,7 +1381,6 @@
         "phash_class": "abeefebafefbeeed",
         "name": "狂の魔石",
         "shortname": "狂魔",
-        "priority": 450061,
         "dropPriority": 6194,
         "phash_battle": "5ea5b9290c485866"
     },
@@ -1540,7 +1392,6 @@
         "phash_class": "10bf9e453e454d3e",
         "name": "剣の輝石",
         "shortname": "剣輝",
-        "priority": 460001,
         "dropPriority": 6100,
         "phash_battle": "1ee1295a5206a629"
     },
@@ -1552,7 +1403,6 @@
         "phash_class": "e02b1e558f706639",
         "name": "弓の輝石",
         "shortname": "弓輝",
-        "priority": 460011,
         "dropPriority": 6099,
         "phash_battle": "1ee1a979d6268624"
     },
@@ -1564,7 +1414,6 @@
         "phash_class": "000b3e5cbaa44999",
         "name": "槍の輝石",
         "shortname": "槍輝",
-        "priority": 460021,
         "dropPriority": 6098,
         "phash_battle": "1ee1a91b46c6a621"
     },
@@ -1576,7 +1425,6 @@
         "phash_class": "38cb36348e636438",
         "name": "騎の輝石",
         "shortname": "騎輝",
-        "priority": 460031,
         "dropPriority": 6097,
         "phash_battle": "1ee1a959560680a4"
     },
@@ -1588,7 +1436,6 @@
         "phash_class": "b0bb4e463a96f63b",
         "name": "術の輝石",
         "shortname": "術輝",
-        "priority": 460041,
         "dropPriority": 6096,
         "phash_battle": "1ee1a9495696a629"
     },
@@ -1600,7 +1447,6 @@
         "phash_class": "40ef3e112e71412e",
         "name": "殺の輝石",
         "shortname": "殺輝",
-        "priority": 460051,
         "dropPriority": 6095,
         "phash_battle": "1ee5a9594616a621"
     },
@@ -1612,7 +1458,6 @@
         "phash_class": "01effe107e9145af",
         "name": "狂の輝石",
         "shortname": "狂輝",
-        "priority": 460061,
         "dropPriority": 6094,
         "phash_battle": "1ee5a97956968424"
     },
@@ -1626,7 +1471,6 @@
         "alias": [
             "剣モニュメント"
         ],
-        "priority": 470001,
         "dropPriority": 5300,
         "phash_battle": "96a15949649ba626"
     },
@@ -1640,7 +1484,6 @@
         "alias": [
             "弓モニュメント"
         ],
-        "priority": 470011,
         "dropPriority": 5299,
         "phash_battle": "46992342851b3d3a"
     },
@@ -1654,7 +1497,6 @@
         "alias": [
             "槍モニュメント"
         ],
-        "priority": 470021,
         "dropPriority": 5298,
         "phash_battle": "d6a93249a40d6692"
     },
@@ -1668,7 +1510,6 @@
         "alias": [
             "騎モニュメント"
         ],
-        "priority": 470031,
         "dropPriority": 5297,
         "phash_battle": "36e9199e653a8944"
     },
@@ -1682,7 +1523,6 @@
         "alias": [
             "術モニュメント"
         ],
-        "priority": 470041,
         "dropPriority": 5296,
         "phash_battle": "46a118b764539c62"
     },
@@ -1696,7 +1536,6 @@
         "alias": [
             "殺モニュメント"
         ],
-        "priority": 470051,
         "dropPriority": 5295,
         "phash_battle": "66b9ccd22526114e"
     },
@@ -1710,7 +1549,6 @@
         "alias": [
             "狂モニュメント"
         ],
-        "priority": 470061,
         "dropPriority": 5294,
         "phash_battle": "0e49a3d34986642b"
     },
@@ -1724,7 +1562,6 @@
         "alias": [
             "剣ピース"
         ],
-        "priority": 480001,
         "dropPriority": 5200,
         "phash_battle": "96b14949649aa624"
     },
@@ -1738,7 +1575,6 @@
         "alias": [
             "弓ピース"
         ],
-        "priority": 480011,
         "dropPriority": 5199,
         "phash_battle": "5699634284593d38"
     },
@@ -1752,7 +1588,6 @@
         "alias": [
             "槍ピース"
         ],
-        "priority": 480021,
         "dropPriority": 5198,
         "phash_battle": "d6a93ad8a42c6692"
     },
@@ -1766,7 +1601,6 @@
         "alias": [
             "騎ピース"
         ],
-        "priority": 480031,
         "dropPriority": 5197,
         "phash_battle": "36e9199a653a8964"
     },
@@ -1780,7 +1614,6 @@
         "alias": [
             "術ピース"
         ],
-        "priority": 480041,
         "dropPriority": 5196,
         "phash_battle": "46e918b26c53ac62"
     },
@@ -1794,7 +1627,6 @@
         "alias": [
             "殺ピース"
         ],
-        "priority": 480051,
         "dropPriority": 5195,
         "phash_battle": "66b9ccd23526994e"
     },
@@ -1808,15 +1640,8 @@
         "alias": [
             "狂ピース"
         ],
-        "priority": 480061,
         "dropPriority": 5194,
         "phash_battle": "0e69a3525996746b"
-    },
-    {
-        "id": 30000000,
-        "name": "ポイント",
-        "type": "Point",
-        "priority": 500001
     },
     {
         "id": 94047709,
@@ -1824,7 +1649,6 @@
         "rarity": 2,
         "phash": "5649a51861d34b0c",
         "name": "3ゾロダイス",
-        "priority": 500011,
         "dropPriority": 4108,
         "phash_battle": "7a0594e90c1e7881"
     },
@@ -1834,7 +1658,6 @@
         "rarity": 2,
         "phash": "7659a5d461c24b14",
         "name": "2ゾロダイス",
-        "priority": 500021,
         "dropPriority": 4107,
         "phash_battle": "7a05a4e90d1e78e5"
     },
@@ -1844,7 +1667,6 @@
         "rarity": 2,
         "phash": "5649a51831934904",
         "name": "1ゾロダイス",
-        "priority": 500031,
         "dropPriority": 4106,
         "phash_battle": "3ea518d924265069"
     },
@@ -1854,7 +1676,6 @@
         "rarity": 2,
         "phash": "5649a534c1c2691e",
         "name": "456ダイス",
-        "priority": 500041,
         "dropPriority": 4105,
         "phash_battle": "7e0584e1099a78a7"
     },
@@ -1864,7 +1685,6 @@
         "rarity": 2,
         "phash": "5649259221584b04",
         "name": "123ダイス",
-        "priority": 500051,
         "dropPriority": 4104,
         "phash_battle": "fe0511e961145a01"
     },
@@ -1874,7 +1694,6 @@
         "rarity": 2,
         "phash": "7ec8a5b843479cb4",
         "name": "ノーマルダイス",
-        "priority": 500061,
         "dropPriority": 4103,
         "phash_battle": "2e65d8a35c18eaa5"
     },
@@ -1884,8 +1703,7 @@
         "rarity": 2,
         "phash": "3c208bda71764c8c",
         "name": "キラキラポイント",
-        "dropPriority": 3004,
-        "priority": 500071
+        "dropPriority": 3004
     },
     {
         "id": 94043005,
@@ -1894,8 +1712,8 @@
         "phash": "fc0279ec27d86738",
         "name": "聖夜の絆創膏",
         "shortname": "絆創膏",
-        "priority": 500081,
-        "dropPriority": 2005
+        "dropPriority": 2005,
+        "phash_battle": "16692d4638964882"
     },
     {
         "id": 94040905,
@@ -1904,7 +1722,6 @@
         "phash": "fc920b29e8585e8c",
         "name": "AUOくじ2019",
         "shortname": "くじ",
-        "priority": 500091,
         "dropPriority": 2005
     },
     {
@@ -1913,8 +1730,7 @@
         "rarity": 2,
         "phash": "9e0849584990cc05",
         "name": "詩詠みポイント",
-        "dropPriority": 3004,
-        "priority": 500101
+        "dropPriority": 3004
     },
     {
         "id": 94032207,
@@ -1922,8 +1738,7 @@
         "rarity": 2,
         "phash": "1e080958490c5914",
         "name": "奉納ポイント",
-        "dropPriority": 3007,
-        "priority": 500111
+        "dropPriority": 3007
     },
     {
         "id": 94031305,
@@ -1931,8 +1746,9 @@
         "rarity": 2,
         "phash": "de4229b4924f68b0",
         "name": "アミーゴタオル",
-        "priority": 500121,
-        "dropPriority": 2005
+        "shortname": "タオル",
+        "dropPriority": 2005,
+        "phash_battle": "d629d04aa5128bd8"
     },
     {
         "id": 94030104,
@@ -1940,8 +1756,7 @@
         "rarity": 2,
         "phash": "3e888b785934f28c",
         "name": "おともだちポイント",
-        "dropPriority": 3004,
-        "priority": 500131
+        "dropPriority": 3004
     },
     {
         "id": 94029005,
@@ -1950,7 +1765,6 @@
         "phash": "fc820b6aa259468c",
         "name": "AUOくじ",
         "shortname": "くじ",
-        "priority": 500141,
         "dropPriority": 2005
     },
     {
@@ -1959,8 +1773,7 @@
         "rarity": 2,
         "phash": "5668a91e58850c61",
         "name": "同人空想力",
-        "dropPriority": 3006,
-        "priority": 500151
+        "dropPriority": 3006
     },
     {
         "id": 94027505,
@@ -1968,8 +1781,7 @@
         "rarity": 2,
         "phash": "ff6a8fb249ccf28c",
         "name": "同人探求力",
-        "dropPriority": 3005,
-        "priority": 500161
+        "dropPriority": 3005
     },
     {
         "id": 94027504,
@@ -1977,8 +1789,7 @@
         "rarity": 2,
         "phash": "4c62939c69b3264d",
         "name": "同人活動力",
-        "dropPriority": 3004,
-        "priority": 500171
+        "dropPriority": 3004
     },
     {
         "id": 94023304,
@@ -1986,8 +1797,7 @@
         "rarity": 2,
         "phash": "fcc9871669f4eb19",
         "name": "ドラクルコイン",
-        "dropPriority": 3004,
-        "priority": 500181
+        "dropPriority": 3004
     },
     {
         "id": 94020805,
@@ -1995,8 +1805,7 @@
         "rarity": 2,
         "phash": "5628815668b54e39",
         "name": "空中庭園謹製チョコ",
-        "dropPriority": 3004,
-        "priority": 500191
+        "dropPriority": 3004
     },
     {
         "id": 94018805,
@@ -2005,7 +1814,6 @@
         "phash": "26796414d919308c",
         "name": "冥界の砂",
         "shortname": "砂",
-        "priority": 500201,
         "dropPriority": 2005
     },
     {
@@ -2014,8 +1822,7 @@
         "rarity": 2,
         "phash": "1e68a198699c19a4",
         "name": "織田幕府ポイント",
-        "dropPriority": 3005,
-        "priority": 500211
+        "dropPriority": 3005
     },
     {
         "id": 94011304,
@@ -2023,8 +1830,7 @@
         "rarity": 2,
         "phash": "3e6a0b9cc8b37204",
         "name": "新選組ポイント",
-        "dropPriority": 3004,
-        "priority": 500221
+        "dropPriority": 3004
     },
     {
         "id": 94009005,
@@ -2032,8 +1838,6 @@
         "rarity": 3,
         "phash": "d6362dc9892c926e",
         "name": "奇跡のくつした",
-        "shortname": "",
-        "priority": 500231,
         "dropPriority": 2005
     },
     {
@@ -2042,8 +1846,6 @@
         "rarity": 3,
         "phash": "1ca6a35a656c5a8f",
         "name": "真紅の花びら",
-        "shortname": "",
-        "priority": 500241,
         "dropPriority": 2004
     },
     {
@@ -2052,8 +1854,6 @@
         "rarity": 2,
         "phash": "2c82d33c8b6c03c4",
         "name": "手稿（偽）",
-        "shortname": "",
-        "priority": 500251,
         "dropPriority": 2004
     },
     {
@@ -2062,8 +1862,6 @@
         "rarity": 2,
         "phash": "2fda7b9c0a648be4",
         "name": "手稿（真）",
-        "shortname": "",
-        "priority": 500261,
         "dropPriority": 2005
     },
     {
@@ -2072,9 +1870,8 @@
         "rarity": 3,
         "phash": "6f0c7a9913d3b6a6",
         "name": "アルトリウム",
-        "shortname": "",
         "dropPriority": 3004,
-        "priority": 500271
+        "phash_battle": "be0a49d3d6a62429"
     },
     {
         "id": 94001202,
@@ -2082,8 +1879,6 @@
         "rarity": 2,
         "phash": "36ccc921a1d60dd0",
         "name": "シルバーベル",
-        "shortname": "",
-        "priority": 500281,
         "dropPriority": 2002
     },
     {
@@ -2092,8 +1887,7 @@
         "rarity": 2,
         "phash": "cf7a3b9c6bcc9861",
         "name": "本能寺ポイント",
-        "dropPriority": 3004,
-        "priority": 500291
+        "dropPriority": 3004
     },
     {
         "id": 94000303,
@@ -2101,9 +1895,7 @@
         "rarity": 3,
         "phash": "764653e1bd9594b2",
         "name": "ネロメダル〔金〕",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600001
+        "dropPriority": 2003
     },
     {
         "id": 94000402,
@@ -2111,9 +1903,7 @@
         "rarity": 3,
         "phash": "16432650015410cd",
         "name": "特選団子",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 600011
+        "dropPriority": 2002
     },
     {
         "id": 94000504,
@@ -2121,9 +1911,7 @@
         "rarity": 3,
         "phash": "d644234332342434",
         "name": "かぼちゃランタン",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 600021
+        "dropPriority": 2004
     },
     {
         "id": 94000903,
@@ -2131,9 +1919,7 @@
         "rarity": 3,
         "phash": "56012b1c50043441",
         "name": "平蜘蛛",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600031
+        "dropPriority": 2003
     },
     {
         "id": 94001203,
@@ -2141,9 +1927,7 @@
         "rarity": 3,
         "phash": "66004936a38b8e78",
         "name": "ゴールドスター",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600041
+        "dropPriority": 2003
     },
     {
         "id": 94001204,
@@ -2151,9 +1935,7 @@
         "rarity": 3,
         "phash": "3623b94649cc1e43",
         "name": "魔法のくつした",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 600051
+        "dropPriority": 2004
     },
     {
         "id": 94001501,
@@ -2161,9 +1943,7 @@
         "rarity": 3,
         "phash": "7b86780acb08bec7",
         "name": "シンクウカーン",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600061
+        "dropPriority": 2003
     },
     {
         "id": 94001803,
@@ -2171,9 +1951,7 @@
         "rarity": 3,
         "phash": "7c860fe88379f119",
         "name": "剣のコインチョコ",
-        "shortname": "",
-        "dropPriority": 2010,
-        "priority": 600071
+        "dropPriority": 2010
     },
     {
         "id": 94001804,
@@ -2181,9 +1959,7 @@
         "rarity": 3,
         "phash": "fc860f608379f118",
         "name": "弓のコインチョコ",
-        "shortname": "",
-        "dropPriority": 2009,
-        "priority": 600081
+        "dropPriority": 2009
     },
     {
         "id": 94001805,
@@ -2191,9 +1967,7 @@
         "rarity": 3,
         "phash": "fc860fe88378f119",
         "name": "槍のコインチョコ",
-        "shortname": "",
-        "dropPriority": 2008,
-        "priority": 600091
+        "dropPriority": 2008
     },
     {
         "id": 94001806,
@@ -2201,9 +1975,7 @@
         "rarity": 3,
         "phash": "f8860fe88379f119",
         "name": "騎のコインチョコ",
-        "shortname": "",
-        "dropPriority": 2007,
-        "priority": 600101
+        "dropPriority": 2007
     },
     {
         "id": 94001807,
@@ -2211,9 +1983,7 @@
         "rarity": 3,
         "phash": "f8860fe88379f119",
         "name": "術のコインチョコ",
-        "shortname": "",
-        "dropPriority": 2006,
-        "priority": 600111
+        "dropPriority": 2006
     },
     {
         "id": 94001808,
@@ -2221,9 +1991,7 @@
         "rarity": 3,
         "phash": "f8860e60837cf119",
         "name": "殺のコインチョコ",
-        "shortname": "",
-        "dropPriority": 2005,
-        "priority": 600121
+        "dropPriority": 2005
     },
     {
         "id": 94001809,
@@ -2231,9 +1999,7 @@
         "rarity": 3,
         "phash": "f8860f708379f919",
         "name": "狂のコインチョコ",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 600131
+        "dropPriority": 2004
     },
     {
         "id": 94001810,
@@ -2241,9 +2007,7 @@
         "rarity": 3,
         "phash": "f8860ee0c379f119",
         "name": "全のコインチョコ",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600141
+        "dropPriority": 2003
     },
     {
         "id": 94002002,
@@ -2251,9 +2015,7 @@
         "rarity": 3,
         "phash": "8c59a393c9926141",
         "name": "黒猫フィギュア",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 600151
+        "dropPriority": 2004
     },
     {
         "id": 94002801,
@@ -2261,9 +2023,7 @@
         "rarity": 3,
         "phash": "3643c32c8330810c",
         "name": "モナ・リザ（偽）",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600161
+        "dropPriority": 2003
     },
     {
         "id": 94003901,
@@ -2271,9 +2031,7 @@
         "rarity": 3,
         "phash": "6718f0c629c14ebb",
         "name": "金丹",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600171
+        "dropPriority": 2003
     },
     {
         "id": 94003904,
@@ -2281,9 +2039,7 @@
         "rarity": 3,
         "phash": "67489989c636736e",
         "name": "功徳の札",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 600181
+        "dropPriority": 2004
     },
     {
         "id": 94003905,
@@ -2291,9 +2047,7 @@
         "rarity": 3,
         "phash": "de038760095e019c",
         "name": "大蓮華",
-        "shortname": "",
-        "dropPriority": 2005,
-        "priority": 600191
+        "dropPriority": 2005
     },
     {
         "id": 94003906,
@@ -2301,9 +2055,7 @@
         "rarity": 3,
         "phash": "5692216cd913333c",
         "name": "功徳の玉",
-        "shortname": "",
-        "dropPriority": 2006,
-        "priority": 600201
+        "dropPriority": 2006
     },
     {
         "id": 94004503,
@@ -2311,9 +2063,7 @@
         "rarity": 3,
         "phash": "7c210bd301b0b076",
         "name": "鬼印のつづら",
-        "shortname": "",
-        "dropPriority": 2005,
-        "priority": 600211
+        "dropPriority": 2005
     },
     {
         "id": 94006403,
@@ -2321,9 +2071,7 @@
         "rarity": 3,
         "phash": "964269ad83d2498c",
         "name": "ライオン号くん",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600221
+        "dropPriority": 2003
     },
     {
         "id": 94007703,
@@ -2331,9 +2079,7 @@
         "rarity": 3,
         "phash": "de893cb2834ca69d",
         "name": "金のズダ袋",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600231
+        "dropPriority": 2003
     },
     {
         "id": 94009001,
@@ -2341,9 +2087,7 @@
         "rarity": 3,
         "phash": "d6922369ad84c17d",
         "name": "フルーツケーキ",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600241
+        "dropPriority": 2003
     },
     {
         "id": 94011303,
@@ -2351,9 +2095,7 @@
         "rarity": 3,
         "phash": "66938b1c60e79448",
         "name": "小判",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600251
+        "dropPriority": 2003
     },
     {
         "id": 94015003,
@@ -2361,9 +2103,7 @@
         "rarity": 3,
         "phash": "5e03adb9037cd116",
         "name": "マグホイール",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 600261
+        "dropPriority": 2004
     },
     {
         "id": 94015303,
@@ -2371,9 +2111,7 @@
         "rarity": 3,
         "phash": "5ec18332639c5903",
         "name": "コノートコイン",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 600271
+        "dropPriority": 2004
     },
     {
         "id": 94017503,
@@ -2381,9 +2119,7 @@
         "rarity": 3,
         "phash": "7f0269ac93cc6718",
         "name": "ビームクッキー",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600281
+        "dropPriority": 2003
     },
     {
         "id": 94018803,
@@ -2392,8 +2128,7 @@
         "phash": "36a6e31c23792c99",
         "name": "スノーベビー",
         "shortname": "ベビー",
-        "dropPriority": 2003,
-        "priority": 600291
+        "dropPriority": 2003
     },
     {
         "id": 94020803,
@@ -2402,8 +2137,7 @@
         "phash": "d65a2db4c90f4a03",
         "name": "クークーカカオ",
         "shortname": "カカオ",
-        "dropPriority": 2003,
-        "priority": 600301
+        "dropPriority": 2003
     },
     {
         "id": 94020804,
@@ -2412,8 +2146,7 @@
         "phash": "66c1d930479931ce",
         "name": "フエールフレーバー",
         "shortname": "フレーバー",
-        "dropPriority": 2005,
-        "priority": 600311
+        "dropPriority": 2005
     },
     {
         "id": 94023303,
@@ -2423,8 +2156,7 @@
         "name": "賢者のチョーク",
         "shortname": "チョーク",
         "dropPriority": 2003,
-        "phash_battle": "fc42b02770ce7199",
-        "priority": 600321
+        "phash_battle": "fc42b02770ce7199"
     },
     {
         "id": 94025003,
@@ -2433,8 +2165,7 @@
         "phash": "5e03a55603503906",
         "name": "カエルの香炉",
         "shortname": "香炉",
-        "dropPriority": 2003,
-        "priority": 600331
+        "dropPriority": 2003
     },
     {
         "id": 94027503,
@@ -2442,8 +2173,7 @@
         "rarity": 3,
         "phash": "77488b9669a59e7b",
         "name": "ＢＢ＄札",
-        "dropPriority": 2003,
-        "priority": 600341
+        "dropPriority": 2003
     },
     {
         "id": 94029003,
@@ -2452,8 +2182,7 @@
         "phash": "d6052d6281614b04",
         "name": "マッスルバーガー",
         "shortname": "バーガー",
-        "dropPriority": 2003,
-        "priority": 600351
+        "dropPriority": 2003
     },
     {
         "id": 94029004,
@@ -2461,9 +2190,7 @@
         "rarity": 3,
         "phash": "5642a92c4e3314d3",
         "name": "金の延べ棒",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 600361
+        "dropPriority": 2004
     },
     {
         "id": 94030103,
@@ -2472,8 +2199,7 @@
         "phash": "96592c934396690c",
         "name": "コヅチサンデー",
         "shortname": "サンデー",
-        "dropPriority": 2003,
-        "priority": 600371
+        "dropPriority": 2003
     },
     {
         "id": 94031303,
@@ -2483,7 +2209,7 @@
         "name": "アディオスマイク",
         "shortname": "マイク",
         "dropPriority": 2003,
-        "priority": 600381
+        "phash_battle": "3ed9a34c718718c1"
     },
     {
         "id": 94032203,
@@ -2491,9 +2217,7 @@
         "rarity": 3,
         "phash": "b69309e643391918",
         "name": "雀の幸",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 600391
+        "dropPriority": 2003
     },
     {
         "id": 94032206,
@@ -2502,8 +2226,7 @@
         "phash": "7e021bf807cf601a",
         "name": "ケヤキの材木",
         "shortname": "ケヤキ",
-        "dropPriority": 2006,
-        "priority": 600401
+        "dropPriority": 2006
     },
     {
         "id": 94033503,
@@ -2512,8 +2235,7 @@
         "phash": "df02788e60339ccf",
         "name": "夢綴りの筆",
         "shortname": "筆",
-        "dropPriority": 2003,
-        "priority": 600411
+        "dropPriority": 2003
     },
     {
         "id": 94034603,
@@ -2522,8 +2244,7 @@
         "phash": "1e93d96c12c829a9",
         "name": "ハーミットシェーカー",
         "shortname": "シェーカー",
-        "dropPriority": 2003,
-        "priority": 600421
+        "dropPriority": 2003
     },
     {
         "id": 94035003,
@@ -2533,8 +2254,7 @@
         "name": "花かんざし",
         "shortname": "かんざし",
         "dropPriority": 2003,
-        "phash_battle": "a631dc650d8a2452",
-        "priority": 600431
+        "phash_battle": "a631dc650d8a2452"
     },
     {
         "id": 94036603,
@@ -2544,7 +2264,7 @@
         "name": "ノーヴル・クロック",
         "shortname": "クロック",
         "dropPriority": 2003,
-        "priority": 600441
+        "phash_battle": "7a03ec255952d846"
     },
     {
         "id": 94038403,
@@ -2553,8 +2273,7 @@
         "phash": "ce3170c9361989c7",
         "name": "陣立味噌",
         "shortname": "味噌",
-        "dropPriority": 2003,
-        "priority": 600451
+        "dropPriority": 2003
     },
     {
         "id": 94040103,
@@ -2563,8 +2282,7 @@
         "phash": "56630de0ad967098",
         "name": "ドリームチップ",
         "shortname": "チップ",
-        "dropPriority": 2003,
-        "priority": 600461
+        "dropPriority": 2003
     },
     {
         "id": 94040903,
@@ -2573,8 +2291,7 @@
         "phash": "f6032d5903c390d6",
         "name": "Ｗマッスルバーガー",
         "shortname": "バーガー",
-        "dropPriority": 2003,
-        "priority": 600471
+        "dropPriority": 2003
     },
     {
         "id": 94041903,
@@ -2584,7 +2301,7 @@
         "name": "金のセイバーバッヂ",
         "shortname": "金バッヂ",
         "dropPriority": 2003,
-        "priority": 600481
+        "phash_battle": "1ea169924a04a501"
     },
     {
         "id": 94043003,
@@ -2594,7 +2311,7 @@
         "name": "真心の枕",
         "shortname": "枕",
         "dropPriority": 2003,
-        "priority": 600491
+        "phash_battle": "ab16b54a5a9546f6"
     },
     {
         "id": 94045903,
@@ -2603,8 +2320,7 @@
         "phash": "9c07836c619c4996",
         "name": "夜すがらの扇",
         "shortname": "扇",
-        "dropPriority": 2003,
-        "priority": 600501
+        "dropPriority": 2003
     },
     {
         "id": 94046503,
@@ -2613,8 +2329,7 @@
         "phash": "4649a94e0d94dbc3",
         "name": "疑惑のハチミツ",
         "shortname": "ハチミツ",
-        "dropPriority": 2003,
-        "priority": 600511
+        "dropPriority": 2003
     },
     {
         "id": 94047703,
@@ -2622,10 +2337,8 @@
         "rarity": 3,
         "phash": "d6412db08d486106",
         "name": "ライフカウンター",
-        "shortname": "",
         "dropPriority": 2003,
-        "phash_battle": "6a059c21934a590c",
-        "priority": 600521
+        "phash_battle": "6a059c21934a590c"
     },
     {
         "id": 94000302,
@@ -2633,9 +2346,7 @@
         "rarity": 2,
         "phash": "74465be0b9b596b6",
         "name": "ネロメダル〔銀〕",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700001
+        "dropPriority": 2002
     },
     {
         "id": 94000401,
@@ -2643,9 +2354,7 @@
         "rarity": 2,
         "phash": "de291d8843568124",
         "name": "月見団子",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 700011
+        "dropPriority": 2001
     },
     {
         "id": 94000502,
@@ -2653,9 +2362,7 @@
         "rarity": 2,
         "phash": "3e09d08e701ca14c",
         "name": "スイートキャンドル",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700021
+        "dropPriority": 2002
     },
     {
         "id": 94000503,
@@ -2663,9 +2370,7 @@
         "rarity": 2,
         "phash": "3ef18b1ad1acb50f",
         "name": "いたずらコウモリ",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 700031
+        "dropPriority": 2003
     },
     {
         "id": 94000902,
@@ -2673,9 +2378,7 @@
         "rarity": 2,
         "phash": "d6c02571090ccbc4",
         "name": "曜変天目茶碗",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700041
+        "dropPriority": 2002
     },
     {
         "id": 94001502,
@@ -2683,9 +2386,7 @@
         "rarity": 2,
         "phash": "fc864319e9c20910",
         "name": "バンノウレンズ",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700051
+        "dropPriority": 2002
     },
     {
         "id": 94002003,
@@ -2693,9 +2394,7 @@
         "rarity": 2,
         "phash": "f67985166927c25b",
         "name": "ストロベリーアイス",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 700061
+        "dropPriority": 2003
     },
     {
         "id": 94002802,
@@ -2703,9 +2402,7 @@
         "rarity": 2,
         "phash": "1e02f32c61c96118",
         "name": "自画像（偽）",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700071
+        "dropPriority": 2002
     },
     {
         "id": 94003101,
@@ -2713,9 +2410,7 @@
         "rarity": 2,
         "phash": "7c280752e1146398",
         "name": "剣の印章",
-        "shortname": "",
-        "dropPriority": 2007,
-        "priority": 700081
+        "dropPriority": 2007
     },
     {
         "id": 94003102,
@@ -2723,9 +2418,7 @@
         "rarity": 2,
         "phash": "7c280752a11c6198",
         "name": "弓の印章",
-        "shortname": "",
-        "dropPriority": 2006,
-        "priority": 700091
+        "dropPriority": 2006
     },
     {
         "id": 94003103,
@@ -2733,9 +2426,7 @@
         "rarity": 2,
         "phash": "7c280752a19c6390",
         "name": "槍の印章",
-        "shortname": "",
-        "dropPriority": 2005,
-        "priority": 700101
+        "dropPriority": 2005
     },
     {
         "id": 94003104,
@@ -2743,9 +2434,7 @@
         "rarity": 2,
         "phash": "7c680756a11d638c",
         "name": "騎の印章",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 700111
+        "dropPriority": 2004
     },
     {
         "id": 94003105,
@@ -2753,9 +2442,7 @@
         "rarity": 2,
         "phash": "7c28075aa1146990",
         "name": "術の印章",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 700121
+        "dropPriority": 2003
     },
     {
         "id": 94003106,
@@ -2763,9 +2450,7 @@
         "rarity": 2,
         "phash": "7c280752a1146bd8",
         "name": "殺の印章",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700131
+        "dropPriority": 2002
     },
     {
         "id": 94003107,
@@ -2773,9 +2458,7 @@
         "rarity": 2,
         "phash": "7c68071aa11c63c4",
         "name": "狂の印章",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 700141
+        "dropPriority": 2001
     },
     {
         "id": 94003702,
@@ -2783,9 +2466,7 @@
         "rarity": 2,
         "phash": "6e599394493431c3",
         "name": "鬼瓢箪",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700151
+        "dropPriority": 2002
     },
     {
         "id": 94003902,
@@ -2793,9 +2474,7 @@
         "rarity": 2,
         "phash": "d6ac2d5809da8937",
         "name": "仙桃",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700161
+        "dropPriority": 2002
     },
     {
         "id": 94004504,
@@ -2803,9 +2482,7 @@
         "rarity": 2,
         "phash": "96a8a15052a68c89",
         "name": "錦の反物",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 700171
+        "dropPriority": 2004
     },
     {
         "id": 94005603,
@@ -2813,9 +2490,7 @@
         "rarity": 2,
         "phash": "565289986b290c6c",
         "name": "木材",
-        "shortname": "",
-        "dropPriority": 2005,
-        "priority": 700181
+        "dropPriority": 2005
     },
     {
         "id": 94005604,
@@ -2823,9 +2498,7 @@
         "rarity": 2,
         "phash": "560fa1f09bd44827",
         "name": "石材",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 700191
+        "dropPriority": 2004
     },
     {
         "id": 94005605,
@@ -2833,9 +2506,7 @@
         "rarity": 2,
         "phash": "d66429da5895ce63",
         "name": "鉄材",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 700201
+        "dropPriority": 2003
     },
     {
         "id": 94006103,
@@ -2843,9 +2514,7 @@
         "rarity": 2,
         "phash": "761289ec365b601f",
         "name": "レアルタ合金",
-        "shortname": "",
-        "dropPriority": 2005,
-        "priority": 700211
+        "dropPriority": 2005
     },
     {
         "id": 94006104,
@@ -2853,9 +2522,7 @@
         "rarity": 2,
         "phash": "565289ac365a4897",
         "name": "エードラム合金",
-        "shortname": "",
-        "dropPriority": 2004,
-        "priority": 700221
+        "dropPriority": 2004
     },
     {
         "id": 94006105,
@@ -2863,9 +2530,7 @@
         "rarity": 2,
         "phash": "761209ecb21b4cc7",
         "name": "イシュカ合金",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 700231
+        "dropPriority": 2003
     },
     {
         "id": 94006402,
@@ -2873,9 +2538,7 @@
         "rarity": 2,
         "phash": "e69b2db4432eb0c7",
         "name": "マジカル☆ブシドームサシ",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700241
+        "dropPriority": 2002
     },
     {
         "id": 94007702,
@@ -2883,9 +2546,7 @@
         "rarity": 2,
         "phash": "de897cb20b6c845b",
         "name": "銀のズダ袋",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700251
+        "dropPriority": 2002
     },
     {
         "id": 94009002,
@@ -2893,9 +2554,7 @@
         "rarity": 2,
         "phash": "e7861d78195dca24",
         "name": "ショートケーキ",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700261
+        "dropPriority": 2002
     },
     {
         "id": 94011302,
@@ -2903,9 +2562,7 @@
         "rarity": 2,
         "phash": "6fbad9ccaef7f3ed",
         "name": "砂金",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700271
+        "dropPriority": 2002
     },
     {
         "id": 94015002,
@@ -2913,9 +2570,7 @@
         "rarity": 2,
         "phash": "9c02ecb909f84b78",
         "name": "チタンプレート",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 700281
+        "dropPriority": 2003
     },
     {
         "id": 94015302,
@@ -2923,9 +2578,7 @@
         "rarity": 2,
         "phash": "7ea989d42d320d56",
         "name": "インスタント麺",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 700291
+        "dropPriority": 2003
     },
     {
         "id": 94017502,
@@ -2933,9 +2586,7 @@
         "rarity": 2,
         "phash": "ed02bbc60bfc5abc",
         "name": "ミサイルラムネ",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700301
+        "dropPriority": 2002
     },
     {
         "id": 94018802,
@@ -2944,8 +2595,7 @@
         "phash": "ec1299f80ef3403f",
         "name": "コープスベル",
         "shortname": "ベル",
-        "dropPriority": 2002,
-        "priority": 700311
+        "dropPriority": 2002
     },
     {
         "id": 94020802,
@@ -2954,8 +2604,7 @@
         "phash": "5f8817f44a1bf966",
         "name": "ミスティックミルク",
         "shortname": "ミルク",
-        "dropPriority": 2002,
-        "priority": 700321
+        "dropPriority": 2002
     },
     {
         "id": 94023302,
@@ -2965,8 +2614,7 @@
         "name": "イリアス紙片",
         "shortname": "紙片",
         "dropPriority": 2002,
-        "phash_battle": "ee114da16c711114",
-        "priority": 700331
+        "phash_battle": "ee114da16c711114"
     },
     {
         "id": 94025002,
@@ -2975,8 +2623,7 @@
         "phash": "1fd0d7b87046cbdc",
         "name": "カエルの根付",
         "shortname": "根付",
-        "dropPriority": 2002,
-        "priority": 700341
+        "dropPriority": 2002
     },
     {
         "id": 94027502,
@@ -2984,8 +2631,7 @@
         "rarity": 2,
         "phash": "b668895668a54ebb",
         "name": "ミミ＄札",
-        "dropPriority": 2002,
-        "priority": 700351
+        "dropPriority": 2002
     },
     {
         "id": 94029002,
@@ -2994,8 +2640,7 @@
         "phash": "7e4209ac87584267",
         "name": "ストロングドッグ",
         "shortname": "ドッグ",
-        "dropPriority": 2002,
-        "priority": 700361
+        "dropPriority": 2002
     },
     {
         "id": 94030102,
@@ -3004,8 +2649,7 @@
         "phash": "de4279cc653597d1",
         "name": "カナボーチュロス",
         "shortname": "チュロス",
-        "dropPriority": 2002,
-        "priority": 700371
+        "dropPriority": 2002
     },
     {
         "id": 94031302,
@@ -3015,7 +2659,7 @@
         "name": "ムーチョダンベル",
         "shortname": "ダンベル",
         "dropPriority": 2002,
-        "priority": 700381
+        "phash_battle": "de0144b02cd25a94"
     },
     {
         "id": 94032202,
@@ -3023,9 +2667,7 @@
         "rarity": 2,
         "phash": "fea821544b0632c1",
         "name": "川の幸",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 700391
+        "dropPriority": 2002
     },
     {
         "id": 94032205,
@@ -3034,8 +2676,7 @@
         "phash": "dde289ec32dd623b",
         "name": "ヒノキの材木",
         "shortname": "ヒノキ",
-        "dropPriority": 2005,
-        "priority": 700401
+        "dropPriority": 2005
     },
     {
         "id": 94033502,
@@ -3044,8 +2685,7 @@
         "phash": "6c12592889a90de9",
         "name": "想紡ぎの墨",
         "shortname": "墨",
-        "dropPriority": 2002,
-        "priority": 700411
+        "dropPriority": 2002
     },
     {
         "id": 94034602,
@@ -3054,8 +2694,7 @@
         "phash": "464c893260911a2d",
         "name": "トリッキークロス",
         "shortname": "クロス",
-        "dropPriority": 2002,
-        "priority": 700421
+        "dropPriority": 2002
     },
     {
         "id": 94035002,
@@ -3065,8 +2704,7 @@
         "name": "月つやべに",
         "shortname": "つやべに",
         "dropPriority": 2002,
-        "phash_battle": "9225c9892e82d315",
-        "priority": 700431
+        "phash_battle": "9225c9892e82d315"
     },
     {
         "id": 94036602,
@@ -3076,7 +2714,7 @@
         "name": "ダンディ・ラビット",
         "shortname": "ラビット",
         "dropPriority": 2002,
-        "priority": 700441
+        "phash_battle": "b749e69934b469b6"
     },
     {
         "id": 94038402,
@@ -3085,8 +2723,7 @@
         "phash": "dc70071e21067bc1",
         "name": "無縁塩",
         "shortname": "塩",
-        "dropPriority": 2002,
-        "priority": 700451
+        "dropPriority": 2002
     },
     {
         "id": 94040102,
@@ -3095,8 +2732,7 @@
         "phash": "dcc349b15b70923a",
         "name": "ミラクルトランプ",
         "shortname": "トランプ",
-        "dropPriority": 2002,
-        "priority": 700461
+        "dropPriority": 2002
     },
     {
         "id": 94040902,
@@ -3105,8 +2741,7 @@
         "phash": "561aa7582930190e",
         "name": "ストロングドッグZERO",
         "shortname": "ドッグ",
-        "dropPriority": 2002,
-        "priority": 700471
+        "dropPriority": 2002
     },
     {
         "id": 94041902,
@@ -3116,7 +2751,7 @@
         "name": "銀のセイバーバッヂ",
         "shortname": "銀バッヂ",
         "dropPriority": 2002,
-        "priority": 700481
+        "phash_battle": "1e41e953c83a1a86"
     },
     {
         "id": 94043002,
@@ -3126,7 +2761,7 @@
         "name": "奉仕の体温計",
         "shortname": "体温計",
         "dropPriority": 2002,
-        "priority": 700491
+        "phash_battle": "4baaa5555532eb68"
     },
     {
         "id": 94045902,
@@ -3135,8 +2770,7 @@
         "phash": "5e0925520976c294",
         "name": "集いの手毬",
         "shortname": "手毬",
-        "dropPriority": 2002,
-        "priority": 700501
+        "dropPriority": 2002
     },
     {
         "id": 94046502,
@@ -3145,8 +2779,7 @@
         "phash": "1606f91cc07986f0",
         "name": "不気味な薬草",
         "shortname": "薬草",
-        "dropPriority": 2002,
-        "priority": 700511
+        "dropPriority": 2002
     },
     {
         "id": 94047702,
@@ -3154,10 +2787,8 @@
         "rarity": 2,
         "phash": "168d73288f608d46",
         "name": "ポイントジェム",
-        "shortname": "",
         "dropPriority": 2002,
-        "phash_battle": "ce3189352ca21ac4",
-        "priority": 700521
+        "phash_battle": "ce3189352ca21ac4"
     },
     {
         "id": 94000301,
@@ -3165,9 +2796,7 @@
         "rarity": 1,
         "phash": "744753b0bd958490",
         "name": "ネロメダル〔銅〕",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800001
+        "dropPriority": 2001
     },
     {
         "id": 94000501,
@@ -3175,9 +2804,7 @@
         "rarity": 1,
         "phash": "56652114d321a4d4",
         "name": "プチケーキ",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800011
+        "dropPriority": 2001
     },
     {
         "id": 94000901,
@@ -3185,9 +2812,7 @@
         "rarity": 1,
         "phash": "74830969f3180816",
         "name": "九十九髪茄子",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800021
+        "dropPriority": 2001
     },
     {
         "id": 94001201,
@@ -3195,9 +2820,7 @@
         "rarity": 1,
         "phash": "5c8d89733282e165",
         "name": "ミニリボン",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800031
+        "dropPriority": 2001
     },
     {
         "id": 94001503,
@@ -3205,9 +2828,7 @@
         "rarity": 1,
         "phash": "5617a1b538692959",
         "name": "トランＧスター",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800041
+        "dropPriority": 2001
     },
     {
         "id": 94001802,
@@ -3215,9 +2836,7 @@
         "rarity": 1,
         "phash": "5609a15558221e34",
         "name": "材料チョコ",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 800051
+        "dropPriority": 2002
     },
     {
         "id": 94002004,
@@ -3225,9 +2844,7 @@
         "rarity": 1,
         "phash": "b697d236a6909110",
         "name": "ミネラルウォーター",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 800061
+        "dropPriority": 2002
     },
     {
         "id": 94002803,
@@ -3235,9 +2852,7 @@
         "rarity": 1,
         "phash": "56070381a1a12199",
         "name": "人体図（偽）",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800071
+        "dropPriority": 2001
     },
     {
         "id": 94003903,
@@ -3245,9 +2860,7 @@
         "rarity": 1,
         "phash": "5621ad94c9585a06",
         "name": "肉まん",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800081
+        "dropPriority": 2001
     },
     {
         "id": 94004505,
@@ -3255,9 +2868,7 @@
         "rarity": 1,
         "phash": "5c738b8da01c30a2",
         "name": "竜宮珊瑚",
-        "shortname": "",
-        "dropPriority": 2003,
-        "priority": 800091
+        "dropPriority": 2003
     },
     {
         "id": 94005601,
@@ -3265,9 +2876,7 @@
         "rarity": 1,
         "phash": "f40303a1c1387909",
         "name": "真水",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 800101
+        "dropPriority": 2002
     },
     {
         "id": 94005602,
@@ -3275,9 +2884,7 @@
         "rarity": 1,
         "phash": "f41309088348e806",
         "name": "食料",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800111
+        "dropPriority": 2001
     },
     {
         "id": 94006101,
@@ -3285,9 +2892,7 @@
         "rarity": 1,
         "phash": "569109018105d301",
         "name": "オイル",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 800121
+        "dropPriority": 2002
     },
     {
         "id": 94006102,
@@ -3295,9 +2900,7 @@
         "rarity": 1,
         "phash": "5603890c48705303",
         "name": "セメント",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800131
+        "dropPriority": 2001
     },
     {
         "id": 94006401,
@@ -3305,9 +2908,7 @@
         "rarity": 1,
         "phash": "5c85a31340488c34",
         "name": "高級プリン",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800141
+        "dropPriority": 2001
     },
     {
         "id": 94007701,
@@ -3315,9 +2916,7 @@
         "rarity": 1,
         "phash": "dc0d4af0036c80c3",
         "name": "銅のズダ袋",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800151
+        "dropPriority": 2001
     },
     {
         "id": 94009003,
@@ -3325,9 +2924,7 @@
         "rarity": 1,
         "phash": "b62708d9490db6e6",
         "name": "チーズケーキ",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800161
+        "dropPriority": 2001
     },
     {
         "id": 94011301,
@@ -3335,9 +2932,7 @@
         "rarity": 1,
         "phash": "56078d7971128398",
         "name": "永楽銭",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800171
+        "dropPriority": 2001
     },
     {
         "id": 94011901,
@@ -3345,9 +2940,7 @@
         "rarity": 1,
         "phash": "5427022990531099",
         "name": "サクラチップ",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800181
+        "dropPriority": 2001
     },
     {
         "id": 94015001,
@@ -3355,9 +2948,7 @@
         "rarity": 1,
         "phash": "56196180d9253054",
         "name": "ジャンクパーツ",
-        "shortname": "",
-        "dropPriority": 2002,
-        "priority": 800191
+        "dropPriority": 2002
     },
     {
         "id": 94017501,
@@ -3365,9 +2956,7 @@
         "rarity": 1,
         "phash": "d613c96d208ca01c",
         "name": "ドリルグミ",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800201
+        "dropPriority": 2001
     },
     {
         "id": 94018801,
@@ -3376,8 +2965,7 @@
         "phash": "2699482319269084",
         "name": "ホロウキャンドル",
         "shortname": "キャンドル",
-        "dropPriority": 2001,
-        "priority": 800211
+        "dropPriority": 2001
     },
     {
         "id": 94020801,
@@ -3386,8 +2974,7 @@
         "phash": "d68d29494c369003",
         "name": "ファンシーシュガー",
         "shortname": "シュガー",
-        "dropPriority": 2001,
-        "priority": 800221
+        "dropPriority": 2001
     },
     {
         "id": 94023301,
@@ -3397,8 +2984,7 @@
         "name": "ヒポぐるみ",
         "shortname": "ヒポぐるみ",
         "dropPriority": 2001,
-        "phash_battle": "fa05d2e10e613253",
-        "priority": 800231
+        "phash_battle": "fa05d2e10e613253"
     },
     {
         "id": 94025001,
@@ -3407,8 +2993,7 @@
         "phash": "5c85037bd3813028",
         "name": "カエルの手拭い",
         "shortname": "手拭い",
-        "dropPriority": 2001,
-        "priority": 800241
+        "dropPriority": 2001
     },
     {
         "id": 94027501,
@@ -3416,8 +3001,7 @@
         "rarity": 1,
         "phash": "740188233244c8b2",
         "name": "ギル＄札",
-        "dropPriority": 2001,
-        "priority": 800251
+        "dropPriority": 2001
     },
     {
         "id": 94029001,
@@ -3426,8 +3010,7 @@
         "phash": "d649292300a861d0",
         "name": "ワイルドポテト",
         "shortname": "ポテト",
-        "dropPriority": 2001,
-        "priority": 800261
+        "dropPriority": 2001
     },
     {
         "id": 94030101,
@@ -3436,8 +3019,7 @@
         "phash": "369969692c844890",
         "name": "ドクロコーン",
         "shortname": "コーン",
-        "dropPriority": 2001,
-        "priority": 800271
+        "dropPriority": 2001
     },
     {
         "id": 94031301,
@@ -3447,7 +3029,7 @@
         "name": "オーラバンド",
         "shortname": "バンド",
         "dropPriority": 2001,
-        "priority": 800281
+        "phash_battle": "96254b11e20d36c4"
     },
     {
         "id": 94032201,
@@ -3455,9 +3037,7 @@
         "rarity": 1,
         "phash": "560321e8600c8822",
         "name": "山の幸",
-        "shortname": "",
-        "dropPriority": 2001,
-        "priority": 800291
+        "dropPriority": 2001
     },
     {
         "id": 94032204,
@@ -3466,8 +3046,7 @@
         "phash": "5e1389ad354e623a",
         "name": "スギの材木",
         "shortname": "スギ",
-        "dropPriority": 2004,
-        "priority": 800301
+        "dropPriority": 2004
     },
     {
         "id": 94033501,
@@ -3476,8 +3055,7 @@
         "phash": "76258c910c814209",
         "name": "言記しの紙",
         "shortname": "紙",
-        "dropPriority": 2001,
-        "priority": 800311
+        "dropPriority": 2001
     },
     {
         "id": 94034601,
@@ -3486,8 +3064,7 @@
         "phash": "5603a5c10928190c",
         "name": "バッドコースター",
         "shortname": "コースター",
-        "dropPriority": 2001,
-        "priority": 800321
+        "dropPriority": 2001
     },
     {
         "id": 94035001,
@@ -3497,8 +3074,7 @@
         "name": "雪おしろい",
         "shortname": "おしろい",
         "dropPriority": 2001,
-        "phash_battle": "b64d8953f403a42b",
-        "priority": 800331
+        "phash_battle": "b64d8953f403a42b"
     },
     {
         "id": 94036601,
@@ -3508,7 +3084,7 @@
         "name": "フォーマル・リーブス",
         "shortname": "リーブス",
         "dropPriority": 2001,
-        "priority": 800341
+        "phash_battle": "34890963c1635051"
     },
     {
         "id": 94038401,
@@ -3517,8 +3093,7 @@
         "phash": "561b4025bc8d6338",
         "name": "青苧糸",
         "shortname": "糸",
-        "dropPriority": 2001,
-        "priority": 800351
+        "dropPriority": 2001
     },
     {
         "id": 94040101,
@@ -3527,8 +3102,7 @@
         "phash": "dc13071d28602007",
         "name": "ラッキーダイス",
         "shortname": "ダイス",
-        "dropPriority": 2001,
-        "priority": 800361
+        "dropPriority": 2001
     },
     {
         "id": 94040901,
@@ -3537,8 +3111,7 @@
         "phash": "36c1891c400c2184",
         "name": "ワイルドポテトV",
         "shortname": "ポテト",
-        "dropPriority": 2001,
-        "priority": 800371
+        "dropPriority": 2001
     },
     {
         "id": 94041901,
@@ -3548,7 +3121,7 @@
         "name": "銅のセイバーバッヂ",
         "shortname": "銅バッヂ",
         "dropPriority": 2001,
-        "priority": 800381
+        "phash_battle": "b60549681f40803a"
     },
     {
         "id": 94043001,
@@ -3558,7 +3131,7 @@
         "name": "慈愛の包帯",
         "shortname": "包帯",
         "dropPriority": 2001,
-        "priority": 800391
+        "phash_battle": "52ad855228964ba5"
     },
     {
         "id": 94045901,
@@ -3567,8 +3140,7 @@
         "phash": "561349ada4938434",
         "name": "出会いの風車",
         "shortname": "風車",
-        "dropPriority": 2001,
-        "priority": 800401
+        "dropPriority": 2001
     },
     {
         "id": 94046501,
@@ -3577,8 +3149,7 @@
         "phash": "d60d04a369d08112",
         "name": "怪しい麦袋",
         "shortname": "麦袋",
-        "dropPriority": 2001,
-        "priority": 800411
+        "dropPriority": 2001
     },
     {
         "id": 94047701,
@@ -3586,23 +3157,19 @@
         "rarity": 1,
         "phash": "fc91070f43279809",
         "name": "マーカーハウス",
-        "shortname": "",
         "dropPriority": 2001,
-        "phash_battle": "fc030722c8e4310c",
-        "priority": 800421
+        "phash_battle": "fc030722c8e4310c"
     },
     {
         "id": 1,
         "type": "Item",
         "phash": "f61389b4292f4806",
         "name": "QP",
-        "priority": 9999999,
         "dropPriority": 510,
         "phash_battle": "52097491ec022003"
     },
     {
         "id": 9700100,
-        "priority": 900001,
         "dropPriority": 699,
         "type": "Exp. UP",
         "rarity": 1,
@@ -3617,7 +3184,6 @@
     },
     {
         "id": 9700200,
-        "priority": 900002,
         "dropPriority": 698,
         "type": "Exp. UP",
         "rarity": 2,
@@ -3628,7 +3194,6 @@
     },
     {
         "id": 9700300,
-        "priority": 900003,
         "dropPriority": 697,
         "type": "Exp. UP",
         "rarity": 3,
@@ -3639,7 +3204,6 @@
     },
     {
         "id": 9700400,
-        "priority": 900004,
         "dropPriority": 696,
         "type": "Exp. UP",
         "rarity": 4,
@@ -3650,7 +3214,6 @@
     },
     {
         "id": 9700500,
-        "priority": 900005,
         "dropPriority": 695,
         "type": "Exp. UP",
         "rarity": 5,
@@ -3660,7 +3223,6 @@
     },
     {
         "id": 9701100,
-        "priority": 900006,
         "dropPriority": 694,
         "type": "Exp. UP",
         "rarity": 1,
@@ -3673,7 +3235,6 @@
     },
     {
         "id": 9701200,
-        "priority": 900007,
         "dropPriority": 693,
         "type": "Exp. UP",
         "rarity": 2,
@@ -3686,7 +3247,6 @@
     },
     {
         "id": 9701300,
-        "priority": 900008,
         "dropPriority": 692,
         "type": "Exp. UP",
         "rarity": 3,
@@ -3699,7 +3259,6 @@
     },
     {
         "id": 9701400,
-        "priority": 900009,
         "dropPriority": 691,
         "type": "Exp. UP",
         "rarity": 4,
@@ -3712,7 +3271,6 @@
     },
     {
         "id": 9701500,
-        "priority": 900010,
         "dropPriority": 690,
         "type": "Exp. UP",
         "rarity": 5,
@@ -3723,7 +3281,6 @@
     },
     {
         "id": 9702100,
-        "priority": 900011,
         "dropPriority": 689,
         "type": "Exp. UP",
         "rarity": 1,
@@ -3736,7 +3293,6 @@
     },
     {
         "id": 9702200,
-        "priority": 900012,
         "dropPriority": 688,
         "type": "Exp. UP",
         "rarity": 2,
@@ -3749,7 +3305,6 @@
     },
     {
         "id": 9702300,
-        "priority": 900013,
         "dropPriority": 687,
         "type": "Exp. UP",
         "rarity": 3,
@@ -3762,7 +3317,6 @@
     },
     {
         "id": 9702400,
-        "priority": 900014,
         "dropPriority": 686,
         "type": "Exp. UP",
         "rarity": 4,
@@ -3775,7 +3329,6 @@
     },
     {
         "id": 9702500,
-        "priority": 900015,
         "dropPriority": 685,
         "type": "Exp. UP",
         "rarity": 5,
@@ -3786,7 +3339,6 @@
     },
     {
         "id": 9703100,
-        "priority": 900016,
         "dropPriority": 684,
         "type": "Exp. UP",
         "rarity": 1,
@@ -3799,7 +3351,6 @@
     },
     {
         "id": 9703200,
-        "priority": 900017,
         "dropPriority": 683,
         "type": "Exp. UP",
         "rarity": 2,
@@ -3812,7 +3363,6 @@
     },
     {
         "id": 9703300,
-        "priority": 900018,
         "dropPriority": 682,
         "type": "Exp. UP",
         "rarity": 3,
@@ -3825,7 +3375,6 @@
     },
     {
         "id": 9703400,
-        "priority": 900019,
         "dropPriority": 681,
         "type": "Exp. UP",
         "rarity": 4,
@@ -3838,7 +3387,6 @@
     },
     {
         "id": 9703500,
-        "priority": 900020,
         "dropPriority": 680,
         "type": "Exp. UP",
         "rarity": 5,
@@ -3849,7 +3397,6 @@
     },
     {
         "id": 9704100,
-        "priority": 900021,
         "dropPriority": 679,
         "type": "Exp. UP",
         "rarity": 1,
@@ -3862,7 +3409,6 @@
     },
     {
         "id": 9704200,
-        "priority": 900022,
         "dropPriority": 678,
         "type": "Exp. UP",
         "rarity": 2,
@@ -3875,7 +3421,6 @@
     },
     {
         "id": 9704300,
-        "priority": 900023,
         "dropPriority": 677,
         "type": "Exp. UP",
         "rarity": 3,
@@ -3888,7 +3433,6 @@
     },
     {
         "id": 9704400,
-        "priority": 900024,
         "dropPriority": 676,
         "type": "Exp. UP",
         "rarity": 4,
@@ -3901,7 +3445,6 @@
     },
     {
         "id": 9704500,
-        "priority": 900025,
         "dropPriority": 675,
         "type": "Exp. UP",
         "rarity": 5,
@@ -3910,7 +3453,6 @@
     },
     {
         "id": 9705100,
-        "priority": 900026,
         "dropPriority": 674,
         "type": "Exp. UP",
         "rarity": 1,
@@ -3923,7 +3465,6 @@
     },
     {
         "id": 9705200,
-        "priority": 900027,
         "dropPriority": 673,
         "type": "Exp. UP",
         "rarity": 2,
@@ -3936,7 +3477,6 @@
     },
     {
         "id": 9705300,
-        "priority": 900028,
         "dropPriority": 672,
         "type": "Exp. UP",
         "rarity": 3,
@@ -3949,7 +3489,6 @@
     },
     {
         "id": 9705400,
-        "priority": 900029,
         "dropPriority": 671,
         "type": "Exp. UP",
         "rarity": 4,
@@ -3962,7 +3501,6 @@
     },
     {
         "id": 9705500,
-        "priority": 900030,
         "dropPriority": 670,
         "type": "Exp. UP",
         "rarity": 5,
@@ -3973,7 +3511,6 @@
     },
     {
         "id": 9706100,
-        "priority": 900031,
         "dropPriority": 669,
         "type": "Exp. UP",
         "rarity": 1,
@@ -3986,7 +3523,6 @@
     },
     {
         "id": 9706200,
-        "priority": 900032,
         "dropPriority": 668,
         "type": "Exp. UP",
         "rarity": 2,
@@ -3999,7 +3535,6 @@
     },
     {
         "id": 9706300,
-        "priority": 900033,
         "dropPriority": 667,
         "type": "Exp. UP",
         "rarity": 3,
@@ -4012,7 +3547,6 @@
     },
     {
         "id": 9706400,
-        "priority": 900034,
         "dropPriority": 666,
         "type": "Exp. UP",
         "rarity": 4,
@@ -4025,7 +3559,6 @@
     },
     {
         "id": 9706500,
-        "priority": 900035,
         "dropPriority": 665,
         "type": "Exp. UP",
         "rarity": 5,
@@ -4036,7 +3569,6 @@
     },
     {
         "id": 9707100,
-        "priority": 900036,
         "dropPriority": 664,
         "type": "Exp. UP",
         "rarity": 1,
@@ -4049,7 +3581,6 @@
     },
     {
         "id": 9707200,
-        "priority": 900037,
         "dropPriority": 663,
         "type": "Exp. UP",
         "rarity": 2,
@@ -4062,7 +3593,6 @@
     },
     {
         "id": 9707300,
-        "priority": 900038,
         "dropPriority": 662,
         "type": "Exp. UP",
         "rarity": 3,
@@ -4075,7 +3605,6 @@
     },
     {
         "id": 9707400,
-        "priority": 900039,
         "dropPriority": 661,
         "type": "Exp. UP",
         "rarity": 4,
@@ -4088,7 +3617,6 @@
     },
     {
         "id": 9707500,
-        "priority": 900040,
         "dropPriority": 660,
         "type": "Exp. UP",
         "rarity": 5,
