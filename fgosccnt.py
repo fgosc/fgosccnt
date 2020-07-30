@@ -1378,7 +1378,8 @@ def get_output(filenames, debug=False):
         f = Path(filename)
 
         if f.exists() == False:
-            output = { 'filename': str(filename) + ': Not Found' }
+            output = { 'filename': str(filename) + ': not found' }
+            all_list.append([])
         else:
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
@@ -1407,6 +1408,7 @@ def get_output(filenames, debug=False):
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
             except:
                 output = ({'filename': str(filename) + ': not valid'})
+                all_list.append([])
         fileoutput.append(output)
     return fileoutput, all_list
 
