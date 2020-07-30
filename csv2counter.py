@@ -34,10 +34,24 @@ if __name__ == '__main__':
         reader = csv.DictReader(f)
         l = [row for row in reader]
 
-    for item in l:
+    warning = ""
+    for i, item in enumerate(l):
         if item['filename'] == "missing":
-            print("missing なデータがあります", file=sys.stderr)
-            sys.exit(1)
+            warning = warning + "{}行目に missing なデータがあります\n".format(i+2)
+##            print("missing なデータがあります", file=sys.stderr)
+##            sys.exit(1)
+        elif item['filename'].endswith("not valid"):
+            warning = warning + "{}行目に not valid なデータがあります\n".format(i+2)
+        elif item['filename'].endswith("not found"):
+            warning = warning + "{}行目に not found なデータがあります\n".format(i+2)
+
+    if warning != "":
+        print ("""###############################################
+# WARNING: この処理には以下のエラーがあります #
+#      結果をそのまま使用しないでください     #
+###############################################
+{}###############################################""".format(warning))
+
     print ("【{}】".format(args.place), end="")
     output = ""
     monyupi_flag = False
