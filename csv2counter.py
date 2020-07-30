@@ -3,23 +3,55 @@
 import csv
 import sys
 import argparse
+from pathlib import Path
+import json
+import re
+import fgosccnt
 
-monyupi_list = ['剣モ', '弓モ', '槍モ', '騎モ', '術モ', '殺モ', '狂モ',
-                '剣ピ', '弓ピ', '槍ピ', '騎ピ', '術ピ', '殺ピ', '狂ピ', ]
+drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
+with open(drop_file, encoding='UTF-8') as f:
+    drop_item = json.load(f)
 
-skillstone_list = [ '剣秘', '弓秘', '槍秘', '騎秘', '術秘', '殺秘', '狂秘',
-                    '剣魔', '弓魔', '槍魔', '騎魔', '術魔', '殺魔', '狂魔',
-                    '剣輝', '弓輝', '槍輝', '騎輝', '術輝', '殺輝', '狂輝']
+shortname2id = {item["shortname"]:item["id"] for item in drop_item if "shortname" in item.keys()}
+name2id = {item["name"]:item["id"] for item in drop_item if "name" in item.keys()}
+fgosccnt.calc_dist_local()
 
-stditem_list = ['爪',  '心臓',  '逆鱗',  '根',  '幼角',
-                '涙石',  '脂',  'ランプ',  'スカラベ',  '産毛',
-                '胆石',  '神酒',  '炉心',  '鏡',  '卵',  'カケラ',
-                '種',  'ランタン',  '八連',  '宝玉',  '羽根',
-                '歯車',  '頁',  'ホム',  '蹄鉄',  '勲章',
-                '貝殻',  '勾玉',  '結氷',  '指輪',  'オーロラ',
-                '鈴',  '矢尻',  '冠',
-                '証',  '骨',  '牙',  '塵',  '鎖',
-                '毒針',  '髄液',  '鉄杭',  '火薬']
+ID_GEM_MIN = 6001
+ID_GEM_MAX = 6007
+ID_MAGIC_GEM_MIN = 6101
+ID_MAGIC_GEM_MAX = 6107
+ID_SECRET_GEM_MIN = 6201
+ID_SECRET_GEM_MAX = 6207
+ID_PIECE_MIN = 7001
+ID_MONUMENT_MAX = 7107
+ID_STAMDARD_ITEM_MIN = 6501
+ID_STAMDARD_ITEM_MAX = 6599
+
+def delete_brackets(s):
+    """
+    括弧と括弧内文字列を削除
+    """
+    """ brackets to zenkaku """
+    table = {
+        "(": "（",
+        ")": "）",
+##        "<": "＜",
+##        ">": "＞",
+##        "{": "｛",
+##        "}": "｝",
+##        "[": "［",
+##        "]": "］"
+    }
+    for key in table.keys():
+        s = s.replace(key, table[key])
+    """ delete zenkaku_brackets """
+##    l = ['（[^（|^）]*）', '【[^【|^】]*】', '＜[^＜|^＞]*＞', '［[^［|^］]*］',
+##         '「[^「|^」]*」', '｛[^｛|^｝]*｝', '〔[^〔|^〕]*〕', '〈[^〈|^〉]*〉']
+    l = ['（[^（|^）]*）']
+    for l_ in l:
+        s = re.sub(l_, "", s)
+    """ recursive processing """
+    return delete_brackets(s) if sum([1 if re.search(l_, s) else 0 for l_ in l]) > 0 else s
 
 if __name__ == '__main__':
 
@@ -63,31 +95,43 @@ if __name__ == '__main__':
         if i == 2:
             output =  l[0][item] + "周\n"
         if i > 2:
-            if stditem_flag == False and item in stditem_list:
+            if delete_brackets(item) in shortname2id.keys():
+                id = shortname2id[delete_brackets(item)]
+            elif delete_brackets(item) in name2id.keys():
+                id = name2id[delete_brackets(item)]
+            else:
+                id = [k for k, v in fgosccnt.item_name.items() if v == delete_brackets(item)][0]
+            if stditem_flag == False \
+               and ID_STAMDARD_ITEM_MIN <= id <=  ID_STAMDARD_ITEM_MAX:
                 output = output[:-1] + "\n"
                 stditem_flag = True
-            elif stditem_flag == True and item not in stditem_list:
+            elif stditem_flag == True \
+                 and not (ID_STAMDARD_ITEM_MIN <= id <=  ID_STAMDARD_ITEM_MAX):
                 output = output[:-1] + "\n"
                 stditem_flag = False
 
-            if skillstone_flag == False and item in skillstone_list:
+            if skillstone_flag == False \
+               and ID_GEM_MIN <= id <= ID_GEM_MAX:
                 output = output[:-1] + "\n"
                 skillstone_flag = True
-            elif skillstone_flag == True and item not in skillstone_list:
+            elif skillstone_flag == True \
+                 and not (ID_GEM_MIN <= id <= ID_GEM_MAX):
                 output = output[:-1] + "\n"
                 skillstone_flag = False
 
-            if monyupi_flag == False and item in monyupi_list:
+            if monyupi_flag == False \
+               and ID_PIECE_MIN <= id <= ID_MONUMENT_MAX:
                 output = output[:-1] + "\n"
                 monyupi_flag = True
-            elif monyupi_flag == True and item not in monyupi_list:
+            elif monyupi_flag == True \
+                 and not (ID_PIECE_MIN <= id <= ID_MONUMENT_MAX):
                 output = output[:-1] + "\n"
                 monyupi_flag = False
-
-            if item.startswith('ポイント(+') and point_flag == False:
+            type = fgosccnt.item_type[id]
+            if type == "Point" and point_flag == False:
                 output = output[:-1] + "\n"
                 point_flag = True
-            elif point_flag == True and not item.startswith('ポイント(+'):
+            elif point_flag == True and not type == "Point":
                 output = output[:-1] + "\n"
                 point_flag = False
 
