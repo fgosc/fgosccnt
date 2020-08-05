@@ -12,6 +12,7 @@ from enum import Enum
 import itertools
 import json
 from operator import itemgetter
+import math
 
 progname = "FGOスクショカウント"
 version = "0.4.0"
@@ -36,6 +37,9 @@ train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下
 train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
 train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
 drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
+freequest_file = Path(__file__).resolve().parent / Path("freequest.json")
+syurenquest_file = Path(__file__).resolve().parent / Path("syurenquest.json")
+eventquest_dir = Path(__file__).resolve().parent / Path("data/json/")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -49,6 +53,9 @@ PRIORITY_ITEM = 700
 PRIORITY_REWARD_QP = 9012
 ID_START = 9500000
 ID_REWARD_QP = 5
+ID_NORTH_AMERICA = 93000500
+ID_SYURENJYO = 94006800
+ID_EVNET = 94000000
 
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
@@ -70,6 +77,25 @@ dist_exp_class = {item["phash_class"]:item["id"]  for item in drop_item if item[
 dist_exp_class_sold = {item["phash_class_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_class_sold" in item.keys()}
 dist_exp_class.update(dist_exp_class_sold)
 dist_point = {item["id"]:item["phash_battle"] for item in drop_item if item["type"] == "Point" and "phash_battle" in item.keys()}
+
+with open(drop_file, encoding='UTF-8') as f:
+    drop_item = json.load(f)
+
+with open(freequest_file, encoding='UTF-8') as f:
+    freequest = json.load(f)
+
+with open(syurenquest_file, encoding='UTF-8') as f:
+    syurenquest = json.load(f)
+    freequest = freequest + syurenquest
+
+evnetfiles = eventquest_dir.glob('**/*.json')
+for evnetfile in evnetfiles:
+    try:
+        with open(evnetfile, encoding='UTF-8') as f:
+            event = json.load(f)
+            freequest = freequest + event
+    except:
+        print("{}: ファイルが読み込めません".format(evnetfile))
 
 def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
     """
@@ -1441,13 +1467,51 @@ def change_value(line):
     line = re.sub('000$', "千", str(line))
     return line
 
+def make_quest_output(quest):
+    output = ""
+    if quest != "":
+        quest_list = [q["name"] for q in freequest if q["place"] == quest["place"]]
+        if math.floor(quest["id"]/100)*100 == ID_NORTH_AMERICA:
+            output = quest["place"] + " " + quest["name"]
+        elif math.floor(quest["id"]/100)*100 == ID_SYURENJYO:
+            output = quest["chapter"] + " " + quest["place"]                
+        elif math.floor(quest["id"]/100000)*100000 == ID_EVNET:
+            output = quest["shortname"]                
+        else:
+            # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
+            if quest_list.index(quest["name"]) == 0:
+                output = quest["chapter"] + " " + quest["place"]
+            else:
+                output = quest["chapter"] + " " + quest["name"]
+    return output
+
+def deside_quest(item_list):
+
+    item_set = set()
+    for item in item_list:
+        if item["id"] == 5:
+            item_set.add("QP(+" + str(item["dropnum"]) + ")")
+        elif item["id"] == 1 or item["category"] == "Craft Essence" or 9700100 <= item["id"] <= 9700307:
+            continue
+        else:
+            item_set.add(item["name"])
+
+    quest_candidate = ""
+    for quest in reversed(freequest):
+        dropset = {i["name"] for i in quest["drop"] if i["type"] != "Craft Essence"}
+        dropset.add("QP(+" + str(quest["qp"]) + ")")
+        if dropset == item_set:
+            quest_candidate = quest
+            break
+    return quest_candidate
+    
 def make_csv_header(item_list):
     """
     CSVのヘッダ情報を作成
     礼装のドロップが無いかつ恒常以外のアイテムが有るとき礼装0をつける
     """
     if item_list == [[]]:
-        return ['filename', 'ドロ数'], False
+        return ['filename', 'ドロ数'], False, ""
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
@@ -1470,7 +1534,10 @@ def make_csv_header(item_list):
         else:
             tmp = out_name(l['id'])
         header.append(tmp)
-    return ['filename', 'ドロ数'] + header, ce0_flag
+    # クエスト名判定
+    quest = deside_quest(new_list)
+    quest_output = make_quest_output(quest)
+    return ['filename', 'ドロ数'] + header, ce0_flag, quest_output
 
 def make_csv_data(sc_list, ce0_flag):
     if sc_list == []: return [{}],[{}] 
@@ -1518,13 +1585,15 @@ if __name__ == '__main__':
     fileoutput, all_new_list = get_output(inputs, args.debug)
 
     # CSVヘッダーをつくる
-    csv_heder, ce0_flag = make_csv_header(all_new_list)
+    csv_heder, ce0_flag, questname = make_csv_header(all_new_list)
     csv_sum, csv_data = make_csv_data(all_new_list, ce0_flag)
 
     writer = csv.DictWriter(sys.stdout, fieldnames=csv_heder, lineterminator='\n')
     writer.writeheader()
     if len(all_new_list) > 1: #ファイル一つのときは合計値は出さない
-        a = {'filename':'合計', 'ドロ数':''}
+        if questname == "":
+            questname = "合計"
+        a = {'filename':questname, 'ドロ数':''}
         a.update(csv_sum)
         writer.writerow(a)
     for fo, cd in zip(fileoutput, csv_data):

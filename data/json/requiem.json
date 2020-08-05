@@ -1,0 +1,586 @@
+[
+    {
+        "id": 94047901,
+        "name": "フリーゲームバトル　初級",
+        "place": "",
+        "chapter": "",
+        "qp": 2400,
+        "drop": [
+            {
+                "id": 9404530,
+                "name": "見上げた空の星に",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6541,
+                "name": "禍罪の矢尻",
+                "type": "Item",
+                "dropPriority": 8315
+            },
+            {
+                "id": 6004,
+                "name": "騎の輝石",
+                "type": "Item",
+                "dropPriority": 6097
+            },
+            {
+                "id": 7004,
+                "name": "ライダーピース",
+                "type": "Item",
+                "dropPriority": 5197
+            },
+            {
+                "id": 94047704,
+                "name": "ノーマルダイス",
+                "type": "Item",
+                "dropPriority": 4103
+            },
+            {
+                "id": 94047702,
+                "name": "ポイントジェム",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94047701,
+                "name": "マーカーハウス",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "フリーゲームバトル　初級"
+    },
+    {
+        "id": 94047902,
+        "name": "フリーゲームバトル　中級",
+        "place": "",
+        "chapter": "",
+        "qp": 3900,
+        "drop": [
+            {
+                "id": 9404530,
+                "name": "見上げた空の星に",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6511,
+                "name": "禁断の頁",
+                "type": "Item",
+                "dropPriority": 8303
+            },
+            {
+                "id": 6105,
+                "name": "術の魔石",
+                "type": "Item",
+                "dropPriority": 6196
+            },
+            {
+                "id": 6005,
+                "name": "術の輝石",
+                "type": "Item",
+                "dropPriority": 6096
+            },
+            {
+                "id": 7005,
+                "name": "キャスターピース",
+                "type": "Item",
+                "dropPriority": 5196
+            },
+            {
+                "id": 94047705,
+                "name": "123ダイス",
+                "type": "Item",
+                "dropPriority": 4104
+            },
+            {
+                "id": 94047704,
+                "name": "ノーマルダイス",
+                "type": "Item",
+                "dropPriority": 4103
+            },
+            {
+                "id": 94047703,
+                "name": "ライフカウンター",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94047702,
+                "name": "ポイントジェム",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "フリーゲームバトル　中級"
+    },
+    {
+        "id": 94047903,
+        "name": "フリーゲームバトル　上級",
+        "place": "",
+        "chapter": "",
+        "qp": 5400,
+        "drop": [
+            {
+                "id": 9404530,
+                "name": "見上げた空の星に",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6537,
+                "name": "巨人の指輪",
+                "type": "Item",
+                "dropPriority": 8312
+            },
+            {
+                "id": 6107,
+                "name": "狂の魔石",
+                "type": "Item",
+                "dropPriority": 6194
+            },
+            {
+                "id": 7007,
+                "name": "バーサーカーピース",
+                "type": "Item",
+                "dropPriority": 5194
+            },
+            {
+                "id": 94047706,
+                "name": "456ダイス",
+                "type": "Item",
+                "dropPriority": 4105
+            },
+            {
+                "id": 94047704,
+                "name": "ノーマルダイス",
+                "type": "Item",
+                "dropPriority": 4103
+            },
+            {
+                "id": 94047703,
+                "name": "ライフカウンター",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94047701,
+                "name": "マーカーハウス",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "フリーゲームバトル　上級"
+    },
+    {
+        "id": 94047904,
+        "name": "フリーゲームバトル　腕自慢級",
+        "place": "",
+        "chapter": "",
+        "qp": 6400,
+        "drop": [
+            {
+                "id": 9404530,
+                "name": "見上げた空の星に",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6507,
+                "name": "混沌の爪",
+                "type": "Item",
+                "dropPriority": 8400
+            },
+            {
+                "id": 6533,
+                "name": "宵哭きの鉄杭",
+                "type": "Item",
+                "dropPriority": 8104
+            },
+            {
+                "id": 6107,
+                "name": "狂の魔石",
+                "type": "Item",
+                "dropPriority": 6194
+            },
+            {
+                "id": 6001,
+                "name": "剣の輝石",
+                "type": "Item",
+                "dropPriority": 6100
+            },
+            {
+                "id": 7101,
+                "name": "セイバーモニュメント",
+                "type": "Item",
+                "dropPriority": 5300
+            },
+            {
+                "id": 94047706,
+                "name": "456ダイス",
+                "type": "Item",
+                "dropPriority": 4105
+            },
+            {
+                "id": 94047705,
+                "name": "123ダイス",
+                "type": "Item",
+                "dropPriority": 4104
+            },
+            {
+                "id": 94047704,
+                "name": "ノーマルダイス",
+                "type": "Item",
+                "dropPriority": 4103
+            },
+            {
+                "id": 94047703,
+                "name": "ライフカウンター",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94047702,
+                "name": "ポイントジェム",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94047701,
+                "name": "マーカーハウス",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "腕自慢級"
+    },
+    {
+        "id": 94047905,
+        "name": "フリーゲームバトル　達人級",
+        "place": "",
+        "chapter": "",
+        "qp": 7400,
+        "drop": [
+            {
+                "id": 9404530,
+                "name": "見上げた空の星に",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6528,
+                "name": "原初の産毛",
+                "type": "Item",
+                "dropPriority": 8405
+            },
+            {
+                "id": 6513,
+                "name": "隕蹄鉄",
+                "type": "Item",
+                "dropPriority": 8305
+            },
+            {
+                "id": 6106,
+                "name": "殺の魔石",
+                "type": "Item",
+                "dropPriority": 6195
+            },
+            {
+                "id": 6006,
+                "name": "殺の輝石",
+                "type": "Item",
+                "dropPriority": 6095
+            },
+            {
+                "id": 7106,
+                "name": "アサシンモニュメント",
+                "type": "Item",
+                "dropPriority": 5295
+            },
+            {
+                "id": 94047709,
+                "name": "3ゾロダイス",
+                "type": "Item",
+                "dropPriority": 4108
+            },
+            {
+                "id": 94047705,
+                "name": "123ダイス",
+                "type": "Item",
+                "dropPriority": 4104
+            },
+            {
+                "id": 94047704,
+                "name": "ノーマルダイス",
+                "type": "Item",
+                "dropPriority": 4103
+            },
+            {
+                "id": 94047702,
+                "name": "ポイントジェム",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94047701,
+                "name": "マーカーハウス",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "達人級"
+    },
+    {
+        "id": 94047906,
+        "name": "フリーゲームバトル　名人級",
+        "place": "",
+        "chapter": "",
+        "qp": 8400,
+        "drop": [
+            {
+                "id": 9404530,
+                "name": "見上げた空の星に",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6524,
+                "name": "大騎士勲章",
+                "type": "Item",
+                "dropPriority": 8309
+            },
+            {
+                "id": 6103,
+                "name": "槍の魔石",
+                "type": "Item",
+                "dropPriority": 6198
+            },
+            {
+                "id": 6107,
+                "name": "狂の魔石",
+                "type": "Item",
+                "dropPriority": 6194
+            },
+            {
+                "id": 7103,
+                "name": "ランサーモニュメント",
+                "type": "Item",
+                "dropPriority": 5298
+            },
+            {
+                "id": 94047708,
+                "name": "2ゾロダイス",
+                "type": "Item",
+                "dropPriority": 4107
+            },
+            {
+                "id": 94047706,
+                "name": "456ダイス",
+                "type": "Item",
+                "dropPriority": 4105
+            },
+            {
+                "id": 94047704,
+                "name": "ノーマルダイス",
+                "type": "Item",
+                "dropPriority": 4103
+            },
+            {
+                "id": 94047703,
+                "name": "ライフカウンター",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94047702,
+                "name": "ポイントジェム",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "名人級"
+    },
+    {
+        "id": 94047907,
+        "name": "フリーゲームバトル　チャンピオン級",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9404530,
+                "name": "見上げた空の星に",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6540,
+                "name": "九十九鏡",
+                "type": "Item",
+                "dropPriority": 8506
+            },
+            {
+                "id": 6532,
+                "name": "枯淡勾玉",
+                "type": "Item",
+                "dropPriority": 8310
+            },
+            {
+                "id": 6202,
+                "name": "弓の秘石",
+                "type": "Item",
+                "dropPriority": 6299
+            },
+            {
+                "id": 6102,
+                "name": "弓の魔石",
+                "type": "Item",
+                "dropPriority": 6199
+            },
+            {
+                "id": 6002,
+                "name": "弓の輝石",
+                "type": "Item",
+                "dropPriority": 6099
+            },
+            {
+                "id": 7102,
+                "name": "アーチャーモニュメント",
+                "type": "Item",
+                "dropPriority": 5299
+            },
+            {
+                "id": 94047707,
+                "name": "1ゾロダイス",
+                "type": "Item",
+                "dropPriority": 4106
+            },
+            {
+                "id": 94047705,
+                "name": "123ダイス",
+                "type": "Item",
+                "dropPriority": 4104
+            },
+            {
+                "id": 94047704,
+                "name": "ノーマルダイス",
+                "type": "Item",
+                "dropPriority": 4103
+            },
+            {
+                "id": 94047703,
+                "name": "ライフカウンター",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94047701,
+                "name": "マーカーハウス",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "チャンピオン級"
+    },
+    {
+        "id": 94047908,
+        "name": "フリーゲームバトル　チョットデキル級",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9404530,
+                "name": "見上げた空の星に",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6517,
+                "name": "蛮神の心臓",
+                "type": "Item",
+                "dropPriority": 8500
+            },
+            {
+                "id": 6530,
+                "name": "魔術髄液",
+                "type": "Item",
+                "dropPriority": 8103
+            },
+            {
+                "id": 6207,
+                "name": "狂の秘石",
+                "type": "Item",
+                "dropPriority": 6294
+            },
+            {
+                "id": 6007,
+                "name": "狂の輝石",
+                "type": "Item",
+                "dropPriority": 6094
+            },
+            {
+                "id": 7107,
+                "name": "バーサーカーモニュメント",
+                "type": "Item",
+                "dropPriority": 5294
+            },
+            {
+                "id": 94047709,
+                "name": "3ゾロダイス",
+                "type": "Item",
+                "dropPriority": 4108
+            },
+            {
+                "id": 94047708,
+                "name": "2ゾロダイス",
+                "type": "Item",
+                "dropPriority": 4107
+            },
+            {
+                "id": 94047707,
+                "name": "1ゾロダイス",
+                "type": "Item",
+                "dropPriority": 4106
+            },
+            {
+                "id": 94047706,
+                "name": "456ダイス",
+                "type": "Item",
+                "dropPriority": 4105
+            },
+            {
+                "id": 94047705,
+                "name": "123ダイス",
+                "type": "Item",
+                "dropPriority": 4104
+            },
+            {
+                "id": 94047704,
+                "name": "ノーマルダイス",
+                "type": "Item",
+                "dropPriority": 4103
+            },
+            {
+                "id": 94047703,
+                "name": "ライフカウンター",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94047702,
+                "name": "ポイントジェム",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94047701,
+                "name": "マーカーハウス",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "チョットデキル級"
+    }
+]

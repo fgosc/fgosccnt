@@ -1,0 +1,822 @@
+[
+    {
+        "id": 94042001,
+        "name": "枯れ果てた荒野で資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 7400,
+        "drop": [
+            {
+                "id": 9404160,
+                "name": "双つ星の歌姫",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6521,
+                "name": "黒獣脂",
+                "type": "Item",
+                "dropPriority": 8403
+            },
+            {
+                "id": 6522,
+                "name": "愚者の鎖",
+                "type": "Item",
+                "dropPriority": 8102
+            },
+            {
+                "id": 6101,
+                "name": "剣の魔石",
+                "type": "Item",
+                "dropPriority": 6200
+            },
+            {
+                "id": 6001,
+                "name": "剣の輝石",
+                "type": "Item",
+                "dropPriority": 6100
+            },
+            {
+                "id": 6007,
+                "name": "狂の輝石",
+                "type": "Item",
+                "dropPriority": 6094
+            },
+            {
+                "id": 7001,
+                "name": "セイバーピース",
+                "type": "Item",
+                "dropPriority": 5200
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041902,
+                "name": "銀のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94041901,
+                "name": "銅のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "テキサス・ビヨンド"
+    },
+    {
+        "id": 94042002,
+        "name": "静止軌道上で資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 7400,
+        "drop": [
+            {
+                "id": 9404170,
+                "name": "ベスティア・デル・ソル",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6520,
+                "name": "血の涙石",
+                "type": "Item",
+                "dropPriority": 8402
+            },
+            {
+                "id": 6508,
+                "name": "ゴーストランタン",
+                "type": "Item",
+                "dropPriority": 8300
+            },
+            {
+                "id": 6107,
+                "name": "狂の魔石",
+                "type": "Item",
+                "dropPriority": 6194
+            },
+            {
+                "id": 6007,
+                "name": "狂の輝石",
+                "type": "Item",
+                "dropPriority": 6094
+            },
+            {
+                "id": 7007,
+                "name": "バーサーカーピース",
+                "type": "Item",
+                "dropPriority": 5194
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041903,
+                "name": "金のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94041902,
+                "name": "銀のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "ビッグ・ブルー・タンク"
+    },
+    {
+        "id": 94042003,
+        "name": "古代神殿跡で資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 7400,
+        "drop": [
+            {
+                "id": 9404160,
+                "name": "双つ星の歌姫",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6525,
+                "name": "智慧のスカラベ",
+                "type": "Item",
+                "dropPriority": 8503
+            },
+            {
+                "id": 6510,
+                "name": "無間の歯車",
+                "type": "Item",
+                "dropPriority": 8302
+            },
+            {
+                "id": 6515,
+                "name": "八連双晶",
+                "type": "Item",
+                "dropPriority": 8301
+            },
+            {
+                "id": 6205,
+                "name": "術の秘石",
+                "type": "Item",
+                "dropPriority": 6296
+            },
+            {
+                "id": 6105,
+                "name": "術の魔石",
+                "type": "Item",
+                "dropPriority": 6196
+            },
+            {
+                "id": 6005,
+                "name": "術の輝石",
+                "type": "Item",
+                "dropPriority": 6096
+            },
+            {
+                "id": 7005,
+                "name": "キャスターピース",
+                "type": "Item",
+                "dropPriority": 5196
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041903,
+                "name": "金のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94041901,
+                "name": "銅のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "アビス・サルガッソー"
+    },
+    {
+        "id": 94042004,
+        "name": "女王女学院で資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 8400,
+        "drop": [
+            {
+                "id": 9404170,
+                "name": "ベスティア・デル・ソル",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6539,
+                "name": "暁光炉心",
+                "type": "Item",
+                "dropPriority": 8406
+            },
+            {
+                "id": 6510,
+                "name": "無間の歯車",
+                "type": "Item",
+                "dropPriority": 8302
+            },
+            {
+                "id": 6106,
+                "name": "殺の魔石",
+                "type": "Item",
+                "dropPriority": 6195
+            },
+            {
+                "id": 6006,
+                "name": "殺の輝石",
+                "type": "Item",
+                "dropPriority": 6095
+            },
+            {
+                "id": 7106,
+                "name": "アサシンモニュメント",
+                "type": "Item",
+                "dropPriority": 5295
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041902,
+                "name": "銀のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94041901,
+                "name": "銅のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "ゼンジョー"
+    },
+    {
+        "id": 94042005,
+        "name": "グリーン・キッチンで資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 8400,
+        "drop": [
+            {
+                "id": 9404160,
+                "name": "双つ星の歌姫",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6529,
+                "name": "呪獣胆石",
+                "type": "Item",
+                "dropPriority": 8504
+            },
+            {
+                "id": 6509,
+                "name": "蛇の宝玉",
+                "type": "Item",
+                "dropPriority": 8307
+            },
+            {
+                "id": 6502,
+                "name": "世界樹の種",
+                "type": "Item",
+                "dropPriority": 8203
+            },
+            {
+                "id": 6202,
+                "name": "弓の秘石",
+                "type": "Item",
+                "dropPriority": 6299
+            },
+            {
+                "id": 6102,
+                "name": "弓の魔石",
+                "type": "Item",
+                "dropPriority": 6199
+            },
+            {
+                "id": 6002,
+                "name": "弓の輝石",
+                "type": "Item",
+                "dropPriority": 6099
+            },
+            {
+                "id": 7102,
+                "name": "アーチャーモニュメント",
+                "type": "Item",
+                "dropPriority": 5299
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041903,
+                "name": "金のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94041902,
+                "name": "銀のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "グリーン・キッチン"
+    },
+    {
+        "id": 94042006,
+        "name": "禁忌宙域で資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 8400,
+        "drop": [
+            {
+                "id": 9404170,
+                "name": "ベスティア・デル・ソル",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6537,
+                "name": "巨人の指輪",
+                "type": "Item",
+                "dropPriority": 8312
+            },
+            {
+                "id": 6530,
+                "name": "魔術髄液",
+                "type": "Item",
+                "dropPriority": 8103
+            },
+            {
+                "id": 6104,
+                "name": "騎の魔石",
+                "type": "Item",
+                "dropPriority": 6197
+            },
+            {
+                "id": 6004,
+                "name": "騎の輝石",
+                "type": "Item",
+                "dropPriority": 6097
+            },
+            {
+                "id": 7104,
+                "name": "ライダーモニュメント",
+                "type": "Item",
+                "dropPriority": 5297
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041903,
+                "name": "金のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94041901,
+                "name": "銅のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "ダーク・マアンナ"
+    },
+    {
+        "id": 94042007,
+        "name": "試練の山で資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9404160,
+                "name": "双つ星の歌姫",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6519,
+                "name": "戦馬の幼角",
+                "type": "Item",
+                "dropPriority": 8401
+            },
+            {
+                "id": 6513,
+                "name": "隕蹄鉄",
+                "type": "Item",
+                "dropPriority": 8305
+            },
+            {
+                "id": 6203,
+                "name": "槍の秘石",
+                "type": "Item",
+                "dropPriority": 6298
+            },
+            {
+                "id": 6103,
+                "name": "槍の魔石",
+                "type": "Item",
+                "dropPriority": 6198
+            },
+            {
+                "id": 6003,
+                "name": "槍の輝石",
+                "type": "Item",
+                "dropPriority": 6098
+            },
+            {
+                "id": 7103,
+                "name": "ランサーモニュメント",
+                "type": "Item",
+                "dropPriority": 5298
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041901,
+                "name": "銅のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "修行惑星ケルトント"
+    },
+    {
+        "id": 94042008,
+        "name": "幻の大河で資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9404170,
+                "name": "ベスティア・デル・ソル",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6506,
+                "name": "竜の逆鱗",
+                "type": "Item",
+                "dropPriority": 8501
+            },
+            {
+                "id": 6512,
+                "name": "竜の牙",
+                "type": "Item",
+                "dropPriority": 8200
+            },
+            {
+                "id": 6204,
+                "name": "騎の秘石",
+                "type": "Item",
+                "dropPriority": 6297
+            },
+            {
+                "id": 6104,
+                "name": "騎の魔石",
+                "type": "Item",
+                "dropPriority": 6197
+            },
+            {
+                "id": 6004,
+                "name": "騎の輝石",
+                "type": "Item",
+                "dropPriority": 6097
+            },
+            {
+                "id": 7104,
+                "name": "ライダーモニュメント",
+                "type": "Item",
+                "dropPriority": 5297
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041902,
+                "name": "銀のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "幻想惑星カリブー"
+    },
+    {
+        "id": 94042009,
+        "name": "要塞外殻で資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9404160,
+                "name": "双つ星の歌姫",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6518,
+                "name": "精霊根",
+                "type": "Item",
+                "dropPriority": 8502
+            },
+            {
+                "id": 6503,
+                "name": "英雄の証",
+                "type": "Item",
+                "dropPriority": 8100
+            },
+            {
+                "id": 6201,
+                "name": "剣の秘石",
+                "type": "Item",
+                "dropPriority": 6300
+            },
+            {
+                "id": 6101,
+                "name": "剣の魔石",
+                "type": "Item",
+                "dropPriority": 6200
+            },
+            {
+                "id": 6001,
+                "name": "剣の輝石",
+                "type": "Item",
+                "dropPriority": 6100
+            },
+            {
+                "id": 7101,
+                "name": "セイバーモニュメント",
+                "type": "Item",
+                "dropPriority": 5300
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041903,
+                "name": "金のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2003
+            }
+        ],
+        "shortname": "秘匿要塞デスチェイテ"
+    },
+    {
+        "id": 94042010,
+        "name": "アルトン星人の住処で資源収集",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9404170,
+                "name": "ベスティア・デル・ソル",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 9807210,
+                "name": "概念礼装EXPカード：はじめてのカレー",
+                "type": "Craft Essence",
+                "dropPriority": 9004
+            },
+            {
+                "id": 9807220,
+                "name": "概念礼装EXPカード：謎の物質γ",
+                "type": "Craft Essence",
+                "dropPriority": 9003
+            },
+            {
+                "id": 6542,
+                "name": "真理の卵",
+                "type": "Item",
+                "dropPriority": 8507
+            },
+            {
+                "id": 6514,
+                "name": "ホムンクルスベビー",
+                "type": "Item",
+                "dropPriority": 8304
+            },
+            {
+                "id": 6207,
+                "name": "狂の秘石",
+                "type": "Item",
+                "dropPriority": 6294
+            },
+            {
+                "id": 6107,
+                "name": "狂の魔石",
+                "type": "Item",
+                "dropPriority": 6194
+            },
+            {
+                "id": 6007,
+                "name": "狂の輝石",
+                "type": "Item",
+                "dropPriority": 6094
+            },
+            {
+                "id": 7104,
+                "name": "ライダーモニュメント",
+                "type": "Item",
+                "dropPriority": 5297
+            },
+            {
+                "id": 7105,
+                "name": "キャスターモニュメント",
+                "type": "Item",
+                "dropPriority": 5296
+            },
+            {
+                "id": 7106,
+                "name": "アサシンモニュメント",
+                "type": "Item",
+                "dropPriority": 5295
+            },
+            {
+                "id": 7107,
+                "name": "バーサーカーモニュメント",
+                "type": "Item",
+                "dropPriority": 5294
+            },
+            {
+                "id": 94001504,
+                "name": "アルトリウム",
+                "type": "Item",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94041903,
+                "name": "金のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94041902,
+                "name": "銀のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94041901,
+                "name": "銅のセイバーバッヂ",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "流浪惑星アルトン"
+    }
+]

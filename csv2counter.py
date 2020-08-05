@@ -84,7 +84,12 @@ if __name__ == '__main__':
 ###############################################
 {}###############################################""".format(warning))
 
-    print ("【{}】".format(args.place), end="")
+    place = ""
+    if l[1]["filename"] != "合計":
+        place = l[0]["filename"]
+    if args.place != "周回場所":
+        place = args.place
+    print ("【{}】".format(place), end="")
     output = ""
     monyupi_flag = False
     skillstone_flag = False
