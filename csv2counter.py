@@ -58,7 +58,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('infile', nargs='?', type=argparse.FileType(),
                         default=sys.stdin)
-    parser.add_argument('--place', default='周回場所')
+    parser.add_argument('--place')
     parser.add_argument('--point', default='ポイント', help="'Point' item's name")
     args = parser.parse_args()
 
@@ -85,9 +85,11 @@ if __name__ == '__main__':
 {}###############################################""".format(warning))
 
     place = ""
-    if l[1]["filename"] != "合計":
+    if l[0]["filename"] != "合計":
         place = l[0]["filename"]
-    if args.place != "周回場所":
+    else:
+        place = "周回場所"    
+    if args.place:
         place = args.place
     print ("【{}】".format(place), end="")
     output = ""
