@@ -65,8 +65,8 @@ item_name = {item["id"]:item["name"] for item in drop_item}
 item_shortname = {item["id"]:item["shortname"] for item in drop_item if "shortname" in item.keys()}
 item_dropPriority = {item["id"]:item["dropPriority"] for item in drop_item}
 item_type = {item["id"]:item["type"] for item in drop_item}
-dist_item = {item["id"]:item["phash_battle"] for item in drop_item if item["type"] == "Item" and "phash_battle" in item.keys()}
-dist_ce = {item["id"]:item["phash"] for item in drop_item if item["type"] == "Craft Essence"}
+dist_item = {item["phash_battle"]:item["id"] for item in drop_item if item["type"] == "Item" and "phash_battle" in item.keys()}
+dist_ce = {item["phash"]:item["id"] for item in drop_item if item["type"] == "Craft Essence"}
 dist_secret_gem = {item["id"]:item["phash_class"] for item in drop_item if 6200 < item["id"] < 6208 and "phash_class" in item.keys()}
 dist_magic_gem = {item["id"]:item["phash_class"] for item in drop_item if 6100 < item["id"] < 6108 and "phash_class" in item.keys()}
 dist_gem = {item["id"]:item["phash_class"] for item in drop_item if 6000 < item["id"] < 6008 and "phash_class" in item.keys()}
@@ -76,7 +76,7 @@ dist_exp_rarity.update(dist_exp_rarity_sold)
 dist_exp_class = {item["phash_class"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_class" in item.keys()}
 dist_exp_class_sold = {item["phash_class_sold"]:item["id"]  for item in drop_item if item["type"] == "Exp. UP" and "phash_class_sold" in item.keys()}
 dist_exp_class.update(dist_exp_class_sold)
-dist_point = {item["id"]:item["phash_battle"] for item in drop_item if item["type"] == "Point" and "phash_battle" in item.keys()}
+dist_point = {item["phash_battle"]:item["id"] for item in drop_item if item["type"] == "Point" and "phash_battle" in item.keys()}
 
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
@@ -1071,11 +1071,11 @@ class Item:
             print("phash :{}".format(hex))
         # 既存のアイテムとの距離を比較
         for i in dist_item.keys():
-            d = hasher.compare(hash_item, hex2hash(dist_item[i]))
+            d = hasher.compare(hash_item, hex2hash(i))
             if d <= 12:
             #ポイントと種の距離が8という例有り(IMG_0274)→16に
             #バーガーと脂の距離が10という例有り(IMG_2354)→14に
-                ids[i] = d
+                ids[dist_item[i]] = d
         if len(ids) > 0:
             ids = sorted(ids.items(), key=lambda x:x[1])
             id_tupple = next(iter(ids))
@@ -1128,9 +1128,9 @@ class Item:
             print("phash :{}".format(hex))
         # 既存のアイテムとの距離を比較
         for i in dist_ce.keys():
-            d = hasher.compare(hash_item, hex2hash(dist_ce[i]))
+            d = hasher.compare(hash_item, hex2hash(i))
             if d <= 12:
-                itemfiles[i] = d
+                itemfiles[dist_ce[i]] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
             item = next(iter(itemfiles))
@@ -1152,9 +1152,9 @@ class Item:
             print("phash :{}".format(hex))
         # 既存のアイテムとの距離を比較
         for i in dist_point.keys():
-            d = hasher.compare(hash_item, hex2hash(dist_point[i]))
+            d = hasher.compare(hash_item, hex2hash(i))
             if d <= 12:
-                itemfiles[i] = d
+                itemfiles[dist_point[i]] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x:x[1])
             item = next(iter(itemfiles))
@@ -1189,10 +1189,12 @@ class Item:
 
         return ""
 
-    def make_new_file(self, img, search_dir, dist_dic, dropPriority, initial):
+    def make_new_file(self, img, search_dir, dist_dic, dropPriority, category):
         """
         ファイル名候補を探す
         """
+        i_dic = {"Item":"item", "Craft Essence":"ce", "Point":"point"}
+        initial = i_dic[category]
         for i in range(999):
             itemfile = search_dir / (initial + '{:0=3}'.format(i + 1) + '.png')
             if itemfile.is_file():
@@ -1206,13 +1208,17 @@ class Item:
                     if id in dist_dic.keys():
                         continue
                     break
-                hash = compute_hash(img)
+                if category == "Craft Essence":
+                    hash = compute_hash_ce(img)
+                else:
+                    hash = compute_hash(img)
                 hash_hex = ""
                 for h in hash[0]:
                     hash_hex = hash_hex + "{:02x}".format(h)
-                dist_dic[id] = hash_hex
+                dist_dic[hash_hex] = id
                 item_name[id] = itemfile.stem
                 item_dropPriority[id] = dropPriority
+                item_type[id] = "Craft Essence"
                 break
         return id
 
@@ -1251,14 +1257,14 @@ class Item:
         if self.category == "Point":
             id = self.classify_point(img, debug)
             if id == "":
-                id = self. make_new_file(img, Point_dir, dist_point, PRIORITY_POINT, "point")
+                id = self.make_new_file(img, Point_dir, dist_point, PRIORITY_POINT, self.category)
             return id            
         elif self.category == "Quest Reward":
             return 5
         elif self.category == "Craft Essence":
             id = self.classify_ce(img, debug)
             if id == "":
-                id = self. make_new_file(img, CE_dir, dist_ce, PRIORITY_CE, "ce")
+                id = self.make_new_file(img, CE_dir, dist_ce, PRIORITY_CE, self.category)
             return id            
         elif self.category == "Exp. UP":
             return self.classify_exp(img)
@@ -1271,7 +1277,7 @@ class Item:
             if id == "":
                 id = self.classify_exp(img)
         if id == "":
-            id = self. make_new_file(img, Item_dir, dist_item, PRIORITY_ITEM, "item")
+            id = self.make_new_file(img, Item_dir, dist_item, PRIORITY_ITEM, self.category)
         return id
 
 ##    def compute_exp_hash(self, img_rgb):
@@ -1345,20 +1351,29 @@ def search_file(search_dir, dist_dic, dropPriority, category):
         img = imread(fname)
 ##        id = 0
         # id 候補を決める
-        for j in range(99999):
-            id = j + ID_START
-            if id in item_name.keys():
-                continue
-            break
+        # 既存のデータがあったらそれを使用
+        if fname.stem in item_name.values():
+            id = [k for k, v in item_name.items() if v == fname.stem][0]
+        elif fname.stem in item_shortname.values():
+            id = [k for k, v in item_shortname.items() if v == fname.stem][0]
+        else:
+            for j in range(99999):
+                id = j + ID_START
+                if id in item_name.keys():
+                    continue
+                break
         # priotiry は固定
-        hash = compute_hash(img)
+            item_name[id] = fname.stem
+            item_dropPriority[id] = dropPriority
+            item_type[id] = category
+        if category == "Craft Essence":
+            hash = compute_hash_ce(img)
+        else:
+            hash = compute_hash(img)
         hash_hex = ""
         for h in hash[0]:
             hash_hex = hash_hex + "{:02x}".format(h)
-        dist_dic[id] = hash_hex
-        item_name[id] = fname.stem
-        item_dropPriority[id] = dropPriority
-        item_type[id] = category
+        dist_dic[hash_hex] = id
 
 def calc_dist_local():
     """
