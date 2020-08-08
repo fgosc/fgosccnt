@@ -1205,7 +1205,7 @@ class Item:
                 # id 候補を決める
                 for j in range(99999):
                     id = j + ID_START
-                    if id in dist_dic.keys():
+                    if id in item_name.keys():
                         continue
                     break
                 if category == "Craft Essence":
