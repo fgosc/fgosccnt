@@ -493,6 +493,7 @@
         "type": "Craft Essence",
         "rarity": 5,
         "name": "ニット・ザ・ラブ",
+        "shortname": "礼装",
         "phash": "cfcc6cfafe69a7fa",
         "dropPriority": 9005
     },
@@ -1705,6 +1706,7 @@
         "rarity": 2,
         "phash": "3c208bda71764c8c",
         "name": "キラキラポイント",
+        "shortname": "ポイント",
         "dropPriority": 3004
     },
     {
