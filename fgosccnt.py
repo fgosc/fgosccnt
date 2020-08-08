@@ -1218,7 +1218,7 @@ class Item:
                 dist_dic[hash_hex] = id
                 item_name[id] = itemfile.stem
                 item_dropPriority[id] = dropPriority
-                item_type[id] = "Craft Essence"
+                item_type[id] = category
                 break
         return id
 
@@ -1270,14 +1270,21 @@ class Item:
             return self.classify_exp(img)
         elif self.category == "Item":
             id = self.classify_item(img, currnet_dropPriority, debug)
+            if id == "":
+                id = self.make_new_file(img, Item_dir, dist_item, PRIORITY_ITEM, self.category)
         else:
             ## ここで category が判別できないのは三行目かつ
             ## スクロール位置の関係で下部表示が消えている場合
             id = self.classify_item(img, currnet_dropPriority, debug)
-            if id == "":
-                id = self.classify_exp(img)
+            if id != "": return id
+            id = self.classify_point(img, debug)
+            if id != "": return id
+            id = self.classify_ce(img, debug)
+            if id != "": return id
+            id = self.classify_exp(img)
+            if id != "": return id
         if id == "":
-            id = self.make_new_file(img, Item_dir, dist_item, PRIORITY_ITEM, self.category)
+            id = self.make_new_file(img, Item_dir, dist_item, PRIORITY_ITEM, "Item")
         return id
 
 ##    def compute_exp_hash(self, img_rgb):

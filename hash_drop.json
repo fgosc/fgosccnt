@@ -292,6 +292,7 @@
         "type": "Craft Essence",
         "rarity": 5,
         "name": "スイート・デイズ",
+        "shortname": "礼装",
         "phash": "0382eee6d7fdf9fe",
         "dropPriority": 9005
     },
@@ -405,6 +406,7 @@
         "type": "Craft Essence",
         "rarity": 5,
         "name": "ビューティフル・ドリーマー",
+        "shortname": "礼装",
         "phash": "ba376d42d90a0152",
         "dropPriority": 9005
     },
@@ -1730,6 +1732,7 @@
         "rarity": 2,
         "phash": "9e0849584990cc05",
         "name": "詩詠みポイント",
+        "shortname": "ポイント",
         "dropPriority": 3004
     },
     {
@@ -1805,6 +1808,7 @@
         "rarity": 2,
         "phash": "5628815668b54e39",
         "name": "空中庭園謹製チョコ",
+        "shortname": "チョコ",
         "dropPriority": 3004
     },
     {
@@ -3117,7 +3121,7 @@
         "id": 94041901,
         "type": "Item",
         "rarity": 1,
-        "phash": "66210d054862d19c",
+        "phash": "66018d9052139511",
         "name": "銅のセイバーバッヂ",
         "shortname": "銅バッヂ",
         "dropPriority": 2001,
