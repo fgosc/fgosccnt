@@ -1,0 +1,366 @@
+[
+    {
+        "id": 94034620,
+        "name": "カクテルテイスティング 初級",
+        "place": "",
+        "chapter": "",
+        "qp": 1900,
+        "drop": [
+            {
+                "id": 6510,
+                "name": "無間の歯車",
+                "type": "Item",
+                "dropPriority": 8302
+            },
+            {
+                "id": 6106,
+                "name": "殺の魔石",
+                "type": "Item",
+                "dropPriority": 6195
+            },
+            {
+                "id": 6006,
+                "name": "殺の輝石",
+                "type": "Item",
+                "dropPriority": 6095
+            },
+            {
+                "id": 7006,
+                "name": "アサシンピース",
+                "type": "Item",
+                "dropPriority": 5195
+            },
+            {
+                "id": 94034602,
+                "name": "トリッキークロス",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94034601,
+                "name": "バッドコースター",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "カクテルテイスティング 初級"
+    },
+    {
+        "id": 94034621,
+        "name": "カクテルテイスティング 中級",
+        "place": "",
+        "chapter": "",
+        "qp": 2900,
+        "drop": [
+            {
+                "id": 6502,
+                "name": "世界樹の種",
+                "type": "Item",
+                "dropPriority": 8203
+            },
+            {
+                "id": 6534,
+                "name": "励振火薬",
+                "type": "Item",
+                "dropPriority": 8105
+            },
+            {
+                "id": 6004,
+                "name": "騎の輝石",
+                "type": "Item",
+                "dropPriority": 6097
+            },
+            {
+                "id": 7004,
+                "name": "ライダーピース",
+                "type": "Item",
+                "dropPriority": 5197
+            },
+            {
+                "id": 94034603,
+                "name": "ハーミットシェーカー",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94034602,
+                "name": "トリッキークロス",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "カクテルテイスティング 中級"
+    },
+    {
+        "id": 94034622,
+        "name": "カクテルテイスティング 上級",
+        "place": "",
+        "chapter": "",
+        "qp": 4400,
+        "drop": [
+            {
+                "id": 6514,
+                "name": "ホムンクルスベビー",
+                "type": "Item",
+                "dropPriority": 8304
+            },
+            {
+                "id": 6516,
+                "name": "凶骨",
+                "type": "Item",
+                "dropPriority": 8101
+            },
+            {
+                "id": 6103,
+                "name": "槍の魔石",
+                "type": "Item",
+                "dropPriority": 6198
+            },
+            {
+                "id": 6003,
+                "name": "槍の輝石",
+                "type": "Item",
+                "dropPriority": 6098
+            },
+            {
+                "id": 7003,
+                "name": "ランサーピース",
+                "type": "Item",
+                "dropPriority": 5198
+            },
+            {
+                "id": 94034603,
+                "name": "ハーミットシェーカー",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94034601,
+                "name": "バッドコースター",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "カクテルテイスティング 上級"
+    },
+    {
+        "id": 94034623,
+        "name": "カクテルテイスティング ミルク級",
+        "place": "",
+        "chapter": "",
+        "qp": 6400,
+        "drop": [
+            {
+                "id": 6528,
+                "name": "原初の産毛",
+                "type": "Item",
+                "dropPriority": 8405
+            },
+            {
+                "id": 6503,
+                "name": "英雄の証",
+                "type": "Item",
+                "dropPriority": 8100
+            },
+            {
+                "id": 6107,
+                "name": "狂の魔石",
+                "type": "Item",
+                "dropPriority": 6194
+            },
+            {
+                "id": 6007,
+                "name": "狂の輝石",
+                "type": "Item",
+                "dropPriority": 6094
+            },
+            {
+                "id": 7107,
+                "name": "バーサーカーモニュメント",
+                "type": "Item",
+                "dropPriority": 5294
+            },
+            {
+                "id": 94034602,
+                "name": "トリッキークロス",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94034601,
+                "name": "バッドコースター",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "ミルク級"
+    },
+    {
+        "id": 94034624,
+        "name": "カクテルテイスティング ソーダ級",
+        "place": "",
+        "chapter": "",
+        "qp": 7400,
+        "drop": [
+            {
+                "id": 6521,
+                "name": "黒獣脂",
+                "type": "Item",
+                "dropPriority": 8403
+            },
+            {
+                "id": 6530,
+                "name": "魔術髄液",
+                "type": "Item",
+                "dropPriority": 8103
+            },
+            {
+                "id": 6105,
+                "name": "術の魔石",
+                "type": "Item",
+                "dropPriority": 6196
+            },
+            {
+                "id": 6005,
+                "name": "術の輝石",
+                "type": "Item",
+                "dropPriority": 6096
+            },
+            {
+                "id": 7105,
+                "name": "キャスターモニュメント",
+                "type": "Item",
+                "dropPriority": 5296
+            },
+            {
+                "id": 94034603,
+                "name": "ハーミットシェーカー",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94034602,
+                "name": "トリッキークロス",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "ソーダ級"
+    },
+    {
+        "id": 94034625,
+        "name": "カクテルテイスティング ロック級",
+        "place": "",
+        "chapter": "",
+        "qp": 8400,
+        "drop": [
+            {
+                "id": 6531,
+                "name": "奇奇神酒",
+                "type": "Item",
+                "dropPriority": 8505
+            },
+            {
+                "id": 6513,
+                "name": "隕蹄鉄",
+                "type": "Item",
+                "dropPriority": 8305
+            },
+            {
+                "id": 6202,
+                "name": "弓の秘石",
+                "type": "Item",
+                "dropPriority": 6299
+            },
+            {
+                "id": 6102,
+                "name": "弓の魔石",
+                "type": "Item",
+                "dropPriority": 6199
+            },
+            {
+                "id": 6002,
+                "name": "弓の輝石",
+                "type": "Item",
+                "dropPriority": 6099
+            },
+            {
+                "id": 7102,
+                "name": "アーチャーモニュメント",
+                "type": "Item",
+                "dropPriority": 5299
+            },
+            {
+                "id": 94034603,
+                "name": "ハーミットシェーカー",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94034601,
+                "name": "バッドコースター",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "ロック級"
+    },
+    {
+        "id": 94034626,
+        "name": "カクテルテイスティング ストレート級",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 6525,
+                "name": "智慧のスカラベ",
+                "type": "Item",
+                "dropPriority": 8503
+            },
+            {
+                "id": 6512,
+                "name": "竜の牙",
+                "type": "Item",
+                "dropPriority": 8200
+            },
+            {
+                "id": 6201,
+                "name": "剣の秘石",
+                "type": "Item",
+                "dropPriority": 6300
+            },
+            {
+                "id": 6001,
+                "name": "剣の輝石",
+                "type": "Item",
+                "dropPriority": 6100
+            },
+            {
+                "id": 7101,
+                "name": "セイバーモニュメント",
+                "type": "Item",
+                "dropPriority": 5300
+            },
+            {
+                "id": 94034603,
+                "name": "ハーミットシェーカー",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94034602,
+                "name": "トリッキークロス",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94034601,
+                "name": "バッドコースター",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "ストレート級"
+    }
+]
