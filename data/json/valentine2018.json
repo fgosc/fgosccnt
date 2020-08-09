@@ -1,0 +1,828 @@
+[
+    {
+        "id": 94020901,
+        "name": "チョコ製造 パートタイム・初級",
+        "place": "",
+        "chapter": "",
+        "qp": 1900,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6503,
+                "name": "英雄の証",
+                "type": "Item",
+                "dropPriority": 8100
+            },
+            {
+                "id": 6004,
+                "name": "騎の輝石",
+                "type": "Item",
+                "dropPriority": 6097
+            },
+            {
+                "id": 7007,
+                "name": "バーサーカーピース",
+                "type": "Item",
+                "dropPriority": 5194
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020802,
+                "name": "ミスティックミルク",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94020801,
+                "name": "ファンシーシュガー",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "チョコ製造 パートタイム・初級"
+    },
+    {
+        "id": 94020902,
+        "name": "チョコ製造 パートタイム・中級",
+        "place": "",
+        "chapter": "",
+        "qp": 2900,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6514,
+                "name": "ホムンクルスベビー",
+                "type": "Item",
+                "dropPriority": 8304
+            },
+            {
+                "id": 6103,
+                "name": "槍の魔石",
+                "type": "Item",
+                "dropPriority": 6198
+            },
+            {
+                "id": 6003,
+                "name": "槍の輝石",
+                "type": "Item",
+                "dropPriority": 6098
+            },
+            {
+                "id": 7003,
+                "name": "ランサーピース",
+                "type": "Item",
+                "dropPriority": 5198
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020803,
+                "name": "クークーカカオ",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94020802,
+                "name": "ミスティックミルク",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "チョコ製造 パートタイム・中級"
+    },
+    {
+        "id": 94020903,
+        "name": "チョコ製造 パートタイム・上級",
+        "place": "",
+        "chapter": "",
+        "qp": 4400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6530,
+                "name": "魔術髄液",
+                "type": "Item",
+                "dropPriority": 8103
+            },
+            {
+                "id": 6005,
+                "name": "術の輝石",
+                "type": "Item",
+                "dropPriority": 6096
+            },
+            {
+                "id": 7005,
+                "name": "キャスターピース",
+                "type": "Item",
+                "dropPriority": 5196
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020803,
+                "name": "クークーカカオ",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94020801,
+                "name": "ファンシーシュガー",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "チョコ製造 パートタイム・上級"
+    },
+    {
+        "id": 94020904,
+        "name": "チョコ製造 パートタイム・超級",
+        "place": "",
+        "chapter": "",
+        "qp": 6400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6513,
+                "name": "隕蹄鉄",
+                "type": "Item",
+                "dropPriority": 8305
+            },
+            {
+                "id": 6104,
+                "name": "騎の魔石",
+                "type": "Item",
+                "dropPriority": 6197
+            },
+            {
+                "id": 6004,
+                "name": "騎の輝石",
+                "type": "Item",
+                "dropPriority": 6097
+            },
+            {
+                "id": 7004,
+                "name": "ライダーピース",
+                "type": "Item",
+                "dropPriority": 5197
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020803,
+                "name": "クークーカカオ",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94020802,
+                "name": "ミスティックミルク",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94020801,
+                "name": "ファンシーシュガー",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "チョコ製造 パートタイム・超級"
+    },
+    {
+        "id": 94020905,
+        "name": "チョコ製造 フルタイム・ホワイト級",
+        "place": "",
+        "chapter": "",
+        "qp": 7400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6529,
+                "name": "呪獣胆石",
+                "type": "Item",
+                "dropPriority": 8504
+            },
+            {
+                "id": 6502,
+                "name": "世界樹の種",
+                "type": "Item",
+                "dropPriority": 8203
+            },
+            {
+                "id": 6207,
+                "name": "狂の秘石",
+                "type": "Item",
+                "dropPriority": 6294
+            },
+            {
+                "id": 6007,
+                "name": "狂の輝石",
+                "type": "Item",
+                "dropPriority": 6094
+            },
+            {
+                "id": 7107,
+                "name": "バーサーカーモニュメント",
+                "type": "Item",
+                "dropPriority": 5294
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020801,
+                "name": "ファンシーシュガー",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "ホワイト級〔狂〕"
+    },
+    {
+        "id": 94020906,
+        "name": "チョコ製造 フルタイム・グレー級",
+        "place": "",
+        "chapter": "",
+        "qp": 8400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6521,
+                "name": "黒獣脂",
+                "type": "Item",
+                "dropPriority": 8403
+            },
+            {
+                "id": 6522,
+                "name": "愚者の鎖",
+                "type": "Item",
+                "dropPriority": 8102
+            },
+            {
+                "id": 6106,
+                "name": "殺の魔石",
+                "type": "Item",
+                "dropPriority": 6195
+            },
+            {
+                "id": 6006,
+                "name": "殺の輝石",
+                "type": "Item",
+                "dropPriority": 6095
+            },
+            {
+                "id": 7106,
+                "name": "アサシンモニュメント",
+                "type": "Item",
+                "dropPriority": 5295
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020802,
+                "name": "ミスティックミルク",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "グレー級〔殺〕"
+    },
+    {
+        "id": 94020907,
+        "name": "チョコ製造 フルタイム・ブラック級",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6519,
+                "name": "戦馬の幼角",
+                "type": "Item",
+                "dropPriority": 8401
+            },
+            {
+                "id": 6527,
+                "name": "万死の毒針",
+                "type": "Item",
+                "dropPriority": 8202
+            },
+            {
+                "id": 6103,
+                "name": "槍の魔石",
+                "type": "Item",
+                "dropPriority": 6198
+            },
+            {
+                "id": 6003,
+                "name": "槍の輝石",
+                "type": "Item",
+                "dropPriority": 6098
+            },
+            {
+                "id": 7103,
+                "name": "ランサーモニュメント",
+                "type": "Item",
+                "dropPriority": 5298
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020803,
+                "name": "クークーカカオ",
+                "type": "Item",
+                "dropPriority": 2003
+            }
+        ],
+        "shortname": "ブラック級〔槍〕"
+    },
+    {
+        "id": 94020908,
+        "name": "チョコ製造 フルタイム・ホワイト級",
+        "place": "",
+        "chapter": "",
+        "qp": 7400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6525,
+                "name": "智慧のスカラベ",
+                "type": "Item",
+                "dropPriority": 8503
+            },
+            {
+                "id": 6509,
+                "name": "蛇の宝玉",
+                "type": "Item",
+                "dropPriority": 8307
+            },
+            {
+                "id": 6205,
+                "name": "術の秘石",
+                "type": "Item",
+                "dropPriority": 6296
+            },
+            {
+                "id": 6105,
+                "name": "術の魔石",
+                "type": "Item",
+                "dropPriority": 6196
+            },
+            {
+                "id": 7005,
+                "name": "キャスターピース",
+                "type": "Item",
+                "dropPriority": 5196
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020801,
+                "name": "ファンシーシュガー",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "ホワイト級〔術〕"
+    },
+    {
+        "id": 94020909,
+        "name": "チョコ製造 フルタイム・グレー級",
+        "place": "",
+        "chapter": "",
+        "qp": 8400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6531,
+                "name": "奇奇神酒",
+                "type": "Item",
+                "dropPriority": 8505
+            },
+            {
+                "id": 6510,
+                "name": "無間の歯車",
+                "type": "Item",
+                "dropPriority": 8302
+            },
+            {
+                "id": 6202,
+                "name": "弓の秘石",
+                "type": "Item",
+                "dropPriority": 6299
+            },
+            {
+                "id": 6002,
+                "name": "弓の輝石",
+                "type": "Item",
+                "dropPriority": 6099
+            },
+            {
+                "id": 7102,
+                "name": "アーチャーモニュメント",
+                "type": "Item",
+                "dropPriority": 5299
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020802,
+                "name": "ミスティックミルク",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "グレー級〔弓〕"
+    },
+    {
+        "id": 94020910,
+        "name": "チョコ製造 フルタイム・ブラック級",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6507,
+                "name": "混沌の爪",
+                "type": "Item",
+                "dropPriority": 8400
+            },
+            {
+                "id": 6533,
+                "name": "宵哭きの鉄杭",
+                "type": "Item",
+                "dropPriority": 8104
+            },
+            {
+                "id": 6207,
+                "name": "狂の秘石",
+                "type": "Item",
+                "dropPriority": 6294
+            },
+            {
+                "id": 6007,
+                "name": "狂の輝石",
+                "type": "Item",
+                "dropPriority": 6094
+            },
+            {
+                "id": 7107,
+                "name": "バーサーカーモニュメント",
+                "type": "Item",
+                "dropPriority": 5294
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020803,
+                "name": "クークーカカオ",
+                "type": "Item",
+                "dropPriority": 2003
+            }
+        ],
+        "shortname": "ブラック級〔狂〕"
+    },
+    {
+        "id": 94020911,
+        "name": "チョコ製造 フルタイム・ホワイト級",
+        "place": "",
+        "chapter": "",
+        "qp": 7400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6518,
+                "name": "精霊根",
+                "type": "Item",
+                "dropPriority": 8502
+            },
+            {
+                "id": 6532,
+                "name": "枯淡勾玉",
+                "type": "Item",
+                "dropPriority": 8310
+            },
+            {
+                "id": 6201,
+                "name": "剣の秘石",
+                "type": "Item",
+                "dropPriority": 6300
+            },
+            {
+                "id": 6101,
+                "name": "剣の魔石",
+                "type": "Item",
+                "dropPriority": 6200
+            },
+            {
+                "id": 7101,
+                "name": "セイバーモニュメント",
+                "type": "Item",
+                "dropPriority": 5300
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020801,
+                "name": "ファンシーシュガー",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "ホワイト級〔剣〕"
+    },
+    {
+        "id": 94020912,
+        "name": "チョコ製造 フルタイム・グレー級",
+        "place": "",
+        "chapter": "",
+        "qp": 8400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6523,
+                "name": "封魔のランプ",
+                "type": "Item",
+                "dropPriority": 8404
+            },
+            {
+                "id": 6501,
+                "name": "鳳凰の羽根",
+                "type": "Item",
+                "dropPriority": 8306
+            },
+            {
+                "id": 6107,
+                "name": "狂の魔石",
+                "type": "Item",
+                "dropPriority": 6194
+            },
+            {
+                "id": 6007,
+                "name": "狂の輝石",
+                "type": "Item",
+                "dropPriority": 6094
+            },
+            {
+                "id": 7107,
+                "name": "バーサーカーモニュメント",
+                "type": "Item",
+                "dropPriority": 5294
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020802,
+                "name": "ミスティックミルク",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "グレー級〔狂〕"
+    },
+    {
+        "id": 94020913,
+        "name": "チョコ製造 フルタイム・ブラック級",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9402900,
+                "name": "スイート・デイズ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6528,
+                "name": "原初の産毛",
+                "type": "Item",
+                "dropPriority": 8405
+            },
+            {
+                "id": 6512,
+                "name": "竜の牙",
+                "type": "Item",
+                "dropPriority": 8200
+            },
+            {
+                "id": 6104,
+                "name": "騎の魔石",
+                "type": "Item",
+                "dropPriority": 6197
+            },
+            {
+                "id": 6004,
+                "name": "騎の輝石",
+                "type": "Item",
+                "dropPriority": 6097
+            },
+            {
+                "id": 7104,
+                "name": "ライダーモニュメント",
+                "type": "Item",
+                "dropPriority": 5297
+            },
+            {
+                "id": 94020805,
+                "name": "空中庭園謹製チョコ",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94020804,
+                "name": "フエールフレーバー",
+                "type": "Item",
+                "dropPriority": 2005
+            },
+            {
+                "id": 94020803,
+                "name": "クークーカカオ",
+                "type": "Item",
+                "dropPriority": 2003
+            }
+        ],
+        "shortname": "ブラック級〔騎〕"
+    }
+]

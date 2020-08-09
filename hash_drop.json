@@ -1707,7 +1707,8 @@
         "phash": "3c208bda71764c8c",
         "name": "キラキラポイント",
         "shortname": "ポイント",
-        "dropPriority": 3004
+        "dropPriority": 3004,
+        "phash_battle": "9ec16938e6c6f894"
     },
     {
         "id": 94043005,
@@ -1735,7 +1736,8 @@
         "phash": "9e0849584990cc05",
         "name": "詩詠みポイント",
         "shortname": "ポイント",
-        "dropPriority": 3004
+        "dropPriority": 3004,
+        "phash_battle": "dea52918c6381986"
     },
     {
         "id": 94032207,
@@ -1802,7 +1804,8 @@
         "rarity": 2,
         "phash": "fcc9871669f4eb19",
         "name": "ドラクルコイン",
-        "dropPriority": 3004
+        "dropPriority": 3004,
+        "phash_battle": "bc0396e4eb384a14"
     },
     {
         "id": 94020805,
@@ -1811,7 +1814,8 @@
         "phash": "5628815668b54e39",
         "name": "空中庭園謹製チョコ",
         "shortname": "チョコ",
-        "dropPriority": 3004
+        "dropPriority": 3004,
+        "phash_battle": "fe01027007098370"
     },
     {
         "id": 94018805,
@@ -1828,7 +1832,8 @@
         "rarity": 2,
         "phash": "1e68a198699c19a4",
         "name": "織田幕府ポイント",
-        "dropPriority": 3005
+        "dropPriority": 3005,
+        "phash_battle": "3ec5213858e62629"
     },
     {
         "id": 94011304,
@@ -1836,7 +1841,8 @@
         "rarity": 2,
         "phash": "3e6a0b9cc8b37204",
         "name": "新選組ポイント",
-        "dropPriority": 3004
+        "dropPriority": 3004,
+        "phash_battle": "5ea12558a618e126"
     },
     {
         "id": 94009005,
@@ -2143,7 +2149,8 @@
         "phash": "d65a2db4c90f4a03",
         "name": "クークーカカオ",
         "shortname": "カカオ",
-        "dropPriority": 2003
+        "dropPriority": 2003,
+        "phash_battle": "5e85dd0983c33333"
     },
     {
         "id": 94020804,
@@ -2152,7 +2159,8 @@
         "phash": "66c1d930479931ce",
         "name": "フエールフレーバー",
         "shortname": "フレーバー",
-        "dropPriority": 2005
+        "dropPriority": 2005,
+        "phash_battle": "266998651a862996"
     },
     {
         "id": 94023303,
@@ -2241,7 +2249,8 @@
         "phash": "df02788e60339ccf",
         "name": "夢綴りの筆",
         "shortname": "筆",
-        "dropPriority": 2003
+        "dropPriority": 2003,
+        "phash_battle": "669bec33dc679862"
     },
     {
         "id": 94034603,
@@ -2250,7 +2259,8 @@
         "phash": "1e93d96c12c829a9",
         "name": "ハーミットシェーカー",
         "shortname": "シェーカー",
-        "dropPriority": 2003
+        "dropPriority": 2003,
+        "phash_battle": "d66924c22d1208d2"
     },
     {
         "id": 94035003,
@@ -2326,7 +2336,8 @@
         "phash": "9c07836c619c4996",
         "name": "夜すがらの扇",
         "shortname": "扇",
-        "dropPriority": 2003
+        "dropPriority": 2003,
+        "phash_battle": "5e83b81c45922390"
     },
     {
         "id": 94046503,
@@ -2335,7 +2346,8 @@
         "phash": "4649a94e0d94dbc3",
         "name": "疑惑のハチミツ",
         "shortname": "ハチミツ",
-        "dropPriority": 2003
+        "dropPriority": 2003,
+        "phash_battle": "a61906d679a69459"
     },
     {
         "id": 94047703,
@@ -2610,7 +2622,8 @@
         "phash": "5f8817f44a1bf966",
         "name": "ミスティックミルク",
         "shortname": "ミルク",
-        "dropPriority": 2002
+        "dropPriority": 2002,
+        "phash_battle": "ee897409b046a946"
     },
     {
         "id": 94023302,
@@ -2691,7 +2704,8 @@
         "phash": "6c12592889a90de9",
         "name": "想紡ぎの墨",
         "shortname": "墨",
-        "dropPriority": 2002
+        "dropPriority": 2002,
+        "phash_battle": "16339dc56d69290a"
     },
     {
         "id": 94034602,
@@ -2700,7 +2714,8 @@
         "phash": "464c893260911a2d",
         "name": "トリッキークロス",
         "shortname": "クロス",
-        "dropPriority": 2002
+        "dropPriority": 2002,
+        "phash_battle": "e64531681a94e466"
     },
     {
         "id": 94035002,
@@ -2738,7 +2753,8 @@
         "phash": "dcc349b15b70923a",
         "name": "ミラクルトランプ",
         "shortname": "トランプ",
-        "dropPriority": 2002
+        "dropPriority": 2002,
+        "phash_battle": "66a1598ad23124c9"
     },
     {
         "id": 94040902,
@@ -2776,7 +2792,8 @@
         "phash": "5e0925520976c294",
         "name": "集いの手毬",
         "shortname": "手毬",
-        "dropPriority": 2002
+        "dropPriority": 2002,
+        "phash_battle": "ea15e1e05a81956b"
     },
     {
         "id": 94046502,
@@ -2785,7 +2802,8 @@
         "phash": "1606f91cc07986f0",
         "name": "不気味な薬草",
         "shortname": "薬草",
-        "dropPriority": 2002
+        "dropPriority": 2002,
+        "phash_battle": "06f9c5619529ad4a"
     },
     {
         "id": 94047702,
@@ -2980,7 +2998,8 @@
         "phash": "d68d29494c369003",
         "name": "ファンシーシュガー",
         "shortname": "シュガー",
-        "dropPriority": 2001
+        "dropPriority": 2001,
+        "phash_battle": "7a05a1b659a31c09"
     },
     {
         "id": 94023301,
@@ -3061,7 +3080,8 @@
         "phash": "76258c910c814209",
         "name": "言記しの紙",
         "shortname": "紙",
-        "dropPriority": 2001
+        "dropPriority": 2001,
+        "phash_battle": "32cf456920301216"
     },
     {
         "id": 94034601,
@@ -3070,7 +3090,8 @@
         "phash": "5603a5c10928190c",
         "name": "バッドコースター",
         "shortname": "コースター",
-        "dropPriority": 2001
+        "dropPriority": 2001,
+        "phash_battle": "fe0561990ca24252"
     },
     {
         "id": 94035001,
@@ -3108,7 +3129,8 @@
         "phash": "dc13071d28602007",
         "name": "ラッキーダイス",
         "shortname": "ダイス",
-        "dropPriority": 2001
+        "dropPriority": 2001,
+        "phash_battle": "fc030dbcb2cb4820"
     },
     {
         "id": 94040901,
@@ -3146,7 +3168,8 @@
         "phash": "561349ada4938434",
         "name": "出会いの風車",
         "shortname": "風車",
-        "dropPriority": 2001
+        "dropPriority": 2001,
+        "phash_battle": "3689a552cab5411a"
     },
     {
         "id": 94046501,
@@ -3155,7 +3178,8 @@
         "phash": "d60d04a369d08112",
         "name": "怪しい麦袋",
         "shortname": "麦袋",
-        "dropPriority": 2001
+        "dropPriority": 2001,
+        "phash_battle": "7a0581294a1416c3"
     },
     {
         "id": 94047701,

@@ -1,0 +1,548 @@
+[
+    {
+        "id": 94046001,
+        "name": "キラキラ草子　初級",
+        "place": "",
+        "chapter": "",
+        "qp": 1900,
+        "drop": [
+            {
+                "id": 9404350,
+                "name": "ニット・ザ・ラブ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6514,
+                "name": "ホムンクルスベビー",
+                "type": "Item",
+                "dropPriority": 8304
+            },
+            {
+                "id": 6006,
+                "name": "殺の輝石",
+                "type": "Item",
+                "dropPriority": 6095
+            },
+            {
+                "id": 7006,
+                "name": "アサシンピース",
+                "type": "Item",
+                "dropPriority": 5195
+            },
+            {
+                "id": 94045904,
+                "name": "キラキラポイント",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94045902,
+                "name": "集いの手毬",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94045901,
+                "name": "出会いの風車",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "キラキラ草子　初級"
+    },
+    {
+        "id": 94046002,
+        "name": "キラキラ草子　中級",
+        "place": "",
+        "chapter": "",
+        "qp": 2900,
+        "drop": [
+            {
+                "id": 9404350,
+                "name": "ニット・ザ・ラブ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6515,
+                "name": "八連双晶",
+                "type": "Item",
+                "dropPriority": 8301
+            },
+            {
+                "id": 6003,
+                "name": "槍の輝石",
+                "type": "Item",
+                "dropPriority": 6098
+            },
+            {
+                "id": 7003,
+                "name": "ランサーピース",
+                "type": "Item",
+                "dropPriority": 5198
+            },
+            {
+                "id": 94045904,
+                "name": "キラキラポイント",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94045903,
+                "name": "夜すがらの扇",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94045902,
+                "name": "集いの手毬",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "キラキラ草子　中級"
+    },
+    {
+        "id": 94046003,
+        "name": "キラキラ草子　上級",
+        "place": "",
+        "chapter": "",
+        "qp": 4400,
+        "drop": [
+            {
+                "id": 9404350,
+                "name": "ニット・ザ・ラブ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6503,
+                "name": "英雄の証",
+                "type": "Item",
+                "dropPriority": 8100
+            },
+            {
+                "id": 6001,
+                "name": "剣の輝石",
+                "type": "Item",
+                "dropPriority": 6100
+            },
+            {
+                "id": 7001,
+                "name": "セイバーピース",
+                "type": "Item",
+                "dropPriority": 5200
+            },
+            {
+                "id": 94045904,
+                "name": "キラキラポイント",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94045903,
+                "name": "夜すがらの扇",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94045901,
+                "name": "出会いの風車",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "キラキラ草子　上級"
+    },
+    {
+        "id": 94046004,
+        "name": "キラキラ草子　超級",
+        "place": "",
+        "chapter": "",
+        "qp": 5400,
+        "drop": [
+            {
+                "id": 9404350,
+                "name": "ニット・ザ・ラブ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6519,
+                "name": "戦馬の幼角",
+                "type": "Item",
+                "dropPriority": 8401
+            },
+            {
+                "id": 6513,
+                "name": "隕蹄鉄",
+                "type": "Item",
+                "dropPriority": 8305
+            },
+            {
+                "id": 6104,
+                "name": "騎の魔石",
+                "type": "Item",
+                "dropPriority": 6197
+            },
+            {
+                "id": 6004,
+                "name": "騎の輝石",
+                "type": "Item",
+                "dropPriority": 6097
+            },
+            {
+                "id": 7004,
+                "name": "ライダーピース",
+                "type": "Item",
+                "dropPriority": 5197
+            },
+            {
+                "id": 94045904,
+                "name": "キラキラポイント",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94045903,
+                "name": "夜すがらの扇",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94045902,
+                "name": "集いの手毬",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94045901,
+                "name": "出会いの風車",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "キラキラ草子　超級"
+    },
+    {
+        "id": 94046005,
+        "name": "キラキラ草子　春はあげぽよ級",
+        "place": "",
+        "chapter": "",
+        "qp": 6400,
+        "drop": [
+            {
+                "id": 9404350,
+                "name": "ニット・ザ・ラブ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6521,
+                "name": "黒獣脂",
+                "type": "Item",
+                "dropPriority": 8403
+            },
+            {
+                "id": 6510,
+                "name": "無間の歯車",
+                "type": "Item",
+                "dropPriority": 8302
+            },
+            {
+                "id": 6102,
+                "name": "弓の魔石",
+                "type": "Item",
+                "dropPriority": 6199
+            },
+            {
+                "id": 6002,
+                "name": "弓の輝石",
+                "type": "Item",
+                "dropPriority": 6099
+            },
+            {
+                "id": 7102,
+                "name": "アーチャーモニュメント",
+                "type": "Item",
+                "dropPriority": 5299
+            },
+            {
+                "id": 94045904,
+                "name": "キラキラポイント",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94045902,
+                "name": "集いの手毬",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94045901,
+                "name": "出会いの風車",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "キラキラ草子　春はあげぽよ級"
+    },
+    {
+        "id": 94046006,
+        "name": "キラキラ草子　夏はよきよき級",
+        "place": "",
+        "chapter": "",
+        "qp": 7400,
+        "drop": [
+            {
+                "id": 9404350,
+                "name": "ニット・ザ・ラブ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6540,
+                "name": "九十九鏡",
+                "type": "Item",
+                "dropPriority": 8506
+            },
+            {
+                "id": 6511,
+                "name": "禁断の頁",
+                "type": "Item",
+                "dropPriority": 8303
+            },
+            {
+                "id": 6206,
+                "name": "殺の秘石",
+                "type": "Item",
+                "dropPriority": 6295
+            },
+            {
+                "id": 6106,
+                "name": "殺の魔石",
+                "type": "Item",
+                "dropPriority": 6195
+            },
+            {
+                "id": 7106,
+                "name": "アサシンモニュメント",
+                "type": "Item",
+                "dropPriority": 5295
+            },
+            {
+                "id": 94045904,
+                "name": "キラキラポイント",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94045903,
+                "name": "夜すがらの扇",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94045902,
+                "name": "集いの手毬",
+                "type": "Item",
+                "dropPriority": 2002
+            }
+        ],
+        "shortname": "キラキラ草子　夏はよきよき級"
+    },
+    {
+        "id": 94046007,
+        "name": "キラキラ草子　秋はばえばえ級",
+        "place": "",
+        "chapter": "",
+        "qp": 8400,
+        "drop": [
+            {
+                "id": 9404350,
+                "name": "ニット・ザ・ラブ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6518,
+                "name": "精霊根",
+                "type": "Item",
+                "dropPriority": 8502
+            },
+            {
+                "id": 6537,
+                "name": "巨人の指輪",
+                "type": "Item",
+                "dropPriority": 8312
+            },
+            {
+                "id": 6205,
+                "name": "術の秘石",
+                "type": "Item",
+                "dropPriority": 6296
+            },
+            {
+                "id": 6105,
+                "name": "術の魔石",
+                "type": "Item",
+                "dropPriority": 6196
+            },
+            {
+                "id": 7105,
+                "name": "キャスターモニュメント",
+                "type": "Item",
+                "dropPriority": 5296
+            },
+            {
+                "id": 94045904,
+                "name": "キラキラポイント",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94045903,
+                "name": "夜すがらの扇",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94045901,
+                "name": "出会いの風車",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "キラキラ草子　秋はばえばえ級"
+    },
+    {
+        "id": 94046008,
+        "name": "キラキラ草子　冬はつらたん級",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9404350,
+                "name": "ニット・ザ・ラブ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6542,
+                "name": "真理の卵",
+                "type": "Item",
+                "dropPriority": 8507
+            },
+            {
+                "id": 6524,
+                "name": "大騎士勲章",
+                "type": "Item",
+                "dropPriority": 8309
+            },
+            {
+                "id": 6201,
+                "name": "剣の秘石",
+                "type": "Item",
+                "dropPriority": 6300
+            },
+            {
+                "id": 6101,
+                "name": "剣の魔石",
+                "type": "Item",
+                "dropPriority": 6200
+            },
+            {
+                "id": 6107,
+                "name": "狂の魔石",
+                "type": "Item",
+                "dropPriority": 6194
+            },
+            {
+                "id": 7101,
+                "name": "セイバーモニュメント",
+                "type": "Item",
+                "dropPriority": 5300
+            },
+            {
+                "id": 94045904,
+                "name": "キラキラポイント",
+                "type": "Point",
+                "dropPriority": 3004
+            },
+            {
+                "id": 94045903,
+                "name": "夜すがらの扇",
+                "type": "Item",
+                "dropPriority": 2003
+            },
+            {
+                "id": 94045902,
+                "name": "集いの手毬",
+                "type": "Item",
+                "dropPriority": 2002
+            },
+            {
+                "id": 94045901,
+                "name": "出会いの風車",
+                "type": "Item",
+                "dropPriority": 2001
+            }
+        ],
+        "shortname": "キラキラ草子　冬はつらたん級"
+    },
+    {
+        "id": 94046009,
+        "name": "キラキラ草子　時はナウしか級",
+        "place": "",
+        "chapter": "",
+        "qp": 9400,
+        "drop": [
+            {
+                "id": 9404350,
+                "name": "ニット・ザ・ラブ",
+                "type": "Craft Essence",
+                "dropPriority": 9005
+            },
+            {
+                "id": 6505,
+                "name": "虚影の塵",
+                "type": "Item",
+                "dropPriority": 8201
+            },
+            {
+                "id": 6516,
+                "name": "凶骨",
+                "type": "Item",
+                "dropPriority": 8101
+            },
+            {
+                "id": 6107,
+                "name": "狂の魔石",
+                "type": "Item",
+                "dropPriority": 6194
+            },
+            {
+                "id": 6007,
+                "name": "狂の輝石",
+                "type": "Item",
+                "dropPriority": 6094
+            },
+            {
+                "id": 7107,
+                "name": "バーサーカーモニュメント",
+                "type": "Item",
+                "dropPriority": 5294
+            },
+            {
+                "id": 94045904,
+                "name": "キラキラポイント",
+                "type": "Point",
+                "dropPriority": 3004
+            }
+        ],
+        "shortname": "キラキラ草子　時はナウしか級"
+    }
+]
