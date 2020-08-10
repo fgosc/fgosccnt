@@ -8,7 +8,7 @@ import json
 import re
 import fgosccnt
 
-drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
+drop_file = Path(__file__).resolve().parent / Path("fgoscdata/hash_drop.json")
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
 
