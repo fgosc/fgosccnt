@@ -36,9 +36,9 @@ Point_dir = basedir / Path("item/point/")
 train_item = basedir / Path("item.xml") #アイテム下部
 train_chest = basedir / Path("chest.xml") #ドロップ数
 train_card = basedir / Path("card.xml") #ドロップ数
-drop_file = basedir / Path("hash_drop.json")
-freequest_file = basedir / Path("freequest.json")
-syurenquest_file = basedir / Path("syurenquest.json")
+drop_file = basedir / Path("fgoscdata/hash_drop.json")
+##freequest_file = basedir / Path("freequest.json")
+##syurenquest_file = basedir / Path("syurenquest.json")
 eventquest_dir = basedir / Path("fgoscdata/data/json/")
 
 hasher = cv2.img_hash.PHash_create()
@@ -81,13 +81,7 @@ dist_point = {item["phash_battle"]:item["id"] for item in drop_item if item["typ
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
 
-with open(freequest_file, encoding='UTF-8') as f:
-    freequest = json.load(f)
-
-with open(syurenquest_file, encoding='UTF-8') as f:
-    syurenquest = json.load(f)
-    freequest = freequest + syurenquest
-
+freequest = []
 evnetfiles = eventquest_dir.glob('**/*.json')
 for evnetfile in evnetfiles:
     try:
