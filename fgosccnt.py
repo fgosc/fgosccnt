@@ -1505,11 +1505,11 @@ def deside_quest(item_list):
     for item in item_list:
         if item["id"] == 5:
             item_set.add("QP(+" + str(item["dropnum"]) + ")")
-        elif item["id"] == 1 or item["category"] == "Craft Essence" or 9700100 <= item["id"] <= 9700307:
+        elif item["id"] == 1 or item["category"] == "Craft Essence" \
+             or (9700 <= math.floor(item["id"]/1000) <= 9707 and str(item["id"])[4] not in ["4", "5"]):
             continue
         else:
             item_set.add(item["name"])
-
     quest_candidate = ""
     for quest in reversed(freequest):
         dropset = {i["name"] for i in quest["drop"] if i["type"] != "Craft Essence"}
