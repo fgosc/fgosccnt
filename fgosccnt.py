@@ -29,17 +29,17 @@ class Ordering(Enum):
     def __str__(self):
         return self.value
 
-
-Item_dir = Path(__file__).resolve().parent / Path("item/equip/")
-CE_dir = Path(__file__).resolve().parent / Path("item/ce/")
-Point_dir = Path(__file__).resolve().parent / Path("item/point/")
-train_item = Path(__file__).resolve().parent / Path("item.xml") #アイテム下部
-train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ数
-train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
-drop_file = Path(__file__).resolve().parent / Path("hash_drop.json")
-freequest_file = Path(__file__).resolve().parent / Path("freequest.json")
-syurenquest_file = Path(__file__).resolve().parent / Path("syurenquest.json")
-eventquest_dir = Path(__file__).resolve().parent / Path("data/json/")
+basedir = Path(__file__).resolve().parent
+Item_dir = basedir / Path("item/equip/")
+CE_dir = basedir / Path("item/ce/")
+Point_dir = basedir / Path("item/point/")
+train_item = basedir / Path("item.xml") #アイテム下部
+train_chest = basedir / Path("chest.xml") #ドロップ数
+train_card = basedir / Path("card.xml") #ドロップ数
+drop_file = basedir / Path("hash_drop.json")
+freequest_file = basedir / Path("freequest.json")
+syurenquest_file = basedir / Path("syurenquest.json")
+eventquest_dir = basedir / Path("fgoscdata/data/json/")
 
 hasher = cv2.img_hash.PHash_create()
 
