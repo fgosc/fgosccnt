@@ -43,17 +43,28 @@ https://github.com/fgophi/fgosccnt/wiki/Easy-Use
 
 # 使い方
 
-    usage: fgosccnt.py [-h] [--version] [filenames [filenames ...]]
-    
-    FGOスクショからアイテムをCSV出力する
-    
-    positional arguments:
-      filenames   入力ファイル
-    
-    optional arguments:
-      -h, --help  show this help message and exit
-      -d, --debug  デバッグ情報の出力
-      --version   show program's version number and exit
+```
+usage: fgosccnt.py [-h] [-f FOLDER] [-t TIMEOUT]
+                   [--ordering {notspecified,filename,timestamp}] [-d]
+                   [--version]
+                   [filenames [filenames ...]]
+
+FGOスクショからアイテムをCSV出力する
+
+positional arguments:
+  filenames             入力ファイル
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FOLDER, --folder FOLDER
+                        フォルダで指定
+  -t TIMEOUT, --timeout TIMEOUT
+                        QPカンスト時の重複チェック感覚(秒): デフォルト15秒
+  --ordering {notspecified,filename,timestamp}
+                        ファイルの処理順序 (未指定の場合 notspecified)
+  -d, --debug           デバッグ情報の出力
+  --version             show program's version number and exit
+```
 
 # 実行結果
     $ python fgosccnt.py ファイル1 ファイル2... > output.csv
@@ -89,7 +100,7 @@ https://github.com/fgophi/fgosccnt/wiki/Easy-Use
 * 複数解像度の読み込みに対応している(極端な低解像度のテストは十分に行えていない)
 * 同じ戦闘結果のスクショが検知された場合は、file名: duplicate と出力されアイテム数は出ない
   * (QPカンストしていない場合)ドロップアイテムが同じでQPが同じ場合
-  * (QPカンストしている場合)ドロップアイテムが同じでファイルのEXIFデータの作成日時の差が15秒未満の場合
+  * (QPカンストしている場合)ドロップアイテムが同じでファイルのEXIFデータの作成日時の差が15秒未満の場合(秒数は-tオプションで変更可能)
 
 # 制限
 * 全く同じアイテムでも複数のアイテムファイルが作成されることがごく稀にある
