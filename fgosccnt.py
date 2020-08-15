@@ -13,6 +13,7 @@ import itertools
 import json
 from operator import itemgetter
 import math
+import pytesseract
 
 progname = "FGOスクショカウント"
 version = "0.4.0"
@@ -171,6 +172,51 @@ class ScreenShot:
             self.items.append(dropitem)
 
         self.itemlist = self.makeitemlist()
+        self.total_qp = self.get_qp()
+
+    def get_qp_from_text(self, text):
+        """
+        capy-drop-parser から流用
+        """
+        qp = 0
+        power = 1
+        # re matches left to right so reverse the list to process lower orders of magnitude first.
+        for match in re.findall("[0-9]+", text)[::-1]:
+            qp += int(match) * power
+            power *= 1000
+
+        return qp
+
+    def extract_text_from_image(sef, image):
+        """
+        capy-drop-parser から流用
+        """
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        _, qp_image = cv2.threshold(gray, 65, 255, cv2.THRESH_BINARY_INV)
+##        cv2.imshow("img", cv2.resize(qp_image, dsize=None, fx=1.5, fy=1.5))
+##        cv2.waitKey(0)
+##        cv2.destroyAllWindows()
+
+        return pytesseract.image_to_string(
+            qp_image,
+            config="-l eng --oem 1 --psm 7 -c tessedit_char_whitelist=,0123456789",
+        )
+
+    def get_qp(self):
+        """
+        capy-drop-parser から流用
+        """
+        pt = pageinfo.detect_qp_region(self.img_rgb_orig)
+        qp_total_text = self.extract_text_from_image(
+            self.img_rgb_orig[pt[0][1]: pt[1][1], pt[0][0] : pt[1][0]]
+        )
+
+        qp_total = self.get_qp_from_text(qp_total_text)
+
+        if qp_total == 0:
+            qp_total = -1
+
+        return qp_total
 
     def find_edge(self, img_th, reverse=False):
         """
@@ -1421,7 +1467,9 @@ def get_output(filenames, debug=False):
     fileoutput = [] #出力
     prev_pages = 0
     prev_pagenum = 0
-
+    prev_total_qp = -1
+    prev_itemlist = []
+    prev_st_ctime = 0
     all_list = []
     
     for filename in filenames:
@@ -1436,31 +1484,47 @@ def get_output(filenames, debug=False):
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
 
-            try:
-                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
+##            try:
+            sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
 
-                #2頁目以降のスクショが無い場合に migging と出力                
-                if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
-                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    fileoutput.append({'filename': 'missing'})
-                    all_list.append([])
-                    
-                all_list.append(sc.itemlist)
-                prev_pages = sc.pages
-                prev_pagenum = sc.pagenum
-
-                sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
-                output = { 'filename': str(filename),'ドロ数':sumdrop}
-                if sc.pagenum == 1:
-                    if sc.lines >= 7:
-                        output["ドロ数"] = str(output["ドロ数"]) + "++"
-                    elif sc.lines >= 4:
-                        output["ドロ数"] = str(output["ドロ数"]) + "+"
-                elif sc.pagenum == 2 and sc.lines >= 7:             
-                    output["ドロ数"] = str(output["ドロ数"]) + "+"
-            except:
-                output = ({'filename': str(filename) + ': not valid'})
+            #2頁目以降のスクショが無い場合に migging と出力                
+            if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
+               or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                fileoutput.append({'filename': 'missing'})
                 all_list.append([])
+
+            # ドロップ内容が同じで、
+            # QPカンストじゃない時、QPが前と一緒
+            # QPカンストの時、ファイル作成時間が15秒未満
+            # のとき、重複除外
+            elif prev_itemlist == sc.itemlist \
+               and (sc.total_qp != 999999999 and sc.total_qp == prev_total_qp) \
+               or (sc.total_qp == 999999999 and  f.stat().st_ctime - prev_st_ctime  < 15):
+                fileoutput.append({'filename': str(filename) + ': duplicate'})
+                all_list.append([])
+                continue
+
+            all_list.append(sc.itemlist)
+
+            prev_pages = sc.pages
+            prev_pagenum = sc.pagenum
+            prev_total_qp = sc.total_qp
+            prev_itemlist = sc.itemlist
+            prev_st_ctime = f.stat().st_ctime
+
+            sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
+            output = { 'filename': str(filename),'ドロ数':sumdrop}
+            if sc.pagenum == 1:
+                if sc.lines >= 7:
+                    output["ドロ数"] = str(output["ドロ数"]) + "++"
+                elif sc.lines >= 4:
+                    output["ドロ数"] = str(output["ドロ数"]) + "+"
+            elif sc.pagenum == 2 and sc.lines >= 7:             
+                output["ドロ数"] = str(output["ドロ数"]) + "+"
+                
+##            except:
+##                output = ({'filename': str(filename) + ': not valid'})
+##                all_list.append([])
         fileoutput.append(output)
     return fileoutput, all_list
 
