@@ -1500,6 +1500,14 @@ def get_output(filenames, debug=False):
             elif prev_itemlist == sc.itemlist \
                and (sc.total_qp != 999999999 and sc.total_qp == prev_total_qp) \
                or (sc.total_qp == 999999999 and  f.stat().st_ctime - prev_st_ctime  < 15):
+                if debug:
+                    print("filename: {}".format(filename))
+                    print("prev_itemlist: {}".format(prev_itemlist))
+                    print("sc.itemlist: {}".format(sc.itemlist))
+                    print("sc.total_qp: {}".format(sc.total_qp))
+                    print("prev_total_qp: {}".format(prev_total_qp))
+                    print("f.stat().st_ctime: {}".format(f.stat().st_ctime))
+                    print("prev_st_ctime: {}".format(prev_st_ctime))
                 fileoutput.append({'filename': str(filename) + ': duplicate'})
                 all_list.append([])
                 continue
