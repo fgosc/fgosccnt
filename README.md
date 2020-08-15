@@ -6,7 +6,10 @@ FGOのバトルリザルトのスクリーンショットから戦利品をカ�
 https://github.com/fgophi/fgosccnt/wiki/Easy-Use
 
 # 必要なソフトウェア
-Python 3.7以降
+1. Python 3.7以降
+2. Tesseract OCR
+  - Mac, Linx 等: https://github.com/tesseract-ocr/tesseract
+  - Windows: https://github.com/UB-Mannheim/tesseract/wiki
 
 # ファイル
 1. fgosccnt.py :実行ファイル
@@ -26,6 +29,7 @@ Python 3.7以降
 # インストール
 
 * OpenCV をインストール
+* Tesseract OCR をインストール
 * makeitem.py, makechest.py, makecard.py をそれぞれ実行
 
 下記コマンドを実行
@@ -83,6 +87,9 @@ Python 3.7以降
   * 個別のカードファイルは -d オプションでスクショを読み込ませればできる
 * 全く同じアイテムで別ファイルができる場合があるが、フォルダを分けて同じ名前のアイテムファイルにすれば同じものとしてカウントされる
 * 複数解像度の読み込みに対応している(極端な低解像度のテストは十分に行えていない)
+* 同じ戦闘結果のスクショが検知された場合は、file名: duplicate と出力されアイテム数は出ない
+  * (QPカンストしていない場合)ドロップアイテムが同じでQPが同じ場合
+  * (QPカンストしている場合)ドロップアイテムが同じでファイル作成時間が15未満の場合
 
 # 制限
 * 全く同じアイテムでも複数のアイテムファイルが作成されることがごく稀にある
