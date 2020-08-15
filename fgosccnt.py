@@ -58,6 +58,7 @@ ID_REWARD_QP = 5
 ID_NORTH_AMERICA = 93000500
 ID_SYURENJYO = 94006800
 ID_EVNET = 94000000
+TIMEOUT = 15
 
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
@@ -1458,10 +1459,11 @@ def get_exif(img):
         return "NON"
 
 
-def get_output(filenames, debug=False):
+def get_output(filenames, args):
     """
     出力内容を作成
     """
+    debug = args.debug
 ##    calc_dist()
     calc_dist_local()
     if train_item.exists() == False:
@@ -1517,8 +1519,9 @@ def get_output(filenames, debug=False):
                 td = dt - prev_datetime
                 if prev_itemlist == sc.itemlist:
                     if (sc.total_qp != 999999999 and sc.total_qp == prev_total_qp) \
-                        or (sc.total_qp == 999999999 and  td.total_seconds() < 15):
+                        or (sc.total_qp == 999999999 and  td.total_seconds() < args.timeout):
                         if debug:
+                            print("args.timeout: {}".format(args.timeout))
                             print("filename: {}".format(filename))
                             print("prev_itemlist: {}".format(prev_itemlist))
                             print("sc.itemlist: {}".format(sc.itemlist))
@@ -1670,9 +1673,10 @@ if __name__ == '__main__':
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
     parser.add_argument('-f', '--folder', help='フォルダで指定')
-    parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
+    parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT, help='QPカンスト時の重複チェック感覚(秒): デフォルト' + str(TIMEOUT) + '秒')
     parser.add_argument('--ordering', help='ファイルの処理順序 (未指定の場合 notspecified)',
         type=Ordering, choices=list(Ordering), default=Ordering.NOTSPECIFIED)
+    parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
     parser.add_argument('--version', action='version', version=progname + " " + version)
 
     args = parser.parse_args()    # 引数を解析
@@ -1687,7 +1691,7 @@ if __name__ == '__main__':
         inputs = args.filenames
     
     inputs = sort_files(inputs, args.ordering)
-    fileoutput, all_new_list = get_output(inputs, args.debug)
+    fileoutput, all_new_list = get_output(inputs, args)
 
     # CSVヘッダーをつくる
     csv_heder, ce0_flag, questname = make_csv_header(all_new_list)
