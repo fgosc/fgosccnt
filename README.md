@@ -8,8 +8,8 @@ https://github.com/fgophi/fgosccnt/wiki/Easy-Use
 # 必要なソフトウェア
 1. Python 3.7以降
 2. Tesseract OCR
-  - Mac, Linx 等: https://github.com/tesseract-ocr/tesseract
-  - Windows: https://github.com/UB-Mannheim/tesseract/wiki
+   - Mac, Linx 等: https://github.com/tesseract-ocr/tesseract
+   - Windows: https://github.com/UB-Mannheim/tesseract/wiki
 
 # ファイル
 1. fgosccnt.py :実行ファイル
