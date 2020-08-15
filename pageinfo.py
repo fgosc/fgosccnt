@@ -111,7 +111,12 @@ def filter_contour_scrollable_area(contour, im):
 
 def detect_qp_region(im, debug_draw_image=False, debug_image_name=None):
     """
-        "所持 QP" 領域を検出する
+        "所持 QP" 領域を検出し、その座標を返す。
+
+        戻り値は (左上座標, 右下座標)
+        つまり ((topleft_x, topleft_y), (bottomright_x, bottomright_y))
+        領域が検出されなかった場合は None を返す。
+        複数箇所が検出された場合は TooManyAreasDetectedError が発生する。
     """
     # 縦横2分割して4領域に分け、左下の領域だけ使う。
     # QP の領域を調べたいならそれで十分。
@@ -120,28 +125,49 @@ def detect_qp_region(im, debug_draw_image=False, debug_image_name=None):
     cr_h, cr_w = cropped.shape[:2]
     logger.debug('cropped image size (for qp): (width, height) = (%s, %s)', cr_w, cr_h)
     im_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
-    binary_threshold = 25
+    binary_threshold = 50
     ret, th1 = cv2.threshold(im_gray, binary_threshold, 255, cv2.THRESH_BINARY)
-    contours, hierarchy = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(th1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     filtered_contours = [c for c in contours if filter_contour_qp(c, im_gray)]
+    candidate = None
+
+    for contour in filtered_contours:
+        logger.debug('detected areas: %s', cv2.boundingRect(contour))
+
     if len(filtered_contours) == 1:
         qp_region = filtered_contours[0]
         x, y, w, h = cv2.boundingRect(qp_region)
-        # 左右の無駄領域を除外する。
-        # 感覚的な値ではあるが 左 12%, 右 7% を除外。
-        topleft = (x + int(w*0.12), y)
-        bottomright = (topleft[0] + w - int(w*0.12) - int(w*0.07), y + h)
-
-        # TODO 切り出した領域をどう扱うか決めてない
+        # 左右の無駄領域を除外する。感覚的な値ではあるが 左 42%, 右 4% を除外。
+        # 落とし穴として、2019年5月末 ～ 9月の間に所持 QP の出力位置が微妙に変わっている。
+        # ここではそのどちらのケースでも対応できるよう枠を広めに取っている。
+        # 現仕様に最適化して切り詰めすぎると困ったことになるため注意。
+        left_margin = 0.42
+        right_margin = 0.04
+        topleft = (x + int(w*left_margin), y)
+        bottomright = (topleft[0] + w - int(w*left_margin) - int(w*right_margin), y + h)
 
         if debug_draw_image:
             cv2.rectangle(cropped, topleft, bottomright, (0, 0, 255), 3)
+
+        # 呼び出し側に返すのは分割前の座標でないといけない。
+        # よって、事前に切り捨てた左上領域の y 座標をここで補正する。
+        # x 座標は分割の影響を受けていないので補正不要。
+        above_height = int(im_h/2)
+        corrected_topleft = (topleft[0], topleft[1] + above_height)
+        corrected_bottomright = (bottomright[0], bottomright[1] + above_height)
+        candidate = (corrected_topleft, corrected_bottomright)
 
     if debug_draw_image:
         cv2.drawContours(cropped, filtered_contours, -1, (0, 255, 0), 3)
         logger.debug('writing debug image: %s', debug_image_name)
         cv2.imwrite(debug_image_name, cropped)
+
+    if len(filtered_contours) > 1:
+        n = len(filtered_contours)
+        raise TooManyAreasDetectedError(f'{n} actual qp regions detected')
+
+    return candidate
 
 
 def guess_pages(actual_width, actual_height, entire_width, entire_height):
@@ -352,6 +378,39 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
     return (pagenum, pages, lines)
 
 
+def look_into_file_for_page(filename, im, args):
+    if args.debug_sc:
+        debug_sc_dir = os.path.join(args.debug_out_dir, 'page')
+        os.makedirs(debug_sc_dir, exist_ok=True)
+        prefix = args.debug_out_file_prefix
+        debug_image = os.path.join(debug_sc_dir, prefix + os.path.basename(filename))
+        logger.debug('debug image path: %s', debug_image)
+    else:
+        debug_image = None
+    kwargs = {
+        'draw_greenline': not args.debug_disable_greenline,
+        'draw_blueline': not args.debug_disable_blueline,
+    }
+    pagenum, pages, lines = guess_pageinfo(im, args.debug_sc, debug_image, **kwargs)
+    logger.debug('pagenum: %s, pages: %s, lines: %s', pagenum, pages, lines)
+    return (pagenum, pages, lines)
+
+
+def look_into_file_for_qp(filename, im, args):
+    if args.debug_sc:
+        debug_sc_dir = os.path.join(args.debug_out_dir, 'qp')
+        os.makedirs(debug_sc_dir, exist_ok=True)
+        prefix = args.debug_out_file_prefix
+        debug_image = os.path.join(debug_sc_dir, prefix + os.path.basename(filename))
+        logger.debug('debug image path: %s', debug_image)
+    else:
+        debug_image = None
+    result = detect_qp_region(im, args.debug_sc, debug_image)
+    if result is None:
+        return ('', '') , ('', '')
+    return result
+
+
 def look_into_file(filename, args):
     logger.debug(f'===== {filename}')
 
@@ -362,28 +421,7 @@ def look_into_file(filename, args):
     im_h, im_w = im.shape[:2]
     logger.debug('image size: (width, height) = (%s, %s)', im_w, im_h)
 
-    # TODO QP 領域をどう扱うか未定
-    # if args.debug_qp:
-    #     debug_qp_dir = os.path.join(args.debug_out_dir, 'qp')
-    #     os.makedirs(debug_qp_dir, exist_ok=True)
-    #     debug_qp_image = os.path.join(debug_qp_dir, os.path.basename(filename))
-    # else:
-    #     debug_qp_image = None
-    # detect_qp_region(im, args.debug_qp, debug_qp_image)
-
-    if args.debug_sc:
-        debug_sc_dir = os.path.join(args.debug_out_dir, 'sc')
-        os.makedirs(debug_sc_dir, exist_ok=True)
-        debug_sc_image = os.path.join(debug_sc_dir, os.path.basename(filename))
-    else:
-        debug_sc_image = None
-    kwargs = {
-        'draw_greenline': not args.debug_disable_greenline,
-        'draw_blueline': not args.debug_disable_blueline,
-    }
-    pagenum, pages, lines = guess_pageinfo(im, args.debug_sc, debug_sc_image, **kwargs)
-    logger.debug('pagenum: %s, pages: %s, lines: %s', pagenum, pages, lines)
-    return (pagenum, pages, lines)
+    return args.func(filename, im, args)
 
 
 def main(args):
@@ -405,44 +443,56 @@ def main(args):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('filename', nargs='+')
-    parser.add_argument(
-        '-l', '--loglevel',
-        choices=('debug', 'info', 'warning'),
-        default='info',
-        help='set loglevel [default: info]',
-    )
-    # parser.add_argument(
-    #     '-dq', '--debug-qp',
-    #     action='store_true',
-    #     help='enable writing qp image for debug',
-    # )
-    parser.add_argument(
-        '-ds', '--debug-sc',
-        action='store_true',
-        help='enable writing sc image for debug',
-    )
-    parser.add_argument(
+    subparsers = parser.add_subparsers()
+
+    def add_common_arguments(p):
+        p.add_argument('filename', nargs='+')
+        p.add_argument(
+            '-l', '--loglevel',
+            choices=('debug', 'info', 'warning'),
+            default='info',
+            help='set loglevel [default: info]',
+        )
+        p.add_argument(
+            '-ds', '--debug-sc',
+            action='store_true',
+            help='enable writing sc image for debug',
+        )
+        p.add_argument(
+            '-do', '--debug-out-dir',
+            default='debugimages',
+            help='output directory for debug images [default: debugimages]',
+        )
+        p.add_argument(
+            '-dp', '--debug-out-file-prefix',
+            default='',
+            help='filename prefix for debug image [default: "" (no prefix)]'
+        )
+        p.add_argument(
+            '-o', '--output',
+            type=argparse.FileType('w'),
+            default=sys.stdout,
+            help='output file [default: STDOUT]',
+        )
+
+    page_parser = subparsers.add_parser('page')
+    add_common_arguments(page_parser)
+    page_parser.add_argument(
         '--debug-disable-blueline',
         action='store_true',
         help='disable drawing blue line on sc image for debug',
     )
-    parser.add_argument(
+    page_parser.add_argument(
         '--debug-disable-greenline',
         action='store_true',
         help='disable drawing green line on sc image for debug',
     )
-    parser.add_argument(
-        '-do', '--debug-out-dir',
-        default='debugimages',
-        help='output directory for debug images [default: debugimages]',
-    )
-    parser.add_argument(
-        '-o', '--output',
-        type=argparse.FileType('w'),
-        default=sys.stdout,
-        help='output file [default: STDOUT]',
-    )
+    page_parser.set_defaults(func=look_into_file_for_page)
+
+    qp_parser = subparsers.add_parser('qp')
+    add_common_arguments(qp_parser)
+    qp_parser.set_defaults(func=look_into_file_for_qp)
+
     return parser.parse_args()
 
 
