@@ -76,11 +76,13 @@ if __name__ == '__main__':
             warning = warning + "{}行目に not valid なデータがあります\n".format(i+2)
         elif item['filename'].endswith("not found"):
             warning = warning + "{}行目に not found なデータがあります\n".format(i+2)
+        elif item['filename'].endswith("duplicate"):
+            warning = warning + "{}行目に重複したデータがあります\n".format(i+2)
 
     if warning != "":
         print ("""###############################################
 # WARNING: この処理には以下のエラーがあります #
-#      結果をそのまま使用しないでください     #
+#　確認せず結果をそのまま使用しないでください #
 ###############################################
 {}###############################################""".format(warning))
 
