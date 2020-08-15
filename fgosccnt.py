@@ -14,6 +14,9 @@ import json
 from operator import itemgetter
 import math
 import pytesseract
+from PIL import Image
+from PIL.ExifTags import TAGS
+import datetime
 
 progname = "FGOスクショカウント"
 version = "0.4.0"
@@ -90,17 +93,6 @@ for evnetfile in evnetfiles:
     except:
         print("{}: ファイルが読み込めません".format(evnetfile))
 
-def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
-    """
-    OpenCVのimreadが日本語ファイル名が読めない対策
-    """
-    try:
-        n = np.fromfile(filename, dtype)
-        img = cv2.imdecode(n, flags)
-        return img
-    except Exception as e:
-        print(e)
-        return None
 
 def has_intersect(a, b):
     """
@@ -1442,6 +1434,30 @@ def out_name(id):
         name = item_name[id]
     return name
 
+
+def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
+    """
+    OpenCVのimreadが日本語ファイル名が読めない対策
+    """
+    try:
+        n = np.fromfile(filename, dtype)
+        img = cv2.imdecode(n, flags)
+        return img
+    except Exception as e:
+        print(e)
+        return None
+
+def get_exif(img):
+    exif = img._getexif()
+    try:
+        for id,val in exif.items():
+            tg = TAGS.get(id,id)
+            if tg == "DateTimeOriginal":
+                return datetime.datetime.strptime(val, '%Y:%m:%d %H:%M:%S')
+    except AttributeError:
+        return "NON"
+
+
 def get_output(filenames, debug=False):
     """
     出力内容を作成
@@ -1469,7 +1485,7 @@ def get_output(filenames, debug=False):
     prev_pagenum = 0
     prev_total_qp = -1
     prev_itemlist = []
-    prev_st_mtime = 0
+    prev_datetime = datetime.datetime(year=2015, month=7, day=30, hour=0)
     all_list = []
     
     for filename in filenames:
@@ -1484,55 +1500,58 @@ def get_output(filenames, debug=False):
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
 
-##            try:
-            sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
+            try:
+                sc = ScreenShot(img_rgb, svm, svm_chest, svm_card, fileextention, debug)
 
-            #2頁目以降のスクショが無い場合に migging と出力                
-            if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
-               or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                fileoutput.append({'filename': 'missing'})
-                all_list.append([])
+                #2頁目以前のスクショが無い場合に migging と出力                
+                if (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1) \
+                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                    fileoutput.append({'filename': 'missing'})
+                    all_list.append([])
 
-            # ドロップ内容が同じで、
-            # QPカンストじゃない時、QPが前と一緒
-            # QPカンストの時、ファイル作成時間が15秒未満
-            # のとき、重複除外
-            elif prev_itemlist == sc.itemlist \
-               and ((sc.total_qp != 999999999 and sc.total_qp == prev_total_qp) \
-               or (sc.total_qp == 999999999 and  f.stat().st_mtime - prev_st_mtime  < 15)):
-                if debug:
-                    print("filename: {}".format(filename))
-                    print("prev_itemlist: {}".format(prev_itemlist))
-                    print("sc.itemlist: {}".format(sc.itemlist))
-                    print("sc.total_qp: {}".format(sc.total_qp))
-                    print("prev_total_qp: {}".format(prev_total_qp))
-                    print("f.stat().st_mtime: {}".format(f.stat().st_mtime))
-                    print("prev_st_mtime: {}".format(prev_st_mtime))
-                fileoutput.append({'filename': str(filename) + ': duplicate'})
-                all_list.append([])
-                continue
+                # ドロップ内容が同じで下記のとき、重複除外
+                # QPカンストじゃない時、QPが前と一緒
+                # QPカンストの時、Exif内のファイル作成時間が15秒未満
+                pilimg = Image.open(filename)
+                dt = get_exif(pilimg)
+                td = dt - prev_datetime
+                if prev_itemlist == sc.itemlist:
+                    if (sc.total_qp != 999999999 and sc.total_qp == prev_total_qp) \
+                        or (sc.total_qp == 999999999 and  td.total_seconds() < 15):
+                        if debug:
+                            print("filename: {}".format(filename))
+                            print("prev_itemlist: {}".format(prev_itemlist))
+                            print("sc.itemlist: {}".format(sc.itemlist))
+                            print("sc.total_qp: {}".format(sc.total_qp))
+                            print("prev_total_qp: {}".format(prev_total_qp))
+                            print("datetime: {}".format(dt))
+                            print("prev_datetime: {}".format(prev_datetime))
+                            print("td.total_second: {}".format(td.total_seconds()))
+                        fileoutput.append({'filename': str(filename) + ': duplicate'})
+                        all_list.append([])
+                        continue
 
-            all_list.append(sc.itemlist)
+                all_list.append(sc.itemlist)
 
-            prev_pages = sc.pages
-            prev_pagenum = sc.pagenum
-            prev_total_qp = sc.total_qp
-            prev_itemlist = sc.itemlist
-            prev_st_ctime = f.stat().st_ctime
+                prev_pages = sc.pages
+                prev_pagenum = sc.pagenum
+                prev_total_qp = sc.total_qp
+                prev_itemlist = sc.itemlist
+                prev_datetime = dt
 
-            sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
-            output = { 'filename': str(filename),'ドロ数':sumdrop}
-            if sc.pagenum == 1:
-                if sc.lines >= 7:
-                    output["ドロ数"] = str(output["ドロ数"]) + "++"
-                elif sc.lines >= 4:
+                sumdrop = len([d for d in sc.itemlist if d["name"] != "クエストクリア報酬QP"])
+                output = { 'filename': str(filename),'ドロ数':sumdrop}
+                if sc.pagenum == 1:
+                    if sc.lines >= 7:
+                        output["ドロ数"] = str(output["ドロ数"]) + "++"
+                    elif sc.lines >= 4:
+                        output["ドロ数"] = str(output["ドロ数"]) + "+"
+                elif sc.pagenum == 2 and sc.lines >= 7:             
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
-            elif sc.pagenum == 2 and sc.lines >= 7:             
-                output["ドロ数"] = str(output["ドロ数"]) + "+"
-                
-##            except:
-##                output = ({'filename': str(filename) + ': not valid'})
-##                all_list.append([])
+                    
+            except:
+                output = ({'filename': str(filename) + ': not valid'})
+                all_list.append([])
         fileoutput.append(output)
     return fileoutput, all_list
 
