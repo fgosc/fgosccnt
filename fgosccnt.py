@@ -1673,7 +1673,7 @@ if __name__ == '__main__':
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
     parser.add_argument('-f', '--folder', help='フォルダで指定')
-    parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT, help='QPカンスト時の重複チェック感覚(秒): デフォルト' + str(TIMEOUT) + '秒')
+    parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT, help='QPカンスト時の重複チェック間隔(秒): デフォルト' + str(TIMEOUT) + '秒')
     parser.add_argument('--ordering', help='ファイルの処理順序 (未指定の場合 notspecified)',
         type=Ordering, choices=list(Ordering), default=Ordering.NOTSPECIFIED)
     parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
