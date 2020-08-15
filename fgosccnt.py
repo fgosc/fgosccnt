@@ -1469,7 +1469,7 @@ def get_output(filenames, debug=False):
     prev_pagenum = 0
     prev_total_qp = -1
     prev_itemlist = []
-    prev_st_ctime = 0
+    prev_st_mtime = 0
     all_list = []
     
     for filename in filenames:
@@ -1498,16 +1498,16 @@ def get_output(filenames, debug=False):
             # QPカンストの時、ファイル作成時間が15秒未満
             # のとき、重複除外
             elif prev_itemlist == sc.itemlist \
-               and (sc.total_qp != 999999999 and sc.total_qp == prev_total_qp) \
-               or (sc.total_qp == 999999999 and  f.stat().st_ctime - prev_st_ctime  < 15):
+               and ((sc.total_qp != 999999999 and sc.total_qp == prev_total_qp) \
+               or (sc.total_qp == 999999999 and  f.stat().st_mtime - prev_st_mtime  < 15)):
                 if debug:
                     print("filename: {}".format(filename))
                     print("prev_itemlist: {}".format(prev_itemlist))
                     print("sc.itemlist: {}".format(sc.itemlist))
                     print("sc.total_qp: {}".format(sc.total_qp))
                     print("prev_total_qp: {}".format(prev_total_qp))
-                    print("f.stat().st_ctime: {}".format(f.stat().st_ctime))
-                    print("prev_st_ctime: {}".format(prev_st_ctime))
+                    print("f.stat().st_mtime: {}".format(f.stat().st_mtime))
+                    print("prev_st_mtime: {}".format(prev_st_mtime))
                 fileoutput.append({'filename': str(filename) + ': duplicate'})
                 all_list.append([])
                 continue
