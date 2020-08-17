@@ -1516,7 +1516,7 @@ def get_output(filenames, args):
                 # QPカンストの時、Exif内のファイル作成時間が15秒未満
                 pilimg = Image.open(filename)
                 dt = get_exif(pilimg)
-                if dt == "NON":
+                if dt == "NON" or prev_datetime == "NON":
                     td = datetime.timedelta(days=1)
                 else:
                     td = dt - prev_datetime
