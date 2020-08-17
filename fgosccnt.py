@@ -1516,7 +1516,10 @@ def get_output(filenames, args):
                 # QPカンストの時、Exif内のファイル作成時間が15秒未満
                 pilimg = Image.open(filename)
                 dt = get_exif(pilimg)
-                td = dt - prev_datetime
+                if dt == "NON":
+                    td = datetime.timedelta(days=1)
+                else:
+                    td = dt - prev_datetime
                 if prev_itemlist == sc.itemlist:
                     if (sc.total_qp != 999999999 and sc.total_qp == prev_total_qp) \
                         or (sc.total_qp == 999999999 and  td.total_seconds() < args.timeout):
