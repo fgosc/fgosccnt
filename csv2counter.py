@@ -120,11 +120,11 @@ if __name__ == '__main__':
                 stditem_flag = False
 
             if skillstone_flag == False \
-               and ID_GEM_MIN <= id <= ID_GEM_MAX:
+               and ID_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
                 output = output[:-1] + "\n"
                 skillstone_flag = True
             elif skillstone_flag == True \
-                 and not (ID_GEM_MIN <= id <= ID_GEM_MAX):
+                 and not (ID_GEM_MIN <= id <= ID_SECRET_GEM_MAX):
                 output = output[:-1] + "\n"
                 skillstone_flag = False
 
