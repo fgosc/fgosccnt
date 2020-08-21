@@ -1457,6 +1457,7 @@ def get_exif(img):
                 return datetime.datetime.strptime(val, '%Y:%m:%d %H:%M:%S')
     except AttributeError:
         return "NON"
+    return "NON"
 
 
 def get_output(filenames, args):
