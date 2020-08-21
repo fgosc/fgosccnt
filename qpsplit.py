@@ -25,17 +25,18 @@ def file_Assignment(files):
         else:            
             img_rgb = fgosccnt.imread(filename)
             fileextention = f.suffix
-            try:
-                fgosccnt.item_name = {5:"クエストクリア報酬QP"}
-                a = fgosccnt.ScreenShot(img_rgb, svm, svm_chest, svm_card,
+##            try:
+##            fgosccnt.item_name = {5:"クエストクリア報酬QP"}
+            a = fgosccnt.ScreenShot(img_rgb, svm, svm_chest, svm_card,
                                         fileextention, reward_only=True)
-            except:
-                print(Path(f).name, end=": ")
-                print("正常なFGOのバトルリザルトのスクショではありません")
-                continue
+##            except:
+##                print(Path(f).name, end=": ")
+##                print("正常なFGOのバトルリザルトのスクショではありません")
+##                continue
 ##            print(a.qplist)
 ##            print(a.chestnum)
 ##            print(a.pagenum)
+            print (a.itemlist)
             if a.itemlist != "":
                 Qp_dir = Path("QP" + "(+" + str(a.itemlist[0]["dropnum"]) + ")")
                 if not Qp_dir.is_dir():
