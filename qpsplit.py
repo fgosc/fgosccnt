@@ -21,22 +21,18 @@ def file_Assignment(files):
     for filename in files:
         f = Path(filename)
         if f.exists() == False:
-            print( filename + 'is not found.')
+            print( filename + ' is not found.')
         else:            
             img_rgb = fgosccnt.imread(filename)
             fileextention = f.suffix
             try:
-                fgosccnt.item_name = {5:"クエストクリア報酬QP"}
                 a = fgosccnt.ScreenShot(img_rgb, svm, svm_chest, svm_card,
-                                        fileextention, reward_only=True)
+                                            fileextention, reward_only=True)
             except:
                 print(Path(f).name, end=": ")
                 print("正常なFGOのバトルリザルトのスクショではありません")
                 continue
-##            print(a.qplist)
-##            print(a.chestnum)
-##            print(a.pagenum)
-            if a.itemlist != "":
+            if a.itemlist[0]["id"] == fgosccnt.ID_REWARD_QP:
                 Qp_dir = Path("QP" + "(+" + str(a.itemlist[0]["dropnum"]) + ")")
                 if not Qp_dir.is_dir():
                     Qp_dir.mkdir()
@@ -44,7 +40,6 @@ def file_Assignment(files):
                 new_path = shutil.move(Path(f), Path(dstfile))
                 print(Path(f).name, end=" => ")
                 print(Qp_dir)
-##                print(new_path)
                 prev_pagenum = a.pagenum
                 prev_chestnum = a.chestnum
             else:
