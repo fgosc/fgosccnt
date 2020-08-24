@@ -126,8 +126,8 @@ def detect_qp_region(im, debug_draw_image=False, debug_image_name=None):
     logger.debug('cropped image size (for qp): (width, height) = (%s, %s)', cr_w, cr_h)
     im_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
     binary_threshold = 50
-    ret, th1 = cv2.threshold(im_gray, binary_threshold, 255, cv2.THRESH_BINARY)
-    contours, hierarchy = cv2.findContours(th1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    _, th1 = cv2.threshold(im_gray, binary_threshold, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(th1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     filtered_contours = [c for c in contours if filter_contour_qp(c, im_gray)]
     candidate = None
@@ -249,8 +249,8 @@ def guess_lines(actual_width, actual_height, entire_width, entire_height):
 
 
 def _detect_scrollbar_region(im, binary_threshold, filter_func):
-    ret, th1 = cv2.threshold(im, binary_threshold, 255, cv2.THRESH_BINARY)
-    contours, hierarchy = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    _, th1 = cv2.threshold(im, binary_threshold, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return [c for c in contours if filter_func(c, im)]
 
 
@@ -284,7 +284,7 @@ def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, **kwargs):
     # トライしていく。閾値が低くなるほど検出されやすいが、矩形がゆがみ
     # やすくなり、後の誤検出につながる。そのため、高い閾値で検出できれば
     # それを正とするのがよい。
-    thresholds_for_entire = (27, 26, 25, 24, 23)
+    thresholds_for_entire = range(27, 17, -1)
 
     actual_scrollbar_contours = _detect_scrollbar_region(
         im_gray, threshold_for_actual, filter_contour_scrollbar)
