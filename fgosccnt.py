@@ -187,11 +187,11 @@ class ScreenShot:
             if debug:
                 print("\n[Item{} Information]".format(i))
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
-                                                pt[0]: pt[2]], reverse=True)
+                                               pt[0]: pt[2]], reverse=True)
             item_img_rgb = self.img_rgb[pt[1]:  pt[3],
                                         pt[0] + lx:  pt[2] + lx]
             item_img_gray = self.img_gray[pt[1]: pt[3],
-                                          pt[0] + lx: pt[2]  + lx]
+                                          pt[0] + lx: pt[2] + lx]
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             dropitem = Item(item_img_rgb, item_img_gray,
