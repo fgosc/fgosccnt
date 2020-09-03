@@ -1565,13 +1565,6 @@ def get_output(filenames, args):
                                 svm, svm_chest, svm_card,
                                 fileextention, debug)
 
-                # 2頁目以前のスクショが無い場合に migging と出力
-                if (prev_pages - prev_pagenum > 0
-                    and sc.pagenum - prev_pagenum != 1) \
-                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    fileoutput.append({'filename': 'missing'})
-                    all_list.append([])
-
                 # ドロップ内容が同じで下記のとき、重複除外
                 # QPカンストじゃない時、QPが前と一緒
                 # QPカンストの時、Exif内のファイル作成時間が15秒未満
@@ -1601,6 +1594,13 @@ def get_output(filenames, args):
                             {'filename': str(filename) + ': duplicate'})
                         all_list.append([])
                         continue
+
+                # 2頁目以前のスクショが無い場合に migging と出力
+                if (prev_pages - prev_pagenum > 0
+                    and sc.pagenum - prev_pagenum != 1) \
+                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                    fileoutput.append({'filename': 'missing'})
+                    all_list.append([])
 
                 all_list.append(sc.itemlist)
 
