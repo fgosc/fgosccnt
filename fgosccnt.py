@@ -186,12 +186,12 @@ class ScreenShot:
         for i, pt in enumerate(item_pts):
             if debug:
                 print("\n[Item{} Information]".format(i))
-            lx, rx = self.find_edge(self.img_th[pt[1]: pt[3],
+            lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                 pt[0]: pt[2]], reverse=True)
             item_img_rgb = self.img_rgb[pt[1]:  pt[3],
-                                        pt[0] + lx:  pt[2] + rx]
+                                        pt[0] + lx:  pt[2] + lx]
             item_img_gray = self.img_gray[pt[1]: pt[3],
-                                          pt[0] + lx: pt[2] + rx]
+                                          pt[0] + lx: pt[2]  + lx]
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             dropitem = Item(item_img_rgb, item_img_gray,
@@ -257,7 +257,7 @@ class ScreenShot:
             # ヒストグラムを計算
             hist = cv2.calcHist([img_th_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
-            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist)
+            _, _, _, maxLoc = cv2.minMaxLoc(hist)
             if maxLoc[1] == target_color:
                 break
         lx = i
@@ -266,7 +266,7 @@ class ScreenShot:
             # ヒストグラムを計算
             hist = cv2.calcHist([img_th_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
-            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(hist)
+            _, _, _, maxLoc = cv2.minMaxLoc(hist)
             if maxLoc[1] == 0:
                 break
         rx = i
