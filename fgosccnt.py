@@ -1069,7 +1069,7 @@ class Item:
         """
         font_size = FONTSIZE_UNDEFINED
 
-        if self.fileextention.lower() == '.png':
+        if self.fileextention.lower() == '.png' and mode == 'jp':
             bonus_pts = self.detect_bonus_char()
             self.bonus = self.read_item(bonus_pts, debug)
             # フォントサイズを決定
