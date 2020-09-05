@@ -160,6 +160,9 @@ def detect_qp_region(im, debug_draw_image=False, debug_image_name=None):
 
     if debug_draw_image:
         cv2.drawContours(cropped, filtered_contours, -1, (0, 255, 0), 3)
+        # 以下はどうしてもデバッグ目的で輪郭検出の状況を知りたい場合のみ有効にする。
+        # 通常はコメントアウトしておく。
+        # cv2.drawContours(cropped, contours, -1, (0, 255, 255), 3)
         logger.debug('writing debug image: %s', debug_image_name)
         cv2.imwrite(debug_image_name, cropped)
 
@@ -175,7 +178,7 @@ def guess_pages(actual_width, actual_height, entire_width, entire_height):
         スクロールバー領域の高さからドロップ枠が何ページあるか推定する
     """
     delta = abs(entire_width - actual_width)
-    if delta > 9:
+    if delta > 15:
         # 比較しようとしている領域が異なる可能性が高い
         raise CannotGuessError(
             f'幅の誤差が大きすぎます: delta = {delta}, '
@@ -195,7 +198,7 @@ def guess_pagenum(actual_x, actual_y, entire_x, entire_y, entire_height):
     """
         スクロールバー領域の y 座標の位置からドロップ画像のページ数を推定する
     """
-    if abs(actual_x - entire_x) > 9:
+    if abs(actual_x - entire_x) > 12:
         # 比較しようとしている領域が異なる可能性が高い
         raise CannotGuessError(f'x 座標の誤差が大きすぎます: entire_x = {entire_x}, actual_x = {actual_x}')
 
@@ -221,7 +224,7 @@ def guess_lines(actual_width, actual_height, entire_width, entire_height):
         スクロールバーを用いる関係上、原理的に 2 行以下は推定不可
     """
     delta = abs(entire_width - actual_width)
-    if delta > 9:
+    if delta > 15:
         # 比較しようとしている領域が異なる可能性が高い
         raise CannotGuessError(
             f'幅の誤差が大きすぎます: delta = {delta}, '
