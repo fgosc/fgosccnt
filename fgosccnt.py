@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+import os
 import sys
 import re
 import argparse
 from pathlib import Path
 from collections import Counter
-import csv
 from enum import Enum
 import itertools
 import json
@@ -36,7 +36,7 @@ class Ordering(Enum):
     TIMESTAMP = 'timestamp'         # 作成日時
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
 
 basedir = Path(__file__).resolve().parent
@@ -190,7 +190,7 @@ class ScreenShot:
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
             item_img_th = self.img_th[pt[1]: pt[3] - 30,
-                                          pt[0] + lx: pt[2] + lx]
+                                      pt[0] + lx: pt[2] + lx]
             if self.is_empty_box(item_img_th):
                 break
             if debug:
@@ -207,10 +207,39 @@ class ScreenShot:
             if dropitem.id == -1:
                 break
             self.current_dropPriority = item_dropPriority[dropitem.id]
-            self.items.append(dropitem)
+            self.items.append((dropitem, pt))
 
         self.itemlist = self.makeitemlist()
-        self.total_qp = self.get_qp()
+        self.total_qp = self.get_qp(debug)
+        self.gained_qp = self.get_qp_gained(debug)
+        self.scroll_position = self.determine_scroll_position(debug)
+
+    def determine_scroll_position(self, debug=False):
+        width = self.img_rgb.shape[1]
+        # TODO: is it okay to hardcode this?
+        topleft = (width - 90, 180)
+        bottomright = (width, 180 + 660)
+
+        if debug:
+            img_copy = self.img_rgb.copy()
+            cv2.rectangle(img_copy, topleft, bottomright, (0, 0, 255), 3)
+            cv2.imwrite("./scroll_bar_selected.jpg", img_copy)
+
+        gray_image = self.img_gray[topleft[1]: bottomright[1], topleft[0]: bottomright[0]]
+        _, binary = cv2.threshold(gray_image, 225, 255, cv2.THRESH_BINARY)
+        if debug:
+            cv2.imwrite("scroll_bar_binary.png", binary)
+        _, template = cv2.threshold(
+            cv2.imread("./data/other/scroll_bar_upper.png",
+                       cv2.IMREAD_GRAYSCALE),
+            225,
+            255,
+            cv2.THRESH_BINARY,
+        )
+
+        res = cv2.matchTemplate(binary, template, cv2.TM_CCOEFF_NORMED)
+        _, maxValue, _, max_loc = cv2.minMaxLoc(res)
+        return max_loc[1] / gray_image.shape[0] if maxValue > 0.5 else -1
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
@@ -242,37 +271,74 @@ class ScreenShot:
 
         return qp
 
-    def extract_text_from_image(sef, image):
+    def extract_text_from_image(self, image):
         """
         capy-drop-parser から流用
         """
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         _, qp_image = cv2.threshold(gray, 65, 255, cv2.THRESH_BINARY_INV)
 
+        # '+' is needed to ensure that tesseract doesn't force a recognition on it,
+        # which results in a '4' most of the time.
         return pytesseract.image_to_string(
             qp_image,
-            config="-l eng --oem 1 --psm 7 -c tessedit_char_whitelist=,0123456789",
+            config="-l eng --oem 1 --psm 7 -c tessedit_char_whitelist=,0123456789+",
         )
 
-    def get_qp(self):
-        """
-        capy-drop-parser から流用
-        """
-        pt = pageinfo.detect_qp_region(self.img_rgb_orig)
-        logger.debug('pt: %s', pt)
-        if pt is None:
-            return QP_UNKNOWN
+    def __get_qp_inner(self, bounds, img, debug=False, debug_img=""):
+        if debug:
+            img_copy = img.copy()
+            cv2.rectangle(img_copy, bounds[0], bounds[1], (0, 0, 255), 3)
+            cv2.imwrite(debug_img, img_copy)
 
-        qp_total_text = self.extract_text_from_image(
-            self.img_rgb_orig[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
+        (topleft, bottomright) = bounds
+        qp_text = self.extract_text_from_image(
+            img[topleft[1]: bottomright[1],
+                topleft[0]: bottomright[0]]
         )
 
-        qp_total = self.get_qp_from_text(qp_total_text)
-        logger.debug('qp_total from text: %s', qp_total)
-        if qp_total == 0:
-            return QP_UNKNOWN
+        qp = self.get_qp_from_text(qp_text)
+        logger.debug('qp from text: %s', qp)
 
-        return qp_total
+        if qp == 0:
+            qp = QP_UNKNOWN
+
+        return qp
+
+    def get_qp(self, debug=False):
+        bounds = pageinfo.detect_qp_region(self.img_rgb_orig)
+
+        if bounds is None:
+            # fall back on hardcoded bound and resized image
+            bounds = ((305, 950), (305 + 600, 950 + 75))
+            img = self.img_rgb
+        else:
+            img = self.img_rgb_orig
+
+        logger.debug('Total QP bounds: %s', bounds)
+        return self.__get_qp_inner(bounds, img, debug, "./qp_total_detection.jpg")
+
+    def get_qp_gained(self, debug=False):
+        bounds = pageinfo.detect_qp_region(self.img_rgb_orig)
+
+        if bounds is None:
+            # fall back on hardcoded bound and resized image
+            bounds = ((305, 865), (305 + 600, 865 + 75))
+            img = self.img_rgb
+        else:
+            # Detecting the QP box with different shading is "easy", while detecting the absence of it
+            # for the gain QP amount is hard. However, the 2 values have the same font and thus roughly
+            # the same height (please NA...). You can consider them to be 2 same-sized boxes on top of
+            # each other.
+            (topleft, bottomright) = bounds
+            height = bottomright[1] - topleft[1]
+            topleft = (topleft[0], topleft[1] - height + int(height*0.12))
+            bottomright = (bottomright[0], bottomright[1] - height)
+            bounds = (topleft, bottomright)
+            img = self.img_rgb_orig
+
+        logger.debug('Gained QP bounds: %s', bounds)
+        return self.__get_qp_inner(bounds, img, debug, "./qp_gain_detection.jpg")
 
     def find_edge(self, img_th, reverse=False):
         """
@@ -401,7 +467,7 @@ class ScreenShot:
         アイテムを出力
         """
         itemlist = []
-        for i, item in enumerate(self.items):
+        for i, (item, pt) in enumerate(self.items):
             tmp = {}
             if item.category == "Quest Reward":
                 tmp['id'] = ID_REWARD_QP
@@ -411,9 +477,11 @@ class ScreenShot:
                 tmp['id'] = item.id
                 tmp['name'] = item.name
                 tmp['dropPriority'] = item_dropPriority[item.id]
-            tmp['dropnum'] = int(item.dropnum[1:])
+            tmp['stack'] = int(item.dropnum[1:])
             tmp['bonus'] = item.bonus
             tmp['category'] = item.category
+            tmp['x'] = pt[0]
+            tmp['y'] = pt[1]
             itemlist.append(tmp)
         return itemlist
 
@@ -604,7 +672,7 @@ def generate_booty_pts(criteria_left, criteria_top, item_width, item_height,
 class Item:
     def __init__(self, pos, img_rgb, img_gray, svm, svm_card, fileextention,
                  current_dropPriority, mode='jp', debug=False):
-        self.position= pos
+        self.position = pos
         self.img_rgb = img_rgb
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
@@ -1111,7 +1179,8 @@ class Item:
                 else:
                     font_size = FONTSIZE_SMALL
         else:
-            self.bonus, bonus_pts, font_size = self.detect_bonus_char4jpg(mode, debug)
+            self.bonus, bonus_pts, font_size = self.detect_bonus_char4jpg(
+                mode, debug)
         if debug:
             print("Bonus Font Size: {}\nBonus: {}".format(
                 font_size, self.bonus))
@@ -1124,6 +1193,8 @@ class Item:
             base_line = bonus_pts[-2][1] - 3 + offsset_y
         else:
             base_line = int(180/206*self.height)
+
+        self.__bonus_string_into_int()
 
         # 実際の(ボーナス無し)ドロップ数の右端の位置を決定
         offset_x = -7 if mode == "na" else 0
@@ -1140,6 +1211,12 @@ class Item:
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
 
+    def __bonus_string_into_int(self):
+        try:
+            self.bonus = int(re.sub(r"\(|\)|\+", "", self.bonus))
+        except:
+            self.bonus = 0
+
     def gem_img2id(self, img, gem_dict):
         hash_gem = self.compute_gem_hash(img)
         gems = {}
@@ -1152,7 +1229,6 @@ class Item:
         return gem[0]
 
     def classify_item(self, img, currnet_dropPriority, debug=False):
-
         """
         imgとの距離を比較して近いアイテムを求める
         id を返すように変更
@@ -1547,7 +1623,7 @@ def get_exif(img):
     return "NON"
 
 
-def get_output(filenames, args):
+def get_output(input_file_paths, args):
     """
     出力内容を作成
     """
@@ -1573,91 +1649,93 @@ def get_output(filenames, args):
     prev_pages = 0
     prev_pagenum = 0
     prev_total_qp = QP_UNKNOWN
+    prev_gained_qp = QP_UNKNOWN
     prev_itemlist = []
     prev_datetime = datetime.datetime(year=2015, month=7, day=30, hour=0)
-    all_list = []
+    all_parsed_output = []
 
-    for filename in filenames:
+    for file_path in input_file_paths:
+        parsed_img_data = {"status": "Incomplete"}
+
         if debug:
-            print(filename)
-        f = Path(filename)
+            print(file_path)
+        parsed_img_data["image_path"] = str(file_path)
 
-        if f.exists() is False:
-            output = {'filename': str(filename) + ': not found'}
-            all_list.append([])
-        else:
-            img_rgb = imread(filename)
-            fileextention = Path(filename).suffix
+        if not Path(file_path).exists():
+            # TODO: is this needed?
+            parsed_img_data["status"] = "File not found"
+            all_parsed_output.append(parsed_img_data)
+            continue
 
-            try:
-                sc = ScreenShot(img_rgb,
-                                svm, svm_chest, svm_card,
-                                fileextention, debug)
+        img_rgb = imread(file_path)
+        file_extention = Path(file_path).suffix
 
-                # ドロップ内容が同じで下記のとき、重複除外
-                # QPカンストじゃない時、QPが前と一緒
-                # QPカンストの時、Exif内のファイル作成時間が15秒未満
-                pilimg = Image.open(filename)
-                dt = get_exif(pilimg)
-                if dt == "NON" or prev_datetime == "NON":
-                    td = datetime.timedelta(days=1)
-                else:
-                    td = dt - prev_datetime
-                if prev_itemlist == sc.itemlist:
-                    if (sc.total_qp != 999999999
-                        and sc.total_qp == prev_total_qp) \
-                        or (sc.total_qp == 999999999
-                            and td.total_seconds() < args.timeout):
-                        if debug:
-                            print("args.timeout: {}".format(args.timeout))
-                            print("filename: {}".format(filename))
-                            print("prev_itemlist: {}".format(prev_itemlist))
-                            print("sc.itemlist: {}".format(sc.itemlist))
-                            print("sc.total_qp: {}".format(sc.total_qp))
-                            print("prev_total_qp: {}".format(prev_total_qp))
-                            print("datetime: {}".format(dt))
-                            print("prev_datetime: {}".format(prev_datetime))
-                            print("td.total_second: {}".format(
-                                td.total_seconds()))
-                        fileoutput.append(
-                            {'filename': str(filename) + ': duplicate'})
-                        all_list.append([])
-                        continue
+        try:
+            screenshot = ScreenShot(
+                img_rgb, svm, svm_chest, svm_card, file_extention, debug)
 
-                # 2頁目以前のスクショが無い場合に migging と出力
-                if (prev_pages - prev_pagenum > 0
-                    and sc.pagenum - prev_pagenum != 1) \
-                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    fileoutput.append({'filename': 'missing'})
-                    all_list.append([])
+            # If the previous image indicated more coming, check whether this is the fated one.
+            if (prev_pages - prev_pagenum > 0 and screenshot.pagenum - prev_pagenum != 1) \
+               or (prev_pages - prev_pagenum == 0 and screenshot.pagenum != 1):
+                parsed_img_data["status"] = "Missing page before this"
 
-                if sc.pages - sc.pagenum == 0:
-                    sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
-                all_list.append(sc.itemlist)
+            # Detect whether image is a duplicate
+            # Image is a candidate duplicate if drops and gained QP match previous image.
+            # Duplicate is confirmed if:
+            # - QP is not capped and drops are the same as in the previous image
+            # - QP is capped and previous image was taken within 15sec
+            # TODO: is this needed?
+            pilimg = Image.open(file_path)
+            date_time = get_exif(pilimg)
+            if date_time == "NON" or prev_datetime == "NON":
+                time_delta = datetime.timedelta(days=1)
+            else:
+                time_delta = date_time - prev_datetime
+            if prev_itemlist == screenshot.itemlist and prev_gained_qp == screenshot.gained_qp:
+                if (screenshot.total_qp != 999999999 and screenshot.total_qp == prev_total_qp) \
+                        or (screenshot.total_qp == 999999999 and time_delta.total_seconds() < args.timeout):
+                    if debug:
+                        print("args.timeout: {}".format(args.timeout))
+                        print("filename: {}".format(file_path))
+                        print("prev_itemlist: {}".format(prev_itemlist))
+                        print("screenshot.itemlist: {}".format(
+                            screenshot.itemlist))
+                        print("screenshot.total_qp: {}".format(
+                            screenshot.total_qp))
+                        print("prev_total_qp: {}".format(prev_total_qp))
+                        print("datetime: {}".format(date_time))
+                        print("prev_datetime: {}".format(prev_datetime))
+                        print("td.total_second: {}".format(
+                            time_delta.total_seconds()))
+                    parsed_img_data["status"] = "Duplicate file"
+                    all_parsed_output.append(parsed_img_data)
+                    continue
 
-                prev_pages = sc.pages
-                prev_pagenum = sc.pagenum
-                prev_total_qp = sc.total_qp
-                prev_itemlist = sc.itemlist
-                prev_datetime = dt
+            # Prep next iter
+            prev_pages = screenshot.pages
+            prev_pagenum = screenshot.pagenum
+            prev_total_qp = screenshot.total_qp
+            prev_gained_qp = screenshot.gained_qp
+            prev_itemlist = screenshot.itemlist
+            prev_datetime = date_time
 
-                sumdrop = len([d for d in sc.itemlist
-                               if d["name"] != "クエストクリア報酬QP"])
-                output = {'filename': str(filename), 'ドロ数': sumdrop}
-                if sc.pagenum == 1:
-                    if sc.lines >= 7:
-                        output["ドロ数"] = str(output["ドロ数"]) + "++"
-                    elif sc.lines >= 4:
-                        output["ドロ数"] = str(output["ドロ数"]) + "+"
-                elif sc.pagenum == 2 and sc.lines >= 7:
-                    output["ドロ数"] = str(output["ドロ数"]) + "+"
+            # Gather data
+            parsed_img_data["qp_total"] = screenshot.total_qp
+            parsed_img_data["qp_gained"] = screenshot.gained_qp
+            parsed_img_data["scroll_position"] = screenshot.scroll_position
+            parsed_img_data["drop_count"] = screenshot.chestnum
+            parsed_img_data["drops_found"] = len(screenshot.itemlist)
+            parsed_img_data["drops"] = screenshot.itemlist
 
-            except Exception as e:
-                logger.error(e, exc_info=True)
-                output = ({'filename': str(filename) + ': not valid'})
-                all_list.append([])
-        fileoutput.append(output)
-    return fileoutput, all_list
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            parsed_img_data["status"] = "Invalid file"
+            all_parsed_output.append(parsed_img_data)
+            continue
+
+        parsed_img_data["status"] = "OK" if parsed_img_data["status"] == "Incomplete" else parsed_img_data["status"]
+        all_parsed_output.append(parsed_img_data)
+    return all_parsed_output
 
 
 def sort_files(files, ordering):
@@ -1736,7 +1814,7 @@ def make_csv_header(item_list):
                   for a in flat_list]
     ce0_flag = ("Craft Essence"
                 not in [d.get('category') for d in flat_list]) \
-                and (max([d.get("id") for d in flat_list]) > 9707500)
+        and (max([d.get("id") for d in flat_list]) > 9707500)
     if ce0_flag:
         short_list.append({"id": 99999990, "name": "礼装",
                            "category": "Craft Essence",
@@ -1752,10 +1830,10 @@ def make_csv_header(item_list):
         if nlist['category'] in ['Quest Reward', 'Point'] \
            or nlist["name"] == "QP":
             tmp = out_name(nlist['id']) \
-                  + "(+" + change_value(nlist["dropnum"]) + ")"
+                + "(+" + change_value(nlist["dropnum"]) + ")"
         elif nlist["dropnum"] > 1:
             tmp = out_name(nlist['id']) \
-                  + "(x" + change_value(nlist["dropnum"]) + ")"
+                + "(x" + change_value(nlist["dropnum"]) + ")"
         elif nlist["name"] == "礼装":
             tmp = "礼装"
         else:
@@ -1792,12 +1870,28 @@ def make_csv_data(sc_list, ce0_flag):
     return csv_sum, csv_data
 
 
+def output_json(parsed_output, out_folder):
+    if out_folder is None:
+        sys.stdout.buffer.write(json.dumps(
+            parsed_output, ensure_ascii=False).encode('utf8'))
+    else:
+        if not os.path.exists(out_folder):
+            os.makedirs(out_folder)
+
+        for parsed_file in parsed_output:
+            title = Path(parsed_file["image_path"]).stem
+            with open(Path("{}/{}.json".format(out_folder, title)), "w") as f:
+                json.dump(parsed_file, f, indent=4, ensure_ascii=False)
+
+
 if __name__ == '__main__':
     # オプションの解析
     parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
     parser.add_argument('-f', '--folder', help='フォルダで指定')
+    parser.add_argument('-o', '--out_folder',
+                        help='directory to write parsed data to. If none is provided, output will be written to stdout')
     parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
                         help='QPカンスト時の重複チェック間隔(秒): デフォルト' + str(TIMEOUT) + '秒')
     parser.add_argument('--ordering', help='ファイルの処理順序 (未指定の場合 notspecified)',
@@ -1806,7 +1900,8 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
     parser.add_argument('--version', action='version',
                         version=PROGNAME + " " + VERSION)
-    parser.add_argument('-l', '--loglevel', choices=('debug', 'info'), default='info')
+    parser.add_argument('-l', '--loglevel',
+                        choices=('debug', 'info'), default='info')
 
     args = parser.parse_args()    # 引数を解析
     logging.basicConfig(
@@ -1815,34 +1910,20 @@ if __name__ == '__main__':
     )
     logger.setLevel(args.loglevel.upper())
 
+    if args.out_folder is not None and not Path(args.out_folder):
+        print("{} is not a valid path".format(args.out_folder))
+        exit(1)
+
     for ndir in [Item_dir, CE_dir, Point_dir]:
         if not ndir.is_dir():
             ndir.mkdir(parents=True)
 
+    # gather input image files
     if args.folder:
         inputs = [x for x in Path(args.folder).iterdir()]
     else:
         inputs = args.filenames
 
     inputs = sort_files(inputs, args.ordering)
-    fileoutput, all_new_list = get_output(inputs, args)
-
-    # CSVヘッダーをつくる
-    csv_heder, ce0_flag, questname = make_csv_header(all_new_list)
-    csv_sum, csv_data = make_csv_data(all_new_list, ce0_flag)
-
-    writer = csv.DictWriter(sys.stdout, fieldnames=csv_heder,
-                            lineterminator='\n')
-    writer.writeheader()
-    if len(all_new_list) > 1:  # ファイル一つのときは合計値は出さない
-        if questname == "":
-            questname = "合計"
-        a = {'filename': questname, 'ドロ数': ''}
-        a.update(csv_sum)
-        writer.writerow(a)
-    for fo, cd in zip(fileoutput, csv_data):
-        fo.update(cd)
-        writer.writerow(fo)
-    if 'ドロ数' in fo.keys():  # issue: #55
-        if len(fileoutput) > 1 and str(fo['ドロ数']).endswith('+'):
-            writer.writerow({'filename': 'missing'})
+    parsed_output = get_output(inputs, args)
+    output_json(parsed_output, args.out_folder)

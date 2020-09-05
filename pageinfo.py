@@ -143,7 +143,11 @@ def detect_qp_region(im, debug_draw_image=False, debug_image_name=None):
         # ここではそのどちらのケースでも対応できるよう枠を広めに取っている。
         # 現仕様に最適化して切り詰めすぎると困ったことになるため注意。
         left_margin = 0.42
-        right_margin = 0.04
+        # This function is also used to detect the "gain QP" amount. On NA this number is
+        # sometimes slightly shifted to the right, but not shifted pasted the rounded edge of
+        # the "total QP" amount. So no right-factor is needd. This border doesn't bother
+        # tesseract, but the extra width is needed for "gain QP".
+        right_margin = 0.0
         topleft = (x + int(w*left_margin), y)
         bottomright = (topleft[0] + w - int(w*left_margin) - int(w*right_margin), y + h)
 
