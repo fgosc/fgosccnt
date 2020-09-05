@@ -11,6 +11,7 @@ import json
 from operator import itemgetter
 import math
 import datetime
+import logging
 
 import cv2
 import numpy as np
@@ -22,6 +23,8 @@ import pageinfo
 
 PROGNAME = "FGOスクショカウント"
 VERSION = "0.4.0"
+
+logger = logging.getLogger(__name__)
 
 
 class Ordering(Enum):
@@ -234,12 +237,14 @@ class ScreenShot:
         capy-drop-parser から流用
         """
         pt = pageinfo.detect_qp_region(self.img_rgb_orig)
+        logger.debug('pt: %s', pt)
+
         qp_total_text = self.extract_text_from_image(
             self.img_rgb_orig[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
         )
 
         qp_total = self.get_qp_from_text(qp_total_text)
-
+        logger.debug('qp_total from text: %s', qp_total)
         if qp_total == 0:
             qp_total = -1
 
@@ -1621,7 +1626,8 @@ def get_output(filenames, args):
                 elif sc.pagenum == 2 and sc.lines >= 7:
                     output["ドロ数"] = str(output["ドロ数"]) + "+"
 
-            except:
+            except Exception as e:
+                logger.error(e, exc_info=True)
                 output = ({'filename': str(filename) + ': not valid'})
                 all_list.append([])
         fileoutput.append(output)
@@ -1774,8 +1780,14 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
     parser.add_argument('--version', action='version',
                         version=PROGNAME + " " + VERSION)
+    parser.add_argument('-l', '--loglevel', choices=('debug', 'info'), default='info')
 
     args = parser.parse_args()    # 引数を解析
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(name)s <%(filename)s-L%(lineno)s> [%(levelname)s] %(message)s',
+    )
+    logger.setLevel(args.loglevel.upper())
 
     for ndir in [Item_dir, CE_dir, Point_dir]:
         if not ndir.is_dir():
