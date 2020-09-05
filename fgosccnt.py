@@ -1603,6 +1603,8 @@ def get_output(filenames, args):
                     td = datetime.timedelta(days=1)
                 else:
                     td = dt - prev_datetime
+                if sc.pages - sc.pagenum == 0:
+                    sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
                 if prev_itemlist == sc.itemlist:
                     if (sc.total_qp != 999999999
                         and sc.total_qp == prev_total_qp) \
@@ -1631,8 +1633,6 @@ def get_output(filenames, args):
                     fileoutput.append({'filename': 'missing'})
                     all_list.append([])
 
-                if sc.pages - sc.pagenum == 0:
-                    sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
                 all_list.append(sc.itemlist)
 
                 prev_pages = sc.pages
