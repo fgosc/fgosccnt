@@ -174,9 +174,7 @@ class ScreenShot:
         self.chestnum = self.ocr_tresurechest(debug)
         if debug:
             print("総ドロップ数(OCR): {}".format(self.chestnum))
-        item_pts = []
-        if self.chestnum >= 0:
-            item_pts = self.img2points()
+        item_pts = self.img2points()
 
         self.items = []
         self.current_dropPriority = PRIORITY_REWARD_QP
@@ -184,24 +182,46 @@ class ScreenShot:
             # qpsplit.py で利用
             item_pts = item_pts[0:1]
         for i, pt in enumerate(item_pts):
-            if debug:
-                print("\n[Item{} Information]".format(i))
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
+            item_img_th = self.img_th[pt[1]: pt[3] - 20,
+                                          pt[0] + lx: pt[2] + lx]
+            if self.is_empty_box(item_img_th):
+                break
+            if debug:
+                print("\n[Item{} Information]".format(i))
             item_img_rgb = self.img_rgb[pt[1]:  pt[3],
                                         pt[0] + lx:  pt[2] + lx]
             item_img_gray = self.img_gray[pt[1]: pt[3],
                                           pt[0] + lx: pt[2] + lx]
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
-            dropitem = Item(item_img_rgb, item_img_gray,
+            dropitem = Item(i, item_img_rgb, item_img_gray,
                             svm, svm_card, fileextention,
                             self.current_dropPriority, mode, debug)
+            if dropitem.id == -1:
+                break
             self.current_dropPriority = item_dropPriority[dropitem.id]
             self.items.append(dropitem)
 
         self.itemlist = self.makeitemlist()
         self.total_qp = self.get_qp()
+
+    def calc_black_whiteArea(self, bw_image):
+        image_size = bw_image.size
+        whitePixels = cv2.countNonZero(bw_image)
+
+        whiteAreaRatio = (whitePixels / image_size) * 100  # [%]
+
+        return whiteAreaRatio
+
+    def is_empty_box(self, img_th):
+        """
+        アイテムボックスにアイテムが無いことを判別する
+        """
+        if self.calc_black_whiteArea(img_th) < 1:
+            return True
+        return False
 
     def get_qp_from_text(self, text):
         """
@@ -410,7 +430,7 @@ class ScreenShot:
             ret = cv2.boundingRect(cnt)
             area = cv2.contourArea(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
-            if ret[2] < int(w/2) and area > 100:
+            if ret[2] < int(w/2) and area > 100 and 0.4 < ret[2]/ret[3] < 0.8:
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt):
@@ -425,6 +445,9 @@ class ScreenShot:
                 if flag is False:
                     item_pts.append(pt)
 
+        if len(item_pts) == 0:
+            # Recognizing Failure
+            return -1
         item_pts.sort()
         if debug:
             print("ドロップ桁数(OCR): {}".format(len(item_pts)))
@@ -517,13 +540,6 @@ class ScreenShot:
                         leftcell_pts.append(pts)
         item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
 
-        # 頁数と宝箱数によってすでに報告した戦利品を間引く
-        if self.pagenum == 1 and self.chestnum < 20:
-            item_pts = item_pts[:self.chestnum+1]
-        elif self.pages - self.pagenum == 0:
-            item_pts = item_pts[14 - (self.lines + 2) % 3 * 7:
-                                15 + self.chestnum % 7]
-
         return item_pts
 
     def booty_pts(self):
@@ -577,8 +593,9 @@ def generate_booty_pts(criteria_left, criteria_top, item_width, item_height,
 
 
 class Item:
-    def __init__(self, img_rgb, img_gray, svm, svm_card, fileextention,
+    def __init__(self, pos, img_rgb, img_gray, svm, svm_card, fileextention,
                  current_dropPriority, mode='jp', debug=False):
+        self.position= pos
         self.img_rgb = img_rgb
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
@@ -588,6 +605,9 @@ class Item:
 
         self.height, self.width = img_rgb.shape[:2]
         self.category = self.classify_category(svm_card)
+        if pos < 14 and self.category == "":
+            self.id = -1
+            return
         self.id = self.classify_card(img_rgb, current_dropPriority, debug)
         if debug:
             print("id: {}".format(self.id))
@@ -1602,6 +1622,8 @@ def get_output(filenames, args):
                     fileoutput.append({'filename': 'missing'})
                     all_list.append([])
 
+                if sc.pages - sc.pagenum == 0:
+                    sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
                 all_list.append(sc.itemlist)
 
                 prev_pages = sc.pages
