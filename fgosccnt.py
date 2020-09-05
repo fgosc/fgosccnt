@@ -65,6 +65,8 @@ ID_NORTH_AMERICA = 93000500
 ID_SYURENJYO = 94006800
 ID_EVNET = 94000000
 TIMEOUT = 15
+QP_UNKNOWN = -1
+
 
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
@@ -238,6 +240,8 @@ class ScreenShot:
         """
         pt = pageinfo.detect_qp_region(self.img_rgb_orig)
         logger.debug('pt: %s', pt)
+        if pt is None:
+            return QP_UNKNOWN
 
         qp_total_text = self.extract_text_from_image(
             self.img_rgb_orig[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
@@ -246,7 +250,7 @@ class ScreenShot:
         qp_total = self.get_qp_from_text(qp_total_text)
         logger.debug('qp_total from text: %s', qp_total)
         if qp_total == 0:
-            qp_total = -1
+            return QP_UNKNOWN
 
         return qp_total
 
@@ -1548,7 +1552,7 @@ def get_output(filenames, args):
     fileoutput = []  # 出力
     prev_pages = 0
     prev_pagenum = 0
-    prev_total_qp = -1
+    prev_total_qp = QP_UNKNOWN
     prev_itemlist = []
     prev_datetime = datetime.datetime(year=2015, month=7, day=30, hour=0)
     all_list = []
