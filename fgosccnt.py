@@ -258,13 +258,13 @@ class ScreenShot:
         """
         capy-drop-parser から流用
         """
-        pt = pageinfo.detect_qp_region(self.img_rgb_orig)
-        logger.debug('pt: %s', pt)
+        pt = pageinfo.detect_qp_region(self.img_rgb)
+        logger.debug('pt from pageinfo: %s', pt)
         if pt is None:
-            return QP_UNKNOWN
+            pt = ((288, 948), (838, 1024))
 
         qp_total_text = self.extract_text_from_image(
-            self.img_rgb_orig[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
+            self.img_rgb[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
         )
 
         qp_total = self.get_qp_from_text(qp_total_text)
