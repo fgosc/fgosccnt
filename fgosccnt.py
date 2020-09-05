@@ -184,7 +184,7 @@ class ScreenShot:
         for i, pt in enumerate(item_pts):
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
-            item_img_th = self.img_th[pt[1]: pt[3] - 20,
+            item_img_th = self.img_th[pt[1]: pt[3] - 30,
                                           pt[0] + lx: pt[2] + lx]
             if self.is_empty_box(item_img_th):
                 break
@@ -646,7 +646,7 @@ class Item:
                 else:
                     flag = True
 
-        if flag:
+        if flag is False:
             pts.append(pt)
         return pts
 
@@ -1089,7 +1089,7 @@ class Item:
         """
         font_size = FONTSIZE_UNDEFINED
 
-        if self.fileextention.lower() == '.png' and mode == 'jp':
+        if self.fileextention.lower() == '.png':
             bonus_pts = self.detect_bonus_char()
             self.bonus = self.read_item(bonus_pts, debug)
             # フォントサイズを決定
