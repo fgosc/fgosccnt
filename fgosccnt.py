@@ -225,8 +225,7 @@ class ScreenShot:
             cv2.rectangle(img_copy, topleft, bottomright, (0, 0, 255), 3)
             cv2.imwrite("./scroll_bar_selected.jpg", img_copy)
 
-        gray_image = self.img_gray[topleft[1]
-            : bottomright[1], topleft[0]: bottomright[0]]
+        gray_image = self.img_gray[topleft[1]: bottomright[1], topleft[0]: bottomright[0]]
         _, binary = cv2.threshold(gray_image, 225, 255, cv2.THRESH_BINARY)
         if debug:
             cv2.imwrite("scroll_bar_binary.png", binary)
@@ -1834,6 +1833,24 @@ def parse_img(
         return parsed_img_data
 
 
+def move_file_to_out_dir(src_file_path, out_dir):
+    if out_dir is not None:
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        src_file_path = Path(src_file_path)
+        if not src_file_path.exists():
+            print("Cannot move {}. It does not exist.".format(src_file_path))
+            exit(1)
+
+        dst_file_path = "{}/{}".format(out_dir, src_file_path.name)
+        os.rename(src_file_path, dst_file_path)
+
+        return dst_file_path
+
+    return src_file_path
+
+
 def parse_into_json(input_file_paths, args):
     """
     The version of output gathering used by AtlasAcademy. Made to resemble capy's output.
@@ -1865,6 +1882,7 @@ def parse_into_json(input_file_paths, args):
     all_parsed_output = []
 
     for file_path in input_file_paths:
+        file_path = move_file_to_out_dir(file_path, args.out_folder)
         all_parsed_output.append(parse_img(
             svm,
             svm_chest,
@@ -2033,7 +2051,7 @@ if __name__ == '__main__':
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
     parser.add_argument('-f', '--folder', help='フォルダで指定')
     parser.add_argument('-o', '--out_folder',
-                        help='directory to write parsed data to. If none is provided, output will be written to stdout')
+                        help='directory to write parsed data to. If specified, provided images will also be moved to here. Else, output will simply be written to stdout')
     parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
                         help='QPカンスト時の重複チェック間隔(秒): デフォルト' + str(TIMEOUT) + '秒')
     parser.add_argument('--ordering', help='ファイルの処理順序 (未指定の場合 notspecified)',
