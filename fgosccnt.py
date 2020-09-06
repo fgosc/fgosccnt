@@ -1834,7 +1834,7 @@ def __parse_img(
         return parsed_img_data
 
 
-def get_atlas_output(input_file_paths, args):
+def parse_into_json(input_file_paths, args):
     """
     The version of output gathering used by AtlasAcademy. Made to resemble capy's output.
     """
@@ -2067,5 +2067,5 @@ if __name__ == '__main__':
         inputs = args.filenames
 
     inputs = sort_files(inputs, args.ordering)
-    parsed_output = get_atlas_output(inputs, args)
+    parsed_output = parse_into_json(inputs, args)
     output_json(parsed_output, args.out_folder)
