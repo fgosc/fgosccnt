@@ -1737,14 +1737,14 @@ def get_output(filenames, args):
     return fileoutput, all_list
 
 
-def __load_svms():
+def load_svms():
     svm = cv2.ml.SVM_load(str(train_item))
     svm_chest = cv2.ml.SVM_load(str(train_chest))
     svm_card = cv2.ml.SVM_load(str(train_card))
     return (svm, svm_chest, svm_card)
 
 
-def __parse_img(
+def parse_img(
         svm,
         svm_chest,
         svm_card,
@@ -1854,7 +1854,7 @@ def parse_into_json(input_file_paths, args):
         print("python makecard.py を実行してください")
         sys.exit(1)
 
-    (svm, svm_chest, svm_card) = __load_svms()
+    (svm, svm_chest, svm_card) = load_svms()
 
     prev_pages = 0
     prev_pagenum = 0
@@ -1865,7 +1865,7 @@ def parse_into_json(input_file_paths, args):
     all_parsed_output = []
 
     for file_path in input_file_paths:
-        all_parsed_output.append(__parse_img(
+        all_parsed_output.append(parse_img(
             svm,
             svm_chest,
             svm_card,
