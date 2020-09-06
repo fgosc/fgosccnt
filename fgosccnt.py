@@ -2050,18 +2050,21 @@ def output_json(parsed_output, out_folder):
 
 if __name__ == '__main__':
     # オプションの解析
-    parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
+    parser = argparse.ArgumentParser(
+        description='Parse item drops from an F/GO screenshot.')
     # 3. parser.add_argumentで受け取る引数を追加していく
-    parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
-    parser.add_argument('-f', '--folder', help='フォルダで指定')
+    parser.add_argument(
+        'filenames', help='image file to parse', nargs='*')    # 必須の引数を追加
+    parser.add_argument(
+        '-f', '--folder', help='folder containing images to parse')
     parser.add_argument('-o', '--out_folder',
-                        help='directory to write parsed data to. If specified, provided images will also be moved to here. Else, output will simply be written to stdout')
+                        help='folder to write parsed data to. If specified, parsed images will also be moved to here. Else, output will simply be written to stdout')
     parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
-                        help='QPカンスト時の重複チェック間隔(秒): デフォルト' + str(TIMEOUT) + '秒')
-    parser.add_argument('--ordering', help='ファイルの処理順序 (未指定の場合 notspecified)',
-                        type=Ordering,
-                        choices=list(Ordering), default=Ordering.NOTSPECIFIED)
-    parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
+                        help="images with the same amount of drops and QP are flagged as duplicate, if taken within this many seconds. Default= {}s".format(TIMEOUT))
+    parser.add_argument('--ordering', help='sort files before processing. Needed to make use of missing screenshot detection',
+                        type=Ordering, choices=list(Ordering), default=Ordering.NOTSPECIFIED)
+    parser.add_argument(
+        '-d', '--debug', help='output debug information', action='store_true')
     parser.add_argument('--version', action='version',
                         version=PROGNAME + " " + VERSION)
     parser.add_argument('-l', '--loglevel',
