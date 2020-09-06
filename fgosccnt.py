@@ -1851,13 +1851,7 @@ def move_file_to_out_dir(src_file_path, out_dir):
     return src_file_path
 
 
-def parse_into_json(input_file_paths, args):
-    """
-    The version of output gathering used by AtlasAcademy. Made to resemble capy's output.
-    """
-    debug = args.debug
-
-    calc_dist_local()
+def check_svms_trained():
     if train_item.exists() is False:
         print("[エラー]item.xml が存在しません")
         print("python makeitem.py を実行してください")
@@ -1870,6 +1864,16 @@ def parse_into_json(input_file_paths, args):
         print("[エラー]card.xml が存在しません")
         print("python makecard.py を実行してください")
         sys.exit(1)
+
+
+def parse_into_json(input_file_paths, args):
+    """
+    The version of output gathering used by AtlasAcademy. Made to resemble capy's output.
+    """
+    debug = args.debug
+
+    calc_dist_local()
+    check_svms_trained()
 
     (svm, svm_chest, svm_card) = load_svms()
 
