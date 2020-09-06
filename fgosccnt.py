@@ -66,6 +66,8 @@ ID_SYURENJYO = 94006800
 ID_EVNET = 94000000
 TIMEOUT = 15
 QP_UNKNOWN = -1
+DEFAULT_POLL_FREQ = 60
+DEFAULT_AMT_PROCESSES = 1
 
 
 with open(drop_file, encoding='UTF-8') as f:
@@ -2060,7 +2062,7 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--out_folder',
                         help='folder to write parsed data to. If specified, parsed images will also be moved to here. Else, output will simply be written to stdout')
     parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
-                        help="images with the same amount of drops and QP are flagged as duplicate, if taken within this many seconds. Default= {}s".format(TIMEOUT))
+                        help="images with the same amount of drops and QP are flagged as duplicate, if taken within this many seconds. Default: {}s".format(TIMEOUT))
     parser.add_argument('--ordering', help='sort files before processing. Needed to make use of missing screenshot detection',
                         type=Ordering, choices=list(Ordering), default=Ordering.NOTSPECIFIED)
     parser.add_argument(
@@ -2069,6 +2071,29 @@ if __name__ == '__main__':
                         version=PROGNAME + " " + VERSION)
     parser.add_argument('-l', '--loglevel',
                         choices=('debug', 'info'), default='info')
+    subparsers = parser.add_subparsers(
+        title='subcommands', description='{subcommand} --help: show help message for the subcommand',)
+
+    watcher_parser = subparsers.add_parser(
+        'watch', help='continuously watch the folder specified by [-f FOLDER]')
+    watcher_parser.add_argument(
+        "-j",
+        "--num_processes",
+        required=False,
+        default=DEFAULT_AMT_PROCESSES,
+        type=int,
+        help="number of processes to allocate in the process pool. Default: {}".format(
+            DEFAULT_AMT_PROCESSES),
+    )
+    watcher_parser.add_argument(
+        "-p",
+        "--polling_frequency",
+        required=False,
+        default=DEFAULT_POLL_FREQ,
+        type=int,
+        help="how often to check for new images (in seconds). Default: {}s".format(
+            DEFAULT_POLL_FREQ),
+    )
 
     args = parser.parse_args()    # 引数を解析
     logging.basicConfig(
