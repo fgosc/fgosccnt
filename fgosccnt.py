@@ -225,7 +225,8 @@ class ScreenShot:
             cv2.rectangle(img_copy, topleft, bottomright, (0, 0, 255), 3)
             cv2.imwrite("./scroll_bar_selected.jpg", img_copy)
 
-        gray_image = self.img_gray[topleft[1]: bottomright[1], topleft[0]: bottomright[0]]
+        gray_image = self.img_gray[topleft[1]
+            : bottomright[1], topleft[0]: bottomright[0]]
         _, binary = cv2.threshold(gray_image, 225, 255, cv2.THRESH_BINARY)
         if debug:
             cv2.imwrite("scroll_bar_binary.png", binary)
@@ -1736,11 +1737,109 @@ def get_output(filenames, args):
     return fileoutput, all_list
 
 
+def __load_svms():
+    svm = cv2.ml.SVM_load(str(train_item))
+    svm_chest = cv2.ml.SVM_load(str(train_chest))
+    svm_card = cv2.ml.SVM_load(str(train_card))
+    return (svm, svm_chest, svm_card)
+
+
+def __parse_img(
+        svm,
+        svm_chest,
+        svm_card,
+        file_path,
+        prev_pages=0,
+        prev_pagenum=0,
+        prev_total_qp=QP_UNKNOWN,
+        prev_gained_qp=QP_UNKNOWN,
+        prev_itemlist=[],
+        prev_datetime=datetime.datetime(year=2015, month=7, day=30, hour=0),
+        debug=False):
+    parsed_img_data = {"status": "Incomplete"}
+
+    if debug:
+        print(file_path)
+    parsed_img_data["image_path"] = str(file_path)
+
+    if not Path(file_path).exists():
+        # TODO: is this needed?
+        parsed_img_data["status"] = "File not found"
+        return parsed_img_data
+
+    img_rgb = imread(file_path)
+    file_extention = Path(file_path).suffix
+
+    try:
+        screenshot = ScreenShot(
+            img_rgb, svm, svm_chest, svm_card, file_extention, debug)
+
+        # If the previous image indicated more coming, check whether this is the fated one.
+        if (prev_pages - prev_pagenum > 0 and screenshot.pagenum - prev_pagenum != 1) \
+                or (prev_pages - prev_pagenum == 0 and screenshot.pagenum != 1):
+            parsed_img_data["status"] = "Missing page before this"
+
+        # Detect whether image is a duplicate
+        # Image is a candidate duplicate if drops and gained QP match previous image.
+        # Duplicate is confirmed if:
+        # - QP is not capped and drops are the same as in the previous image
+        # - QP is capped and previous image was taken within 15sec
+        # TODO: is this needed?
+        pilimg = Image.open(file_path)
+        date_time = get_exif(pilimg)
+        if date_time == "NON" or prev_datetime == "NON":
+            time_delta = datetime.timedelta(days=1)
+        else:
+            time_delta = date_time - prev_datetime
+        if prev_itemlist == screenshot.itemlist and prev_gained_qp == screenshot.gained_qp:
+            if (screenshot.total_qp != 999999999 and screenshot.total_qp == prev_total_qp) \
+                    or (screenshot.total_qp == 999999999 and time_delta.total_seconds() < args.timeout):
+                if debug:
+                    print("args.timeout: {}".format(args.timeout))
+                    print("filename: {}".format(file_path))
+                    print("prev_itemlist: {}".format(prev_itemlist))
+                    print("screenshot.itemlist: {}".format(
+                        screenshot.itemlist))
+                    print("screenshot.total_qp: {}".format(
+                        screenshot.total_qp))
+                    print("prev_total_qp: {}".format(prev_total_qp))
+                    print("datetime: {}".format(date_time))
+                    print("prev_datetime: {}".format(prev_datetime))
+                    print("td.total_second: {}".format(
+                        time_delta.total_seconds()))
+                parsed_img_data["status"] = "Duplicate file"
+                return parsed_img_data
+
+        # Prep next iter
+        prev_pages = screenshot.pages
+        prev_pagenum = screenshot.pagenum
+        prev_total_qp = screenshot.total_qp
+        prev_gained_qp = screenshot.gained_qp
+        prev_itemlist = screenshot.itemlist
+        prev_datetime = date_time
+
+        # Gather data
+        parsed_img_data["qp_total"] = screenshot.total_qp
+        parsed_img_data["qp_gained"] = screenshot.gained_qp
+        parsed_img_data["scroll_position"] = screenshot.scroll_position
+        parsed_img_data["drop_count"] = screenshot.chestnum
+        parsed_img_data["drops_found"] = len(screenshot.itemlist)
+        parsed_img_data["drops"] = screenshot.itemlist
+        parsed_img_data["status"] = "OK" if parsed_img_data["status"] == "Incomplete" else parsed_img_data["status"]
+        return parsed_img_data
+
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        parsed_img_data["status"] = "Invalid file"
+        return parsed_img_data
+
+
 def get_atlas_output(input_file_paths, args):
     """
     The version of output gathering used by AtlasAcademy. Made to resemble capy's output.
     """
     debug = args.debug
+
     calc_dist_local()
     if train_item.exists() is False:
         print("[エラー]item.xml が存在しません")
@@ -1754,11 +1853,9 @@ def get_atlas_output(input_file_paths, args):
         print("[エラー]card.xml が存在しません")
         print("python makecard.py を実行してください")
         sys.exit(1)
-    svm = cv2.ml.SVM_load(str(train_item))
-    svm_chest = cv2.ml.SVM_load(str(train_chest))
-    svm_card = cv2.ml.SVM_load(str(train_card))
 
-    fileoutput = []  # 出力
+    (svm, svm_chest, svm_card) = __load_svms()
+
     prev_pages = 0
     prev_pagenum = 0
     prev_total_qp = QP_UNKNOWN
@@ -1768,86 +1865,18 @@ def get_atlas_output(input_file_paths, args):
     all_parsed_output = []
 
     for file_path in input_file_paths:
-        parsed_img_data = {"status": "Incomplete"}
-
-        if debug:
-            print(file_path)
-        parsed_img_data["image_path"] = str(file_path)
-
-        if not Path(file_path).exists():
-            # TODO: is this needed?
-            parsed_img_data["status"] = "File not found"
-            all_parsed_output.append(parsed_img_data)
-            continue
-
-        img_rgb = imread(file_path)
-        file_extention = Path(file_path).suffix
-
-        try:
-            screenshot = ScreenShot(
-                img_rgb, svm, svm_chest, svm_card, file_extention, debug)
-
-            # If the previous image indicated more coming, check whether this is the fated one.
-            if (prev_pages - prev_pagenum > 0 and screenshot.pagenum - prev_pagenum != 1) \
-               or (prev_pages - prev_pagenum == 0 and screenshot.pagenum != 1):
-                parsed_img_data["status"] = "Missing page before this"
-
-            # Detect whether image is a duplicate
-            # Image is a candidate duplicate if drops and gained QP match previous image.
-            # Duplicate is confirmed if:
-            # - QP is not capped and drops are the same as in the previous image
-            # - QP is capped and previous image was taken within 15sec
-            # TODO: is this needed?
-            pilimg = Image.open(file_path)
-            date_time = get_exif(pilimg)
-            if date_time == "NON" or prev_datetime == "NON":
-                time_delta = datetime.timedelta(days=1)
-            else:
-                time_delta = date_time - prev_datetime
-            if prev_itemlist == screenshot.itemlist and prev_gained_qp == screenshot.gained_qp:
-                if (screenshot.total_qp != 999999999 and screenshot.total_qp == prev_total_qp) \
-                        or (screenshot.total_qp == 999999999 and time_delta.total_seconds() < args.timeout):
-                    if debug:
-                        print("args.timeout: {}".format(args.timeout))
-                        print("filename: {}".format(file_path))
-                        print("prev_itemlist: {}".format(prev_itemlist))
-                        print("screenshot.itemlist: {}".format(
-                            screenshot.itemlist))
-                        print("screenshot.total_qp: {}".format(
-                            screenshot.total_qp))
-                        print("prev_total_qp: {}".format(prev_total_qp))
-                        print("datetime: {}".format(date_time))
-                        print("prev_datetime: {}".format(prev_datetime))
-                        print("td.total_second: {}".format(
-                            time_delta.total_seconds()))
-                    parsed_img_data["status"] = "Duplicate file"
-                    all_parsed_output.append(parsed_img_data)
-                    continue
-
-            # Prep next iter
-            prev_pages = screenshot.pages
-            prev_pagenum = screenshot.pagenum
-            prev_total_qp = screenshot.total_qp
-            prev_gained_qp = screenshot.gained_qp
-            prev_itemlist = screenshot.itemlist
-            prev_datetime = date_time
-
-            # Gather data
-            parsed_img_data["qp_total"] = screenshot.total_qp
-            parsed_img_data["qp_gained"] = screenshot.gained_qp
-            parsed_img_data["scroll_position"] = screenshot.scroll_position
-            parsed_img_data["drop_count"] = screenshot.chestnum
-            parsed_img_data["drops_found"] = len(screenshot.itemlist)
-            parsed_img_data["drops"] = screenshot.itemlist
-
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            parsed_img_data["status"] = "Invalid file"
-            all_parsed_output.append(parsed_img_data)
-            continue
-
-        parsed_img_data["status"] = "OK" if parsed_img_data["status"] == "Incomplete" else parsed_img_data["status"]
-        all_parsed_output.append(parsed_img_data)
+        all_parsed_output.append(__parse_img(
+            svm,
+            svm_chest,
+            svm_card,
+            file_path,
+            prev_pages,
+            prev_pagenum,
+            prev_total_qp,
+            prev_gained_qp,
+            prev_itemlist,
+            prev_datetime,
+            debug))
     return all_parsed_output
 
 
