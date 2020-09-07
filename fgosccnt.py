@@ -12,6 +12,9 @@ from operator import itemgetter
 import math
 import datetime
 import logging
+import multiprocessing
+import time
+import signal
 
 import cv2
 import numpy as np
@@ -25,6 +28,7 @@ PROGNAME = "FGOスクショカウント"
 VERSION = "0.4.0"
 
 logger = logging.getLogger(__name__)
+watcher_running = True
 
 
 class Ordering(Enum):
@@ -66,6 +70,8 @@ ID_SYURENJYO = 94006800
 ID_EVNET = 94000000
 TIMEOUT = 15
 QP_UNKNOWN = -1
+DEFAULT_POLL_FREQ = 60
+DEFAULT_AMT_PROCESSES = 1
 
 
 with open(drop_file, encoding='UTF-8') as f:
@@ -1736,12 +1742,123 @@ def get_output(filenames, args):
     return fileoutput, all_list
 
 
-def get_atlas_output(input_file_paths, args):
-    """
-    The version of output gathering used by AtlasAcademy. Made to resemble capy's output.
-    """
-    debug = args.debug
-    calc_dist_local()
+def load_svms():
+    svm = cv2.ml.SVM_load(str(train_item))
+    svm_chest = cv2.ml.SVM_load(str(train_chest))
+    svm_card = cv2.ml.SVM_load(str(train_card))
+    return (svm, svm_chest, svm_card)
+
+
+def parse_img(
+        svm,
+        svm_chest,
+        svm_card,
+        file_path,
+        prev_pages=0,
+        prev_pagenum=0,
+        prev_total_qp=QP_UNKNOWN,
+        prev_gained_qp=QP_UNKNOWN,
+        prev_itemlist=[],
+        prev_datetime=datetime.datetime(year=2015, month=7, day=30, hour=0),
+        debug=False):
+    parsed_img_data = {"status": "Incomplete"}
+
+    if debug:
+        print(file_path)
+    parsed_img_data["image_path"] = str(os.path.abspath(file_path))
+
+    if not Path(file_path).exists():
+        # TODO: is this needed?
+        parsed_img_data["status"] = "File not found"
+        return parsed_img_data
+
+    img_rgb = imread(file_path)
+    file_extention = Path(file_path).suffix
+
+    try:
+        screenshot = ScreenShot(
+            img_rgb, svm, svm_chest, svm_card, file_extention, debug)
+
+        # If the previous image indicated more coming, check whether this is the fated one.
+        if (prev_pages - prev_pagenum > 0 and screenshot.pagenum - prev_pagenum != 1) \
+                or (prev_pages - prev_pagenum == 0 and screenshot.pagenum != 1):
+            parsed_img_data["status"] = "Missing page before this"
+
+        # Detect whether image is a duplicate
+        # Image is a candidate duplicate if drops and gained QP match previous image.
+        # Duplicate is confirmed if:
+        # - QP is not capped and drops are the same as in the previous image
+        # - QP is capped and previous image was taken within 15sec
+        # TODO: is this needed?
+        pilimg = Image.open(file_path)
+        date_time = get_exif(pilimg)
+        if date_time == "NON" or prev_datetime == "NON":
+            time_delta = datetime.timedelta(days=1)
+        else:
+            time_delta = date_time - prev_datetime
+        if prev_itemlist == screenshot.itemlist and prev_gained_qp == screenshot.gained_qp:
+            if (screenshot.total_qp != 999999999 and screenshot.total_qp == prev_total_qp) \
+                    or (screenshot.total_qp == 999999999 and time_delta.total_seconds() < args.timeout):
+                if debug:
+                    print("args.timeout: {}".format(args.timeout))
+                    print("filename: {}".format(file_path))
+                    print("prev_itemlist: {}".format(prev_itemlist))
+                    print("screenshot.itemlist: {}".format(
+                        screenshot.itemlist))
+                    print("screenshot.total_qp: {}".format(
+                        screenshot.total_qp))
+                    print("prev_total_qp: {}".format(prev_total_qp))
+                    print("datetime: {}".format(date_time))
+                    print("prev_datetime: {}".format(prev_datetime))
+                    print("td.total_second: {}".format(
+                        time_delta.total_seconds()))
+                parsed_img_data["status"] = "Duplicate file"
+                return parsed_img_data
+
+        # Prep next iter
+        prev_pages = screenshot.pages
+        prev_pagenum = screenshot.pagenum
+        prev_total_qp = screenshot.total_qp
+        prev_gained_qp = screenshot.gained_qp
+        prev_itemlist = screenshot.itemlist
+        prev_datetime = date_time
+
+        # Gather data
+        parsed_img_data["qp_total"] = screenshot.total_qp
+        parsed_img_data["qp_gained"] = screenshot.gained_qp
+        parsed_img_data["scroll_position"] = screenshot.scroll_position
+        parsed_img_data["drop_count"] = screenshot.chestnum
+        parsed_img_data["drops_found"] = len(screenshot.itemlist)
+        parsed_img_data["drops"] = screenshot.itemlist
+        parsed_img_data["status"] = "OK" if parsed_img_data["status"] == "Incomplete" else parsed_img_data["status"]
+        return parsed_img_data
+
+    except Exception as e:
+        logger.error("Error during parsing of {}\n{}\n".format(
+            file_path, e), exc_info=True)
+        parsed_img_data["status"] = "Invalid file"
+        return parsed_img_data
+
+
+def move_file_to_out_dir(src_file_path, out_dir):
+    if out_dir is not None:
+        if not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        src_file_path = Path(src_file_path)
+        if not src_file_path.exists():
+            print("Cannot move {}. It does not exist.".format(src_file_path))
+            exit(1)
+
+        dst_file_path = "{}/{}".format(out_dir, src_file_path.name)
+        os.rename(src_file_path, dst_file_path)
+
+        return dst_file_path
+
+    return src_file_path
+
+
+def check_svms_trained():
     if train_item.exists() is False:
         print("[エラー]item.xml が存在しません")
         print("python makeitem.py を実行してください")
@@ -1754,11 +1871,19 @@ def get_atlas_output(input_file_paths, args):
         print("[エラー]card.xml が存在しません")
         print("python makecard.py を実行してください")
         sys.exit(1)
-    svm = cv2.ml.SVM_load(str(train_item))
-    svm_chest = cv2.ml.SVM_load(str(train_chest))
-    svm_card = cv2.ml.SVM_load(str(train_card))
 
-    fileoutput = []  # 出力
+
+def parse_into_json(input_file_paths, args):
+    """
+    The version of output gathering used by AtlasAcademy. Made to resemble capy's output.
+    """
+    debug = args.debug
+
+    calc_dist_local()
+    check_svms_trained()
+
+    (svm, svm_chest, svm_card) = load_svms()
+
     prev_pages = 0
     prev_pagenum = 0
     prev_total_qp = QP_UNKNOWN
@@ -1768,87 +1893,91 @@ def get_atlas_output(input_file_paths, args):
     all_parsed_output = []
 
     for file_path in input_file_paths:
-        parsed_img_data = {"status": "Incomplete"}
-
-        if debug:
-            print(file_path)
-        parsed_img_data["image_path"] = str(file_path)
-
-        if not Path(file_path).exists():
-            # TODO: is this needed?
-            parsed_img_data["status"] = "File not found"
-            all_parsed_output.append(parsed_img_data)
-            continue
-
-        img_rgb = imread(file_path)
-        file_extention = Path(file_path).suffix
-
-        try:
-            screenshot = ScreenShot(
-                img_rgb, svm, svm_chest, svm_card, file_extention, debug)
-
-            # If the previous image indicated more coming, check whether this is the fated one.
-            if (prev_pages - prev_pagenum > 0 and screenshot.pagenum - prev_pagenum != 1) \
-               or (prev_pages - prev_pagenum == 0 and screenshot.pagenum != 1):
-                parsed_img_data["status"] = "Missing page before this"
-
-            # Detect whether image is a duplicate
-            # Image is a candidate duplicate if drops and gained QP match previous image.
-            # Duplicate is confirmed if:
-            # - QP is not capped and drops are the same as in the previous image
-            # - QP is capped and previous image was taken within 15sec
-            # TODO: is this needed?
-            pilimg = Image.open(file_path)
-            date_time = get_exif(pilimg)
-            if date_time == "NON" or prev_datetime == "NON":
-                time_delta = datetime.timedelta(days=1)
-            else:
-                time_delta = date_time - prev_datetime
-            if prev_itemlist == screenshot.itemlist and prev_gained_qp == screenshot.gained_qp:
-                if (screenshot.total_qp != 999999999 and screenshot.total_qp == prev_total_qp) \
-                        or (screenshot.total_qp == 999999999 and time_delta.total_seconds() < args.timeout):
-                    if debug:
-                        print("args.timeout: {}".format(args.timeout))
-                        print("filename: {}".format(file_path))
-                        print("prev_itemlist: {}".format(prev_itemlist))
-                        print("screenshot.itemlist: {}".format(
-                            screenshot.itemlist))
-                        print("screenshot.total_qp: {}".format(
-                            screenshot.total_qp))
-                        print("prev_total_qp: {}".format(prev_total_qp))
-                        print("datetime: {}".format(date_time))
-                        print("prev_datetime: {}".format(prev_datetime))
-                        print("td.total_second: {}".format(
-                            time_delta.total_seconds()))
-                    parsed_img_data["status"] = "Duplicate file"
-                    all_parsed_output.append(parsed_img_data)
-                    continue
-
-            # Prep next iter
-            prev_pages = screenshot.pages
-            prev_pagenum = screenshot.pagenum
-            prev_total_qp = screenshot.total_qp
-            prev_gained_qp = screenshot.gained_qp
-            prev_itemlist = screenshot.itemlist
-            prev_datetime = date_time
-
-            # Gather data
-            parsed_img_data["qp_total"] = screenshot.total_qp
-            parsed_img_data["qp_gained"] = screenshot.gained_qp
-            parsed_img_data["scroll_position"] = screenshot.scroll_position
-            parsed_img_data["drop_count"] = screenshot.chestnum
-            parsed_img_data["drops_found"] = len(screenshot.itemlist)
-            parsed_img_data["drops"] = screenshot.itemlist
-
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            parsed_img_data["status"] = "Invalid file"
-            all_parsed_output.append(parsed_img_data)
-            continue
-
-        parsed_img_data["status"] = "OK" if parsed_img_data["status"] == "Incomplete" else parsed_img_data["status"]
-        all_parsed_output.append(parsed_img_data)
+        file_path = move_file_to_out_dir(file_path, args.out_folder)
+        all_parsed_output.append(parse_img(
+            svm,
+            svm_chest,
+            svm_card,
+            file_path,
+            prev_pages,
+            prev_pagenum,
+            prev_total_qp,
+            prev_gained_qp,
+            prev_itemlist,
+            prev_datetime,
+            debug))
     return all_parsed_output
+
+
+def __parse_into_json_process(input_queue, args):
+    (svm, svm_chest, svm_card) = load_svms()
+
+    global watcher_running
+    while watcher_running or not input_queue.empty():
+        input_file_path = input_queue.get()
+        # Detection of missing screenshots/pages (e.g. scrolled down image with no previous
+        # image to go along with it), is dissabled with `prev_pages=-1`. This is because
+        # the technique depends on having the images sorted in chronological order. Sorting
+        # files and processing them in order is not possible in a multiprocess environment.
+        parsed_output = parse_img(
+            svm,
+            svm_chest,
+            svm_card,
+            input_file_path,
+            prev_pages=-1,
+            debug=args.debug)
+        output_json([parsed_output], args.out_folder)
+
+
+def __signal_handling(*_):
+    """
+    Taken from capy-drop-parser
+    """
+    global watcher_running
+    if not watcher_running:
+        sys.exit(1)
+    watcher_running = False
+    print(
+        "Notice: app may take up to polling frequency time and however long it takes to finish the queue before exiting."
+    )
+
+
+def watch_parse_output_into_json(args):
+    """
+    Continuously watch the given input directory for new files.
+    Processes any new images by parsing them, moving them to output dir, and writing parsed json to
+    output dir.
+
+    Works with a producer/consumer multiprocessing approach. This function watches and
+    fills the queue, while spawned processes use `__parse_into_json_process` to consume the
+    items.
+    """
+    calc_dist_local()
+    check_svms_trained()
+    signal.signal(signal.SIGINT, __signal_handling)
+
+    # We estimate roughly 2secs per image parsing. Queue can hold as many images as can be
+    # processed by the given amount of processes in the given amount of poll time.
+    input_queue = multiprocessing.Queue(maxsize=int(
+        args.num_processes * args.polling_frequency / 2))
+    pool = multiprocessing.Pool(
+        args.num_processes, initializer=__parse_into_json_process, initargs=(input_queue, args))
+
+    global watcher_running
+    while watcher_running:
+        for f in Path(args.folder).iterdir():
+            if not f.is_file():
+                continue
+
+            file_path = move_file_to_out_dir(f, args.out_folder)
+            input_queue.put(file_path)  # blocks when queue is full
+
+        time.sleep(int(args.polling_frequency))
+
+    input_queue.close()
+    input_queue.join_thread()
+    pool.close()
+    pool.join()
 
 
 def sort_files(files, ordering):
@@ -1999,22 +2128,48 @@ def output_json(parsed_output, out_folder):
 
 if __name__ == '__main__':
     # オプションの解析
-    parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
+    parser = argparse.ArgumentParser(
+        description='Parse item drops from an F/GO screenshot.')
     # 3. parser.add_argumentで受け取る引数を追加していく
-    parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
-    parser.add_argument('-f', '--folder', help='フォルダで指定')
+    parser.add_argument(
+        '-i', '--filenames', help='image file to parse', nargs='+')    # 必須の引数を追加
+    parser.add_argument(
+        '-f', '--folder', help='folder containing images to parse')
     parser.add_argument('-o', '--out_folder',
-                        help='directory to write parsed data to. If none is provided, output will be written to stdout')
+                        help='folder to write parsed data to. If specified, parsed images will also be moved to here. Else, output will simply be written to stdout')
     parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
-                        help='QPカンスト時の重複チェック間隔(秒): デフォルト' + str(TIMEOUT) + '秒')
-    parser.add_argument('--ordering', help='ファイルの処理順序 (未指定の場合 notspecified)',
-                        type=Ordering,
-                        choices=list(Ordering), default=Ordering.NOTSPECIFIED)
-    parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
+                        help="images with the same amount of drops and QP are flagged as duplicate, if taken within this many seconds. Default: {}s".format(TIMEOUT))
+    parser.add_argument('--ordering', help='sort files before processing. Needed to make use of missing screenshot detection',
+                        type=Ordering, choices=list(Ordering), default=Ordering.NOTSPECIFIED)
+    parser.add_argument(
+        '-d', '--debug', help='output debug information', action='store_true')
     parser.add_argument('--version', action='version',
                         version=PROGNAME + " " + VERSION)
     parser.add_argument('-l', '--loglevel',
                         choices=('debug', 'info'), default='info')
+    subparsers = parser.add_subparsers(
+        title='subcommands', description='{subcommand} --help: show help message for the subcommand',)
+
+    watcher_parser = subparsers.add_parser(
+        'watch', help='continuously watch the folder specified by [-f FOLDER]')
+    watcher_parser.add_argument(
+        "-j",
+        "--num_processes",
+        required=False,
+        default=DEFAULT_AMT_PROCESSES,
+        type=int,
+        help="number of processes to allocate in the process pool. Default: {}".format(
+            DEFAULT_AMT_PROCESSES),
+    )
+    watcher_parser.add_argument(
+        "-p",
+        "--polling_frequency",
+        required=False,
+        default=DEFAULT_POLL_FREQ,
+        type=int,
+        help="how often to check for new images (in seconds). Default: {}s".format(
+            DEFAULT_POLL_FREQ),
+    )
 
     args = parser.parse_args()    # 引数を解析
     logging.basicConfig(
@@ -2031,12 +2186,24 @@ if __name__ == '__main__':
         if not ndir.is_dir():
             ndir.mkdir(parents=True)
 
-    # gather input image files
-    if args.folder:
-        inputs = [x for x in Path(args.folder).iterdir()]
+    # Attributes are only present if the watch subcommand has been invoked.
+    if hasattr(args, "num_processes") and hasattr(args, "polling_frequency"):
+        if args.folder is None or not Path(args.folder).exists():
+            print(
+                "The watch subcommands requires a valid input directory. Provide one with --folder.")
+            exit(1)
+        watch_parse_output_into_json(args)
     else:
-        inputs = args.filenames
+        if args.filenames is None and args.folder is None:
+            print(
+                "No input files specified. Use --filenames or --folder to do so.")
+            exit(1)
+        # gather input image files
+        if args.folder:
+            inputs = [x for x in Path(args.folder).iterdir()]
+        else:
+            inputs = args.filenames
 
-    inputs = sort_files(inputs, args.ordering)
-    parsed_output = get_atlas_output(inputs, args)
-    output_json(parsed_output, args.out_folder)
+        inputs = sort_files(inputs, args.ordering)
+        parsed_output = parse_into_json(inputs, args)
+        output_json(parsed_output, args.out_folder)
