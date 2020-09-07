@@ -1765,7 +1765,7 @@ def parse_img(
 
     if debug:
         print(file_path)
-    parsed_img_data["image_path"] = str(file_path)
+    parsed_img_data["image_path"] = str(os.path.abspath(file_path))
 
     if not Path(file_path).exists():
         # TODO: is this needed?
