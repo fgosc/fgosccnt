@@ -445,14 +445,16 @@ class ScreenShot:
     def ocr_text(self, im_th):
         h, w = im_th.shape[:2]
         # 物体検出
+        im_th = cv2.bitwise_not(im_th)
         contours = cv2.findContours(im_th,
-                                    cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+                                    cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
         item_pts = []
         for cnt in contours:
             ret = cv2.boundingRect(cnt)
             area = cv2.contourArea(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
-            if ret[2] < int(w/2) and area > 100 and 0.4 < ret[2]/ret[3] < 0.8:
+            if ret[2] < int(w/2) and area > 80 and ret[1] < h/2 \
+                    and 0.4 < ret[2]/ret[3] < 0.8:
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt):
@@ -638,7 +640,7 @@ class Item:
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
         _, img_th = cv2.threshold(self.img_gray, 174, 255, cv2.THRESH_BINARY)
-        self.img_th = cv2.cv2.bitwise_not(img_th)
+        self.img_th = cv2.bitwise_not(img_th)
         self.fileextention = fileextention
 
         self.height, self.width = img_rgb.shape[:2]
@@ -1186,7 +1188,8 @@ class Item:
             self.bonus_pts = []
             self.bonus = ""
             self.font_size = FONTSIZE_NORMAL
-        elif prev_id == self.id:
+        elif prev_id == self.id \
+                and self.category != "Point" and self.name != "QP":
             self.bonus_pts = self.prev_item.bonus_pts
             self.bonus = self.prev_item.bonus
             self.font_size = self.prev_item.font_size
