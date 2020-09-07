@@ -1834,7 +1834,8 @@ def parse_img(
         return parsed_img_data
 
     except Exception as e:
-        logger.error(e, exc_info=True)
+        logger.error("Error during parsing of {}\n{}\n".format(
+            file_path, e), exc_info=True)
         parsed_img_data["status"] = "Invalid file"
         return parsed_img_data
 
