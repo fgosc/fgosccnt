@@ -12,6 +12,9 @@ from operator import itemgetter
 import math
 import datetime
 import logging
+import multiprocessing
+import time
+import signal
 
 import cv2
 import numpy as np
@@ -25,6 +28,7 @@ PROGNAME = "FGOスクショカウント"
 VERSION = "0.4.0"
 
 logger = logging.getLogger(__name__)
+watcher_running = True
 
 
 class Ordering(Enum):
@@ -1904,6 +1908,75 @@ def parse_into_json(input_file_paths, args):
     return all_parsed_output
 
 
+def __parse_into_json_process(input_queue, args):
+    (svm, svm_chest, svm_card) = load_svms()
+
+    global watcher_running
+    while watcher_running:
+        input_file_path = input_queue.get()
+        # Detection of missing screenshots/pages (e.g. scrolled down image with no previous
+        # image to go along with it), is dissabled with `prev_pages=-1`. This is because
+        # the technique depends on having the images sorted in chronological order. Sorting
+        # files and processing them in order is not possible in a multiprocess environment.
+        parsed_output = parse_img(
+            svm,
+            svm_chest,
+            svm_card,
+            input_file_path,
+            prev_pages=-1,
+            debug=args.debug)
+        output_json([parsed_output], args.out_folder)
+
+
+def __signal_handling(*_):
+    """
+    Taken from capy-drop-parser
+    """
+    global watcher_running
+    if not watcher_running:
+        sys.exit(1)
+    watcher_running = False
+    print(
+        "Notice: app may take up to polling frequency time and however long it takes to finish the queue before exting."
+    )
+
+
+def watch_parse_output_into_json(args):
+    """
+    Continuously watch the given input directory for new files.
+    Processes any new images by parsing them, moving them to output dir, and writing parsed json to
+    output dir.
+
+    Works with a producer/consumer multiprocessing approach. This function watches and
+    fills the queue, while spawned processes use `__parse_into_json_process` to consume the
+    items.
+    """
+    calc_dist_local()
+    check_svms_trained()
+    signal.signal(signal.SIGINT, __signal_handling)
+
+    # We estimate roughly 2secs per image parsing. Queue can hold as many images as can be
+    # processed by the given amount of processes in the given amount of poll time.
+    input_queue = multiprocessing.Queue(maxsize=int(
+        args.num_processes * args.polling_frequency / 2))
+    pool = multiprocessing.Pool(
+        args.num_processes, initializer=__parse_into_json_process, initargs=(input_queue, args))
+
+    global watcher_running
+    while watcher_running:
+        for f in Path(args.folder).iterdir():
+            if not f.is_file():
+                continue
+
+            file_path = move_file_to_out_dir(f, args.out_folder)
+            input_queue.put(file_path)  # blocks when queue is full
+
+        time.sleep(int(args.polling_frequency))
+
+    pool.close()
+    pool.join()
+
+
 def sort_files(files, ordering):
     if ordering == Ordering.NOTSPECIFIED:
         return files
@@ -2056,7 +2129,7 @@ if __name__ == '__main__':
         description='Parse item drops from an F/GO screenshot.')
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument(
-        'filenames', help='image file to parse', nargs='*')    # 必須の引数を追加
+        '-i', '--filenames', help='image file to parse', nargs='+')    # 必須の引数を追加
     parser.add_argument(
         '-f', '--folder', help='folder containing images to parse')
     parser.add_argument('-o', '--out_folder',
@@ -2110,12 +2183,20 @@ if __name__ == '__main__':
         if not ndir.is_dir():
             ndir.mkdir(parents=True)
 
-    # gather input image files
-    if args.folder:
-        inputs = [x for x in Path(args.folder).iterdir()]
-    else:
-        inputs = args.filenames
+    # Attributes are only present if the watch subcommand has been invoked.
+    if not (hasattr(args, "num_processes") and hasattr(args, "polling_frequency")):
+        # gather input image files
+        if args.folder:
+            inputs = [x for x in Path(args.folder).iterdir()]
+        else:
+            inputs = args.filenames
 
-    inputs = sort_files(inputs, args.ordering)
-    parsed_output = parse_into_json(inputs, args)
-    output_json(parsed_output, args.out_folder)
+        inputs = sort_files(inputs, args.ordering)
+        parsed_output = parse_into_json(inputs, args)
+        output_json(parsed_output, args.out_folder)
+    else:
+        if args.folder is None or not Path(args.folder).exists():
+            print(
+                "The watch subcommands requires a valid input directory. Provide one with --folder.")
+            exit(1)
+        watch_parse_output_into_json(args)
