@@ -1938,7 +1938,7 @@ def __signal_handling(*_):
         sys.exit(1)
     watcher_running = False
     print(
-        "Notice: app may take up to polling frequency time and however long it takes to finish the queue before exting."
+        "Notice: app may take up to polling frequency time and however long it takes to finish the queue before exiting."
     )
 
 
