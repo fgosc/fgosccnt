@@ -2185,7 +2185,17 @@ if __name__ == '__main__':
             ndir.mkdir(parents=True)
 
     # Attributes are only present if the watch subcommand has been invoked.
-    if not (hasattr(args, "num_processes") and hasattr(args, "polling_frequency")):
+    if hasattr(args, "num_processes") and hasattr(args, "polling_frequency"):
+        if args.folder is None or not Path(args.folder).exists():
+            print(
+                "The watch subcommands requires a valid input directory. Provide one with --folder.")
+            exit(1)
+        watch_parse_output_into_json(args)
+    else:
+        if args.filenames is None and args.folder is None:
+            print(
+                "No input files specified. Use --filenames or --folder to do so.")
+            exit(1)
         # gather input image files
         if args.folder:
             inputs = [x for x in Path(args.folder).iterdir()]
@@ -2195,9 +2205,3 @@ if __name__ == '__main__':
         inputs = sort_files(inputs, args.ordering)
         parsed_output = parse_into_json(inputs, args)
         output_json(parsed_output, args.out_folder)
-    else:
-        if args.folder is None or not Path(args.folder).exists():
-            print(
-                "The watch subcommands requires a valid input directory. Provide one with --folder.")
-            exit(1)
-        watch_parse_output_into_json(args)
