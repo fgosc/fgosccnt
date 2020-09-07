@@ -1913,7 +1913,7 @@ def __parse_into_json_process(input_queue, args):
     (svm, svm_chest, svm_card) = load_svms()
 
     global watcher_running
-    while watcher_running:
+    while watcher_running or not input_queue.empty():
         input_file_path = input_queue.get()
         # Detection of missing screenshots/pages (e.g. scrolled down image with no previous
         # image to go along with it), is dissabled with `prev_pages=-1`. This is because
