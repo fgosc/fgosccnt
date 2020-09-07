@@ -1974,6 +1974,8 @@ def watch_parse_output_into_json(args):
 
         time.sleep(int(args.polling_frequency))
 
+    input_queue.close()
+    input_queue.join_thread()
     pool.close()
     pool.join()
 
