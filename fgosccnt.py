@@ -36,7 +36,7 @@ class Ordering(Enum):
     TIMESTAMP = 'timestamp'         # 作成日時
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
 
 basedir = Path(__file__).resolve().parent
@@ -64,6 +64,7 @@ PRIORITY_SECRET_GEM_MIN = 6294
 PRIORITY_PIECE_MIN = 5194
 PRIORITY_REWARD_QP = 9012
 ID_START = 9500000
+ID_QP = 1
 ID_REWARD_QP = 5
 ID_GEM_MIN = 6001
 ID_GEM_MAX = 6007
@@ -158,14 +159,14 @@ class ScreenShot:
         self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
         self.img_rgb_orig = img_rgb
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
-        th, self.img_th_orig = cv2.threshold(self.img_gray_orig,
+        _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
                                              threshold, 255, cv2.THRESH_BINARY)
 
         game_screen = self.extract_game_screen(debug)
         if debug:
             cv2.imwrite('game_screen.png', game_screen)
 
-        height_g, width_g, _ = game_screen.shape
+        _, width_g, _ = game_screen.shape
         wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
         resizeScale = 1 / wscale
 
@@ -186,7 +187,7 @@ class ScreenShot:
             print("Area Mode: {}".format(mode))
 
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
-        th, self.img_th = cv2.threshold(self.img_gray,
+        _, self.img_th = cv2.threshold(self.img_gray,
                                         threshold, 255, cv2.THRESH_BINARY)
         self.svm = svm
         self.svm_chest = svm_chest
@@ -228,7 +229,8 @@ class ScreenShot:
             prev_item = dropitem
 
         self.itemlist = self.makeitemlist()
-        self.total_qp = self.get_qp()
+        self.total_qp = self.get_qp(mode)
+        self.qp_gained = self.get_qp_gained(mode, debug)
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
@@ -260,7 +262,7 @@ class ScreenShot:
 
         return qp
 
-    def extract_text_from_image(sef, image):
+    def extract_text_from_image(self, image):
         """
         capy-drop-parser から流用
         """
@@ -272,12 +274,12 @@ class ScreenShot:
             config="-l eng --oem 1 --psm 7 -c tessedit_char_whitelist=,0123456789",
         )
 
-    def get_qp(self):
+    def get_qp(self, mode):
         """
         capy-drop-parser から流用
         tesseract-OCR is quite slow and changed to use SVM
         """
-        pt = pageinfo.detect_qp_region(self.img_rgb_orig)
+        pt = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
         logger.debug('pt from pageinfo: %s', pt)
         if pt is None:
             pt = ((288, 948), (838, 1024))
@@ -299,12 +301,55 @@ class ScreenShot:
 
         return qp_total
 
+    def get_qp_gained(self, mode, debug=False):
+        use_tesseract = False
+        bounds = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
+        if bounds is None:
+            # fall back on hardcoded bound
+            bounds = ((398, 858), (948, 934))
+            (topleft, bottomright) = bounds
+            use_tesseract = True
+        else:
+            # Detecting the QP box with different shading is "easy", while detecting the absence of it
+            # for the gain QP amount is hard. However, the 2 values have the same font and thus roughly
+            # the same height (please NA...). You can consider them to be 2 same-sized boxes on top of
+            # each other.
+            (topleft, bottomright) = bounds
+            height = bottomright[1] - topleft[1]
+            topleft = (topleft[0], topleft[1] - height + int(height*0.12))
+            bottomright = (bottomright[0], bottomright[1] - height)
+            bounds = (topleft, bottomright)
+
+        logger.debug('Gained QP bounds: %s', bounds)
+        if debug:
+            img_copy = self.img_rgb_orig.copy()
+            cv2.rectangle(img_copy, bounds[0], bounds[1], (0, 0, 255), 3)
+            cv2.imwrite("./qp_gain_detection.jpg", img_copy)
+
+        if use_tesseract:
+            qp_gain_text = self.extract_text_from_image(
+                self.img_rgb_orig[topleft[1]: bottomright[1],
+                                  topleft[0]: bottomright[0]]
+            )
+            qp_gain = self.get_qp_from_text(qp_gain_text)
+        else:  # use SVM
+            im_th = cv2.bitwise_not(
+                self.img_th_orig[topleft[1]: bottomright[1],
+                                 topleft[0]: bottomright[0]]
+            )
+            qp_gain = self.ocr_text(im_th)
+        logger.debug('qp from text: %s', qp_gain)
+        if qp_gain == 0:
+            qp_gain = QP_UNKNOWN
+
+        return qp_gain
+
     def find_edge(self, img_th, reverse=False):
         """
         直線検出で検出されなかったフチ幅を検出
         """
         edge_width = 4
-        height, width = img_th.shape[:2]
+        _, width = img_th.shape[:2]
         target_color = 255 if reverse else 0
         for i in range(edge_width):
             img_th_x = img_th[:, i:i + 1]
@@ -426,7 +471,7 @@ class ScreenShot:
         アイテムを出力
         """
         itemlist = []
-        for i, item in enumerate(self.items):
+        for item in self.items:
             tmp = {}
             if item.category == "Quest Reward":
                 tmp['id'] = ID_REWARD_QP
