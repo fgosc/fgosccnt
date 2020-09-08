@@ -25,6 +25,7 @@
 
 import argparse
 import csv
+import enum
 import logging
 import os
 import sys
@@ -34,6 +35,18 @@ import cv2
 logger = logging.getLogger('fgo')
 
 NOSCROLL_PAGE_INFO = (1, 1, 0)
+
+
+class QPDetectionMode(enum.Enum):
+    JP = 'jp'
+    NA = 'na'
+
+    def __str__(self):
+        return self.value
+
+    @classmethod
+    def values(cls):
+        return [str(e) for e in list(cls)]
 
 
 class PageInfoError(Exception):
@@ -109,7 +122,7 @@ def filter_contour_scrollable_area(contour, im):
     return True
 
 
-def detect_qp_region(im, debug_draw_image=False, debug_image_name=None):
+def detect_qp_region(im, mode=QPDetectionMode.JP.value, debug_draw_image=False, debug_image_name=None):
     """
         "所持 QP" 領域を検出し、その座標を返す。
 
@@ -135,15 +148,28 @@ def detect_qp_region(im, debug_draw_image=False, debug_image_name=None):
     for contour in filtered_contours:
         logger.debug('detected areas: %s', cv2.boundingRect(contour))
 
-    if len(filtered_contours) == 1:
-        qp_region = filtered_contours[0]
-        x, y, w, h = cv2.boundingRect(qp_region)
-        # 左右の無駄領域を除外する。感覚的な値ではあるが 左 42%, 右 4% を除外。
+    # 左右の無駄領域を除外するためのマージン。
+    #
+    # The position of the QP values in the NA version of the screenshot is
+    # slightly more to the right than in the JP version. This makes it
+    # difficult to apply the same cut position to both types of screenshots.
+    if mode == QPDetectionMode.NA.value:
+        # The values below are optimized for NA's new game screen layout.
+        # Old layout screenshots can also be applied, but may not cut well.
+        left_margin = 0.45
+        right_margin = 0.02
+    else:
+        # 感覚的な値ではあるが 左 42%, 右 4% を除外。
         # 落とし穴として、2019年5月末 ～ 9月の間に所持 QP の出力位置が微妙に変わっている。
         # ここではそのどちらのケースでも対応できるよう枠を広めに取っている。
         # 現仕様に最適化して切り詰めすぎると困ったことになるため注意。
         left_margin = 0.42
         right_margin = 0.04
+
+    if len(filtered_contours) == 1:
+        qp_region = filtered_contours[0]
+        x, y, w, h = cv2.boundingRect(qp_region)
+
         topleft = (x + int(w*left_margin), y)
         bottomright = (topleft[0] + w - int(w*left_margin) - int(w*right_margin), y + h)
 
@@ -408,7 +434,7 @@ def look_into_file_for_qp(filename, im, args):
         logger.debug('debug image path: %s', debug_image)
     else:
         debug_image = None
-    result = detect_qp_region(im, args.debug_sc, debug_image)
+    result = detect_qp_region(im, args.mode, args.debug_sc, debug_image)
     if result is None:
         return ('', '') , ('', '')
     return result
@@ -494,6 +520,12 @@ def parse_args():
 
     qp_parser = subparsers.add_parser('qp')
     add_common_arguments(qp_parser)
+    qp_parser.add_argument(
+        '-m',
+        '--mode',
+        choices=QPDetectionMode.values(),
+        default=QPDetectionMode.JP.value,
+    )
     qp_parser.set_defaults(func=look_into_file_for_qp)
 
     return parser.parse_args()
