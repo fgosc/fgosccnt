@@ -21,4 +21,4 @@ RUN cd /app \
     && mkdir -p /input \
     && mkdir -p /output
 
-ENTRYPOINT python3 /app/fgosccnt.py --folder /input --out_folder /output watch
+ENTRYPOINT python3 /app/fgosccnt.py --folder /parser/input --out_folder /parser/output watch
