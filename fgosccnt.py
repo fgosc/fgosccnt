@@ -160,7 +160,7 @@ class ScreenShot:
         self.img_rgb_orig = img_rgb
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
-                                             threshold, 255, cv2.THRESH_BINARY)
+                                            threshold, 255, cv2.THRESH_BINARY)
 
         game_screen = self.extract_game_screen(debug)
         if debug:
@@ -188,7 +188,7 @@ class ScreenShot:
 
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
         _, self.img_th = cv2.threshold(self.img_gray,
-                                        threshold, 255, cv2.THRESH_BINARY)
+                                       threshold, 255, cv2.THRESH_BINARY)
         self.svm = svm
         self.svm_chest = svm_chest
 
@@ -208,7 +208,7 @@ class ScreenShot:
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
             item_img_th = self.img_th[pt[1]: pt[3] - 30,
-                                          pt[0] + lx: pt[2] + lx]
+                                      pt[0] + lx: pt[2] + lx]
             if self.is_empty_box(item_img_th):
                 break
             if debug:
@@ -302,7 +302,9 @@ class ScreenShot:
 
         logger.debug('qp_total from text: %s', qp_total)
         if len(str(qp_total)) > 9:
-            logger.warning("qp_total exceeds the system's maximum: %s", qp_total)
+            logger.warning(
+                "qp_total exceeds the system's maximum: %s", qp_total
+            )
         if qp_total == 0:
             return QP_UNKNOWN
 
@@ -313,6 +315,7 @@ class ScreenShot:
         bounds = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
         if bounds is None:
             # fall back on hardcoded bound
+            bounds = ((398, 858), (948, 934))
             use_tesseract = True
         else:
             # Detecting the QP box with different shading is "easy", while detecting the absence of it
@@ -340,11 +343,10 @@ class ScreenShot:
             qp_gain = self.ocr_text(im_th)
         if use_tesseract or qp_gain == -1:
             logger.debug('Use tesseract')
-            bounds = ((398, 858), (948, 934))
             (topleft, bottomright) = bounds
             qp_gain_text = self.extract_text_from_image(
                 self.img_rgb[topleft[1]: bottomright[1],
-                                  topleft[0]: bottomright[0]]
+                             topleft[0]: bottomright[0]]
             )
             qp_gain = self.get_qp_from_text(qp_gain_text)
         logger.debug('qp from text: %s', qp_gain)
@@ -462,17 +464,20 @@ class ScreenShot:
 
         'Next' '次へ'ボタンを読み込んで判別する
         """
-        dist = {'jp': np.array([[198, 169,  57,  19, 140,  36,  12,  17]],
+        dist = {'jp': np.array([[198, 41, 185, 146, 50, 100, 140, 200]],
                                dtype='uint8'),
-                'na': np.array([[142,  49,  83, 170,  77,  64,  34,  81]],
+                'na': np.array([[70, 153, 57, 102, 6, 144, 148, 73]],
                                dtype='uint8')}
         img = self.img_rgb[1028:1134, 1416:1754]
-        hash_img = compute_hash(img)
+
+        hash_img = hasher.compute(img)
+        logger.debug("hash_img: %s", hash_img)
         hashorder = {}
         for i in dist.keys():
             dt = hasher.compare(hash_img, dist[i])
             hashorder[i] = dt
         hashorder = sorted(hashorder.items(), key=lambda x: x[1])
+        logger.debug("hashorder: %s", hashorder)
         return next(iter(hashorder))[0]
 
     def makeitemlist(self):
@@ -501,7 +506,8 @@ class ScreenShot:
         # 物体検出
         im_th = cv2.bitwise_not(im_th)
         contours = cv2.findContours(im_th,
-                                    cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
+                                    cv2.RETR_EXTERNAL,
+                                    cv2.CHAIN_APPROX_SIMPLE)[0]
         item_pts = []
         for cnt in contours:
             ret = cv2.boundingRect(cnt)
@@ -1584,10 +1590,10 @@ def compute_hash(img_rgb):
     記述した比率はiPhone6S画像の実測値
     """
     height, width = img_rgb.shape[:2]
-    img = img_rgb[int(17/135*height):
+    img = img_rgb[int(22/135*height):
                   int(77/135*height),
-                  int(19/135*width):
-                  int(103/135*width)]
+                  int(23/135*width):
+                  int(112/135*width)]
     return hasher.compute(img)
 
 
@@ -1942,7 +1948,8 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
     parser.add_argument('--version', action='version',
                         version=PROGNAME + " " + VERSION)
-    parser.add_argument('-l', '--loglevel', choices=('debug', 'info'), default='info')
+    parser.add_argument('-l', '--loglevel',
+                        choices=('debug', 'info'), default='info')
 
     args = parser.parse_args()    # 引数を解析
     logging.basicConfig(
