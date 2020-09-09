@@ -271,7 +271,7 @@ class ScreenShot:
 
         return pytesseract.image_to_string(
             qp_image,
-            config="-l eng --oem 1 --psm 7 -c tessedit_char_whitelist=,0123456789",
+            config="-l eng --oem 1 --psm 7 -c tessedit_char_whitelist=+,0123456789",
         )
 
     def get_qp(self, mode):
@@ -279,23 +279,30 @@ class ScreenShot:
         capy-drop-parser から流用
         tesseract-OCR is quite slow and changed to use SVM
         """
+        use_tesseract = False
         pt = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
         logger.debug('pt from pageinfo: %s', pt)
         if pt is None:
-            pt = ((288, 948), (838, 1024))
+            use_tesseract = True
 
+        qp_total = -1
+        if use_tesseract is False:  # use SVM
+            im_th = cv2.bitwise_not(
+                self.img_th_orig[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
+            )
+            qp_total = self.ocr_text(im_th)
+        if use_tesseract or qp_total == -1:
+            pt = ((288, 948), (838, 1024))
+            logger.debug('Use tesseract')
             qp_total_text = self.extract_text_from_image(
                 self.img_rgb[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
             )
             logger.debug('qp_total_text from text: %s', qp_total_text)
             qp_total = self.get_qp_from_text(qp_total_text)
-        else:
-            im_th = cv2.bitwise_not(
-                self.img_th_orig[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
-            )
-            qp_total = self.ocr_text(im_th)
 
         logger.debug('qp_total from text: %s', qp_total)
+        if len(str(qp_total)) > 9:
+            logger.warning("qp_total exceeds the system's maximum: %s", qp_total)
         if qp_total == 0:
             return QP_UNKNOWN
 
@@ -306,8 +313,6 @@ class ScreenShot:
         bounds = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
         if bounds is None:
             # fall back on hardcoded bound
-            bounds = ((398, 858), (948, 934))
-            (topleft, bottomright) = bounds
             use_tesseract = True
         else:
             # Detecting the QP box with different shading is "easy", while detecting the absence of it
@@ -322,22 +327,26 @@ class ScreenShot:
 
         logger.debug('Gained QP bounds: %s', bounds)
         if debug:
-            img_copy = self.img_rgb_orig.copy()
+            img_copy = self.img_rgb.copy()
             cv2.rectangle(img_copy, bounds[0], bounds[1], (0, 0, 255), 3)
             cv2.imwrite("./qp_gain_detection.jpg", img_copy)
 
-        if use_tesseract:
-            qp_gain_text = self.extract_text_from_image(
-                self.img_rgb_orig[topleft[1]: bottomright[1],
-                                  topleft[0]: bottomright[0]]
-            )
-            qp_gain = self.get_qp_from_text(qp_gain_text)
-        else:  # use SVM
+        qp_gain = -1
+        if use_tesseract is False:
             im_th = cv2.bitwise_not(
                 self.img_th_orig[topleft[1]: bottomright[1],
                                  topleft[0]: bottomright[0]]
             )
             qp_gain = self.ocr_text(im_th)
+        if use_tesseract or qp_gain == -1:
+            logger.debug('Use tesseract')
+            bounds = ((398, 858), (948, 934))
+            (topleft, bottomright) = bounds
+            qp_gain_text = self.extract_text_from_image(
+                self.img_rgb[topleft[1]: bottomright[1],
+                                  topleft[0]: bottomright[0]]
+            )
+            qp_gain = self.get_qp_from_text(qp_gain_text)
         logger.debug('qp from text: %s', qp_gain)
         if qp_gain == 0:
             qp_gain = QP_UNKNOWN
@@ -499,7 +508,7 @@ class ScreenShot:
             area = cv2.contourArea(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
             if ret[2] < int(w/2) and area > 80 and ret[1] < h/2 \
-                    and 0.4 < ret[2]/ret[3] < 0.8:
+                    and 0.4 < ret[2]/ret[3] < 0.85 and ret[3] > h/2:
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt):
@@ -718,7 +727,7 @@ class Item:
                     ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
                     ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX):
                 d = hasher.compare(self.hash_item, prev_item.hash_item)
-                if d <= 10:
+                if d <= 4:
                     self.category = prev_item.category
                     self.id = prev_item.id
                     self.name = prev_item.name
