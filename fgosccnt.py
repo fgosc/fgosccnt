@@ -695,18 +695,6 @@ class ScreenShot:
                                  margin_width, margin_height)
         return pts
 
-    def __item_coords_into_indices(self):
-        """
-        Convert item pixel coordinates (defined on centered and resized img),
-        to item indices starting at (0,0) on the static QP reward (topleft of result screen).
-        """
-        # `generate_booty_pts` generates the pixel coordinates of items (which are later adjusted
-        # by offsets). The generation process outputs the item coordinates in a LEFT->RIGHT &
-        # TOP->BOTTOM manner. Aka, the list of items is already sorted. This makes conversion to
-        # indices easy.
-        for i, (item, pt) in enumerate(self.items):
-            self.items[i] = (item, (i % 7, i//7))
-
 
 def generate_booty_pts(criteria_left, criteria_top, item_width, item_height,
                        margin_width, margin_height):
