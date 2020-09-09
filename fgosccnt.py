@@ -36,7 +36,7 @@ class Ordering(Enum):
     TIMESTAMP = 'timestamp'         # 作成日時
 
     def __str__(self):
-        return self.value
+        return str(self.value)
 
 
 basedir = Path(__file__).resolve().parent
@@ -58,9 +58,26 @@ FONTSIZE_TINY = 2
 PRIORITY_CE = 9000
 PRIORITY_POINT = 3000
 PRIORITY_ITEM = 700
+PRIORITY_GEM_MIN = 6094
+PRIORITY_MAGIC_GEM_MIN = 6194
+PRIORITY_SECRET_GEM_MIN = 6294
+PRIORITY_PIECE_MIN = 5194
 PRIORITY_REWARD_QP = 9012
 ID_START = 9500000
+ID_QP = 1
 ID_REWARD_QP = 5
+ID_GEM_MIN = 6001
+ID_GEM_MAX = 6007
+ID_MAGIC_GEM_MIN = 6101
+ID_MAGIC_GEM_MAX = 6107
+ID_SECRET_GEM_MIN = 6201
+ID_SECRET_GEM_MAX = 6207
+ID_PIECE_MIN = 7001
+ID_MONUMENT_MAX = 7107
+ID_EXP_MIN = 9700100
+ID_EXP_MAX = 9707500
+ID_2ZORO_DICE = 94047708
+ID_3ZORO_DICE = 94047709
 ID_NORTH_AMERICA = 93000500
 ID_SYURENJYO = 94006800
 ID_EVNET = 94000000
@@ -142,14 +159,14 @@ class ScreenShot:
         self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
         self.img_rgb_orig = img_rgb
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
-        th, self.img_th_orig = cv2.threshold(self.img_gray_orig,
-                                             threshold, 255, cv2.THRESH_BINARY)
+        _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
+                                            threshold, 255, cv2.THRESH_BINARY)
 
         game_screen = self.extract_game_screen(debug)
         if debug:
             cv2.imwrite('game_screen.png', game_screen)
 
-        height_g, width_g, _ = game_screen.shape
+        _, width_g, _ = game_screen.shape
         wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
         resizeScale = 1 / wscale
 
@@ -170,8 +187,8 @@ class ScreenShot:
             print("Area Mode: {}".format(mode))
 
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
-        th, self.img_th = cv2.threshold(self.img_gray,
-                                        threshold, 255, cv2.THRESH_BINARY)
+        _, self.img_th = cv2.threshold(self.img_gray,
+                                       threshold, 255, cv2.THRESH_BINARY)
         self.svm = svm
         self.svm_chest = svm_chest
 
@@ -186,11 +203,12 @@ class ScreenShot:
         if reward_only:
             # qpsplit.py で利用
             item_pts = item_pts[0:1]
+        prev_item = None
         for i, pt in enumerate(item_pts):
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
             item_img_th = self.img_th[pt[1]: pt[3] - 30,
-                                          pt[0] + lx: pt[2] + lx]
+                                      pt[0] + lx: pt[2] + lx]
             if self.is_empty_box(item_img_th):
                 break
             if debug:
@@ -201,16 +219,18 @@ class ScreenShot:
                                           pt[0] + lx: pt[2] + lx]
             if debug:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
-            dropitem = Item(i, item_img_rgb, item_img_gray,
+            dropitem = Item(i, prev_item, item_img_rgb, item_img_gray,
                             svm, svm_card, fileextention,
                             self.current_dropPriority, mode, debug)
             if dropitem.id == -1:
                 break
             self.current_dropPriority = item_dropPriority[dropitem.id]
             self.items.append(dropitem)
+            prev_item = dropitem
 
         self.itemlist = self.makeitemlist()
-        self.total_qp = self.get_qp()
+        self.total_qp = self.get_qp(mode)
+        self.qp_gained = self.get_qp_gained(mode, debug)
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
@@ -242,7 +262,7 @@ class ScreenShot:
 
         return qp
 
-    def extract_text_from_image(sef, image):
+    def extract_text_from_image(self, image):
         """
         capy-drop-parser から流用
         """
@@ -251,35 +271,96 @@ class ScreenShot:
 
         return pytesseract.image_to_string(
             qp_image,
-            config="-l eng --oem 1 --psm 7 -c tessedit_char_whitelist=,0123456789",
+            config="-l eng --oem 1 --psm 7 -c tessedit_char_whitelist=+,0123456789",
         )
 
-    def get_qp(self):
+    def get_qp(self, mode):
         """
         capy-drop-parser から流用
+        tesseract-OCR is quite slow and changed to use SVM
         """
-        pt = pageinfo.detect_qp_region(self.img_rgb)
+        use_tesseract = False
+        pt = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
         logger.debug('pt from pageinfo: %s', pt)
         if pt is None:
+            use_tesseract = True
+
+        qp_total = -1
+        if use_tesseract is False:  # use SVM
+            im_th = cv2.bitwise_not(
+                self.img_th_orig[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
+            )
+            qp_total = self.ocr_text(im_th)
+        if use_tesseract or qp_total == -1:
             pt = ((288, 948), (838, 1024))
+            logger.debug('Use tesseract')
+            qp_total_text = self.extract_text_from_image(
+                self.img_rgb[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
+            )
+            logger.debug('qp_total_text from text: %s', qp_total_text)
+            qp_total = self.get_qp_from_text(qp_total_text)
 
-        qp_total_text = self.extract_text_from_image(
-            self.img_rgb[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
-        )
-
-        qp_total = self.get_qp_from_text(qp_total_text)
         logger.debug('qp_total from text: %s', qp_total)
+        if len(str(qp_total)) > 9:
+            logger.warning(
+                "qp_total exceeds the system's maximum: %s", qp_total
+            )
         if qp_total == 0:
             return QP_UNKNOWN
 
         return qp_total
+
+    def get_qp_gained(self, mode, debug=False):
+        use_tesseract = False
+        bounds = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
+        if bounds is None:
+            # fall back on hardcoded bound
+            bounds = ((398, 858), (948, 934))
+            use_tesseract = True
+        else:
+            # Detecting the QP box with different shading is "easy", while detecting the absence of it
+            # for the gain QP amount is hard. However, the 2 values have the same font and thus roughly
+            # the same height (please NA...). You can consider them to be 2 same-sized boxes on top of
+            # each other.
+            (topleft, bottomright) = bounds
+            height = bottomright[1] - topleft[1]
+            topleft = (topleft[0], topleft[1] - height + int(height*0.12))
+            bottomright = (bottomright[0], bottomright[1] - height)
+            bounds = (topleft, bottomright)
+
+        logger.debug('Gained QP bounds: %s', bounds)
+        if debug:
+            img_copy = self.img_rgb.copy()
+            cv2.rectangle(img_copy, bounds[0], bounds[1], (0, 0, 255), 3)
+            cv2.imwrite("./qp_gain_detection.jpg", img_copy)
+
+        qp_gain = -1
+        if use_tesseract is False:
+            im_th = cv2.bitwise_not(
+                self.img_th_orig[topleft[1]: bottomright[1],
+                                 topleft[0]: bottomright[0]]
+            )
+            qp_gain = self.ocr_text(im_th)
+        if use_tesseract or qp_gain == -1:
+            logger.debug('Use tesseract')
+            (topleft, bottomright) = bounds
+            qp_gain_text = self.extract_text_from_image(
+                self.img_rgb[topleft[1]: bottomright[1],
+                             topleft[0]: bottomright[0]]
+            )
+            qp_gain = self.get_qp_from_text(qp_gain_text)
+        logger.debug('qp from text: %s', qp_gain)
+        if qp_gain == 0:
+            qp_gain = QP_UNKNOWN
+
+        return qp_gain
 
     def find_edge(self, img_th, reverse=False):
         """
         直線検出で検出されなかったフチ幅を検出
         """
         edge_width = 4
-        height, width = img_th.shape[:2]
+        _, width = img_th.shape[:2]
         target_color = 255 if reverse else 0
         for i in range(edge_width):
             img_th_x = img_th[:, i:i + 1]
@@ -383,17 +464,20 @@ class ScreenShot:
 
         'Next' '次へ'ボタンを読み込んで判別する
         """
-        dist = {'jp': np.array([[198, 169,  57,  19, 140,  36,  12,  17]],
+        dist = {'jp': np.array([[198, 41, 185, 146, 50, 100, 140, 200]],
                                dtype='uint8'),
-                'na': np.array([[142,  49,  83, 170,  77,  64,  34,  81]],
+                'na': np.array([[70, 153, 57, 102, 6, 144, 148, 73]],
                                dtype='uint8')}
         img = self.img_rgb[1028:1134, 1416:1754]
-        hash_img = compute_hash(img)
+
+        hash_img = hasher.compute(img)
+        logger.debug("hash_img: %s", hash_img)
         hashorder = {}
         for i in dist.keys():
             dt = hasher.compare(hash_img, dist[i])
             hashorder[i] = dt
         hashorder = sorted(hashorder.items(), key=lambda x: x[1])
+        logger.debug("hashorder: %s", hashorder)
         return next(iter(hashorder))[0]
 
     def makeitemlist(self):
@@ -401,7 +485,7 @@ class ScreenShot:
         アイテムを出力
         """
         itemlist = []
-        for i, item in enumerate(self.items):
+        for item in self.items:
             tmp = {}
             if item.category == "Quest Reward":
                 tmp['id'] = ID_REWARD_QP
@@ -417,29 +501,20 @@ class ScreenShot:
             itemlist.append(tmp)
         return itemlist
 
-    def ocr_tresurechest(self, debug=False):
-        """
-        宝箱数をOCRする関数
-        """
-        pt = [1443, 20, 1505, 61]
-        img_num = self.img_th[pt[1]:pt[3], pt[0]:pt[2]]
-        im_th = cv2.bitwise_not(img_num)
+    def ocr_text(self, im_th):
         h, w = im_th.shape[:2]
-
-        # 情報ウィンドウが数字とかぶった部分を除去する
-        for y in range(h):
-            im_th[y, 0] = 255
-        for x in range(w):  # ドロップ数7のときバグる対策 #54
-            im_th[0, x] = 255
         # 物体検出
+        im_th = cv2.bitwise_not(im_th)
         contours = cv2.findContours(im_th,
-                                    cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[0]
+                                    cv2.RETR_EXTERNAL,
+                                    cv2.CHAIN_APPROX_SIMPLE)[0]
         item_pts = []
         for cnt in contours:
             ret = cv2.boundingRect(cnt)
             area = cv2.contourArea(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
-            if ret[2] < int(w/2) and area > 100 and 0.4 < ret[2]/ret[3] < 0.8:
+            if ret[2] < int(w/2) and area > 80 and ret[1] < h/2 \
+                    and 0.4 < ret[2]/ret[3] < 0.85 and ret[3] > h/2:
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt):
@@ -458,8 +533,7 @@ class ScreenShot:
             # Recognizing Failure
             return -1
         item_pts.sort()
-        if debug:
-            print("ドロップ桁数(OCR): {}".format(len(item_pts)))
+        logger.debug("ドロップ桁数(OCR): %d", len(item_pts))
 
         # Hog特徴のパラメータ
         win_size = (120, 60)
@@ -483,6 +557,22 @@ class ScreenShot:
             res = res + str(int(pred[1][0][0]))
 
         return int(res)
+
+    def ocr_tresurechest(self, debug=False):
+        """
+        宝箱数をOCRする関数
+        """
+        pt = [1443, 20, 1505, 61]
+        img_num = self.img_th[pt[1]:pt[3], pt[0]:pt[2]]
+        im_th = cv2.bitwise_not(img_num)
+        h, w = im_th.shape[:2]
+
+        # 情報ウィンドウが数字とかぶった部分を除去する
+        for y in range(h):
+            im_th[y, 0] = 255
+        for x in range(w):  # ドロップ数7のときバグる対策 #54
+            im_th[0, x] = 255
+        return self.ocr_text(im_th)
 
     def calc_offset(self, pts, std_pts, margin_x):
         """
@@ -602,32 +692,25 @@ def generate_booty_pts(criteria_left, criteria_top, item_width, item_height,
 
 
 class Item:
-    def __init__(self, pos, img_rgb, img_gray, svm, svm_card, fileextention,
-                 current_dropPriority, mode='jp', debug=False):
-        self.position= pos
+    def __init__(self, pos, prev_item, img_rgb, img_gray, svm, svm_card,
+                 fileextention, current_dropPriority, mode='jp', debug=False):
+        self.position = pos
+        self.prev_item = prev_item
         self.img_rgb = img_rgb
         self.img_gray = img_gray
         self.img_hsv = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
         _, img_th = cv2.threshold(self.img_gray, 174, 255, cv2.THRESH_BINARY)
-        self.img_th = cv2.cv2.bitwise_not(img_th)
+        self.img_th = cv2.bitwise_not(img_th)
         self.fileextention = fileextention
 
         self.height, self.width = img_rgb.shape[:2]
-        self.category = self.classify_category(svm_card)
-        if pos < 14 and self.category == "":
-            self.id = -1
+        self.identify_item(pos, prev_item, svm_card,
+                           current_dropPriority, debug)
+        if self.id == -1:
             return
-        self.id = self.classify_card(img_rgb, current_dropPriority, debug)
         if debug:
             print("id: {}".format(self.id))
             print("dropPriority: {}".format(item_dropPriority[self.id]))
-        self.name = item_name[self.id]
-        if self.category == "":
-            if self.id in item_type:
-                self.category = item_type[self.id]
-            else:
-                self.category = "Item"
-        if debug:
             print("Category: {}".format(self.category))
             print("Name: {}".format(self.name))
 
@@ -639,6 +722,33 @@ class Item:
             self.dropnum = "x1"
         if debug:
             print("Number of Drop: {}".format(self.dropnum))
+
+    def identify_item(self, pos, prev_item, svm_card,
+                      current_dropPriority, debug):
+        self.hash_item = compute_hash(self.img_rgb)  # 画像の距離
+        if prev_item is not None:
+            if not (prev_item.id == ID_REWARD_QP or
+                    ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX or
+                    ID_PIECE_MIN <= prev_item.id <= ID_MONUMENT_MAX or
+                    ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
+                    ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX):
+                d = hasher.compare(self.hash_item, prev_item.hash_item)
+                if d <= 4:
+                    self.category = prev_item.category
+                    self.id = prev_item.id
+                    self.name = prev_item.name
+                    return
+        self.category = self.classify_category(svm_card)
+        if pos < 14 and self.category == "":
+            self.id = -1
+            return
+        self.id = self.classify_card(self.img_rgb, current_dropPriority, debug)
+        self.name = item_name[self.id]
+        if self.category == "":
+            if self.id in item_type:
+                self.category = item_type[self.id]
+            else:
+                self.category = "Item"
 
     def conflictcheck(self, pts, pt):
         """
@@ -909,6 +1019,13 @@ class Item:
         for i in range(8):  # 8桁以上は無い
             if i == 0:
                 continue
+            elif (self.id == ID_REWARD_QP
+                  or self.category in ["Point"]) and i <= 2:
+                # 報酬QPとPointは3桁以上
+                continue
+            elif self.name == "QP" and i <= 3:
+                # QPは4桁以上
+                continue
             pt = [self.width - margin_right - cut_width * (i + 1)
                   - comma_width * int((i - 1)/3),
                   top_y,
@@ -926,6 +1043,14 @@ class Item:
         # 決まった位置まで出力する
         line = ""
         for j in range(i):
+            if (self.id == ID_REWARD_QP) and j < 1:
+                # 報酬QPの下一桁は0
+                line += '0'
+                continue
+            elif (self.name == "QP" or self.category in ["Point"]) and j < 2:
+                # QPとPointは下二桁は00
+                line += '0'
+                continue
             pt = [self.width - margin_right - cut_width * (j + 1)
                   - comma_width * int(j/3),
                   top_y,
@@ -955,20 +1080,32 @@ class Item:
         return line
 
     def detect_white_char(self, base_line, margin_right,
-                          font_size, debug=False):
+                          debug=False):
         """
         上段と下段の白文字を見つける機能を一つに統合
         """
-        if font_size != FONTSIZE_UNDEFINED:
-            line = self.get_number(base_line, margin_right, font_size)
-            return line
+        pattern_tiny = r"^[\+x][12]\d{4}00$"
+        pattern_tiny_qp = r"^\+[12]\d{4}00$"
+        pattern_small = r"^[\+x]\d{4}00$"
+        pattern_small_qp = r"^\+\d{4}00$"
+        pattern_normal = r"^[\+x][1-9]\d{0,5}$"
+        pattern_normal_qp = r"^\+[1-9]\d{0,4}0$"
+        if self.font_size != FONTSIZE_UNDEFINED:
+            line = self.get_number(base_line, margin_right, self.font_size)
+            if self.font_size == FONTSIZE_NORMAL:
+                m_normal = re.match(pattern_normal, line)
+                if m_normal:
+                    return line
+            elif self.font_size == FONTSIZE_SMALL:
+                m_small = re.match(pattern_small, line)
+                if m_small:
+                    return line
+            elif self.font_size == FONTSIZE_TINY:
+                m_tiny = re.match(pattern_tiny, line)
+                if m_tiny:
+                    return line
+            return ""
         else:
-            pattern_tiny = r"^[\+x][12]\d{4}00$"
-            pattern_tiny_qp = r"^\+[12]\d{4}00$"
-            pattern_small = r"^[\+x]\d{4}00$"
-            pattern_small_qp = r"^\+\d{4}00$"
-            pattern_normal = r"^[\+x][1-9]\d{0,5}$"
-            pattern_normal_qp = r"^\+[1-9]\d{0,4}0$"
             # 1-6桁の読み込み
             font_size = FONTSIZE_NORMAL
             line = self.get_number(base_line, margin_right, font_size)
@@ -980,6 +1117,7 @@ class Item:
             if m_normal:
                 if debug:
                     print("Font Size: {}".format(font_size))
+                self.font_size = font_size
                 return line
             # 6桁の読み込み
             font_size = FONTSIZE_SMALL
@@ -992,6 +1130,7 @@ class Item:
             if m_small:
                 if debug:
                     print("Font Size: {}".format(font_size))
+                self.font_size = font_size
                 return line
             # 7桁読み込み
             font_size = FONTSIZE_TINY
@@ -1004,6 +1143,7 @@ class Item:
             if m_tiny:
                 if debug:
                     print("Font Size: {}".format(font_size))
+                self.font_size = font_size
                 return line
             return ""
 
@@ -1096,32 +1236,47 @@ class Item:
         """
         戦利品OCR
         """
-        font_size = FONTSIZE_UNDEFINED
+        self.font_size = FONTSIZE_UNDEFINED
 
-        if self.fileextention.lower() == '.png':
-            bonus_pts = self.detect_bonus_char()
-            self.bonus = self.read_item(bonus_pts, debug)
-            # フォントサイズを決定
-            if len(bonus_pts) > 0:
-                y_height = bonus_pts[-1][3] - bonus_pts[-1][1]
-                if y_height < 25:
-                    font_size = FONTSIZE_TINY
-                elif y_height > 27:
-                    font_size = FONTSIZE_NORMAL
-                else:
-                    font_size = FONTSIZE_SMALL
+        if self.prev_item is None:
+            prev_id = -1
         else:
-            self.bonus, bonus_pts, font_size = self.detect_bonus_char4jpg(mode, debug)
+            prev_id = self.prev_item.id
+
+        if ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX:
+            # ボーナスが無いアイテム
+            self.bonus_pts = []
+            self.bonus = ""
+            self.font_size = FONTSIZE_NORMAL
+        elif prev_id == self.id \
+                and self.category != "Point" and self.name != "QP":
+            self.bonus_pts = self.prev_item.bonus_pts
+            self.bonus = self.prev_item.bonus
+            self.font_size = self.prev_item.font_size
+        elif self.fileextention.lower() == '.png':
+            self.bonus_pts = self.detect_bonus_char()
+            self.bonus = self.read_item(self.bonus_pts, debug)
+            # フォントサイズを決定
+            if len(self.bonus_pts) > 0:
+                y_height = self.bonus_pts[-1][3] - self.bonus_pts[-1][1]
+                if y_height < 25:
+                    self.font_size = FONTSIZE_TINY
+                elif y_height > 27:
+                    self.font_size = FONTSIZE_NORMAL
+                else:
+                    self.font_size = FONTSIZE_SMALL
+        else:
+            self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg(mode, debug)
         if debug:
             print("Bonus Font Size: {}\nBonus: {}".format(
-                font_size, self.bonus))
+                self.font_size, self.bonus))
 
         # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
         offsset_y = 2 if mode == 'na' else 0
         if (self.category in ["Quest Reward", "Point"] or self.name == "QP") \
            and len(self.bonus) >= 5:  # ボーナスは"(+*0)"なので
             # 1桁目の上部からの距離を設定
-            base_line = bonus_pts[-2][1] - 3 + offsset_y
+            base_line = self.bonus_pts[-2][1] - 3 + offsset_y
         else:
             base_line = int(180/206*self.height)
 
@@ -1129,14 +1284,14 @@ class Item:
         offset_x = -7 if mode == "na" else 0
         if self.category in ["Quest Reward", "Point"] or self.name == "QP":
             margin_right = 15 + offset_x
-        elif len(bonus_pts) > 0:
-            margin_right = self.width - bonus_pts[0][0] + 2
+        elif len(self.bonus_pts) > 0:
+            margin_right = self.width - self.bonus_pts[0][0] + 2
         else:
             margin_right = 15 + offset_x
         if debug:
             print("margin_right: {}".format(margin_right))
         self.dropnum = self.detect_white_char(base_line, margin_right,
-                                              font_size, debug=debug)
+                                              debug=debug)
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
 
@@ -1157,19 +1312,6 @@ class Item:
         imgとの距離を比較して近いアイテムを求める
         id を返すように変更
         """
-        ID_GEM_MIN = 6001
-        ID_GEM_MAX = 6007
-        ID_MAGIC_GEM_MIN = 6101
-        ID_MAGIC_GEM_MAX = 6107
-        ID_SECRET_GEM_MIN = 6201
-        ID_SECRET_GEM_MAX = 6207
-        ID_PIECE_MIN = 7001
-        ID_MONUMENT_MAX = 7107
-        PRIORITY_GEM_MIN = 6094
-        PRIORITY_MAGIC_GEM_MIN = 6194
-        PRIORITY_SECRET_GEM_MIN = 6294
-        PRIORITY_PIECE_MIN = 5194
-
         hash_item = compute_hash(img)  # 画像の距離
         ids = {}
         if debug:
@@ -1448,10 +1590,10 @@ def compute_hash(img_rgb):
     記述した比率はiPhone6S画像の実測値
     """
     height, width = img_rgb.shape[:2]
-    img = img_rgb[int(17/135*height):
+    img = img_rgb[int(22/135*height):
                   int(77/135*height),
-                  int(19/135*width):
-                  int(103/135*width)]
+                  int(23/135*width):
+                  int(112/135*width)]
     return hasher.compute(img)
 
 
@@ -1806,7 +1948,8 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', help='デバッグ情報の出力', action='store_true')
     parser.add_argument('--version', action='version',
                         version=PROGNAME + " " + VERSION)
-    parser.add_argument('-l', '--loglevel', choices=('debug', 'info'), default='info')
+    parser.add_argument('-l', '--loglevel',
+                        choices=('debug', 'info'), default='info')
 
     args = parser.parse_args()    # 引数を解析
     logging.basicConfig(
