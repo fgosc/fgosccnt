@@ -9,7 +9,9 @@ RUN apt-get update && apt-get install -y \
     # for SVM
     libsm6 libxrender1 libxext-dev \
     # for OCR
-    tesseract-ocr
+    tesseract-ocr \
+    && curl -L -o /usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata https://github.com/tesseract-ocr/tessdata_best/blob/master/eng.traineddata?raw=true
+
 
 COPY . /app
 RUN cd /app \
