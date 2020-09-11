@@ -1250,7 +1250,8 @@ class Item:
         if prev_id == self.id:
             self.dropnum_cache = self.prev_item.dropnum_cache
         if prev_id == self.id \
-                and (self.category == "Point" or self.name == "QP"):
+                and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
+                # and (self.category == "Point" or self.name == "QP"):
             # もしキャッシュ画像と一致したらOCRスキップ
             logger.debug("dropnum_cache: %s", self.prev_item.dropnum_cache)
             for dropnum_cache in self.prev_item.dropnum_cache:
@@ -1326,6 +1327,7 @@ class Item:
                                               debug=debug)
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
+        # if self.id != ID_REWARD_QP and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
         if self.id != ID_REWARD_QP and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
             dropnum_found = False
             for cache_item in self.dropnum_cache:
