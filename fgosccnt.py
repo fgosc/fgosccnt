@@ -702,6 +702,7 @@ class Item:
         _, img_th = cv2.threshold(self.img_gray, 174, 255, cv2.THRESH_BINARY)
         self.img_th = cv2.bitwise_not(img_th)
         self.fileextention = fileextention
+        self.dropnum_cache = []
 
         self.height, self.width = img_rgb.shape[:2]
         self.identify_item(pos, prev_item, svm_card,
@@ -1039,6 +1040,7 @@ class Item:
                 # アイテム数 x1 とならず表記無し場合のエラー処理
                 return ""
             if result in ['x', '+']:
+                self.margin_left = pt[0]
                 break
         # 決まった位置まで出力する
         line = ""
@@ -1243,6 +1245,36 @@ class Item:
         else:
             prev_id = self.prev_item.id
 
+        logger.debug("self.id: %d", self.id)
+        logger.debug("prev_id: %d", prev_id)
+        if prev_id == self.id:
+            self.dropnum_cache = self.prev_item.dropnum_cache
+        if prev_id == self.id \
+                and (self.category == "Point" or self.name == "QP"):
+            # もしキャッシュ画像と一致したらOCRスキップ
+            logger.debug("dropnum_cache: %s", self.prev_item.dropnum_cache)
+            for dropnum_cache in self.prev_item.dropnum_cache:
+                logger.debug("in loop")
+                pts = dropnum_cache["pts"]
+                img_gray = self.img_gray[pts[0][1]-2:pts[1][1]+2,
+                                        pts[0][0]-2:pts[1][0]+2]
+                # cv2.imshow("img", cv2.resize(img_gray, dsize=None, fx=1.5, fy=1.5))
+                # cv2.waitKey(0)
+                # cv2.destroyAllWindows()
+                template = dropnum_cache["img"]
+                res = cv2.matchTemplate(img_gray,template,cv2.TM_CCOEFF_NORMED)
+                threshold = 0.95
+                loc = np.where( res >= threshold)
+                find_match = False
+                for pt in zip(*loc[::-1]):
+                    find_match = True
+                    break
+                if find_match:
+                    logger.debug("find_match")
+                    self.bonus = dropnum_cache["bonus"]
+                    self.dropnum = dropnum_cache["dropnum"]
+                    return
+            
         if ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX:
             # ボーナスが無いアイテム
             self.bonus_pts = []
@@ -1294,6 +1326,32 @@ class Item:
                                               debug=debug)
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
+        if self.id != ID_REWARD_QP and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
+            dropnum_found = False
+            for cache_item in self.dropnum_cache:
+                if cache_item["dropnum"] == self.dropnum:
+                    dropnum_found = True
+                    break
+            if dropnum_found is False:
+                # キャッシュのために画像を取得する
+                _, width = self.img_gray.shape
+                _, cut_height, _ = self.define_fontsize(self.font_size)
+                logger.debug("base_line: %d",base_line)
+                logger.debug("cut_height: %d",cut_height)
+                logger.debug("margin_right: %d",margin_right)
+                pts = ((self.margin_left, base_line - cut_height),
+                    (width - margin_right, base_line))
+                cached_img = self.img_gray[pts[0][1]:pts[1][1],
+                                        pts[0][0]:pts[1][0]]
+                # cv2.imshow("img", cv2.resize(cached_img, dsize=None, fx=1.5, fy=1.5))
+                # cv2.waitKey(0)
+                # cv2.destroyAllWindows()
+                tmp = {}
+                tmp["dropnum"] = self.dropnum
+                tmp["img"] = cached_img
+                tmp["pts"] = pts
+                tmp["bonus"] = self.bonus
+                self.dropnum_cache.append(tmp)
 
     def gem_img2id(self, img, gem_dict):
         hash_gem = self.compute_gem_hash(img)
