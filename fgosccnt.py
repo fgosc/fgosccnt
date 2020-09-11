@@ -2135,7 +2135,7 @@ def output_json(parsed_output, out_folder):
 
         for parsed_file in parsed_output:
             title = Path(parsed_file["image_path"]).stem
-            with open(Path("{}/{}.json".format(out_folder, title)), "w") as f:
+            with open(Path("{}/{}.json".format(out_folder, title)), "w", encoding = "utf-8") as f:
                 json.dump(parsed_file, f, indent=4, ensure_ascii=False)
 
 
