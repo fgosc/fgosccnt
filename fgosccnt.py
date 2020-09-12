@@ -1234,7 +1234,7 @@ class Item:
                 template = dropnum_cache["img"]
                 res = cv2.matchTemplate(img_gray, template,
                                         cv2.TM_CCOEFF_NORMED)
-                threshold = 0.92
+                threshold = 0.97
                 loc = np.where(res >= threshold)
                 find_match = False
                 for pt in zip(*loc[::-1]):
