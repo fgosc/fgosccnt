@@ -485,14 +485,9 @@ class ScreenShot:
         itemlist = []
         for item in self.items:
             tmp = {}
-            if item.category == "Quest Reward":
-                tmp['id'] = ID_REWARD_QP
-                tmp['name'] = "クエストクリア報酬QP"
-                tmp['dropPriority'] = PRIORITY_REWARD_QP
-            else:
-                tmp['id'] = item.id
-                tmp['name'] = item.name
-                tmp['dropPriority'] = item_dropPriority[item.id]
+            tmp['id'] = item.id
+            tmp['name'] = item.name
+            tmp['dropPriority'] = item_dropPriority[item.id]
             tmp['dropnum'] = int(item.dropnum[1:])
             tmp['bonus'] = item.bonus
             tmp['category'] = item.category
