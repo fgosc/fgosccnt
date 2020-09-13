@@ -134,7 +134,11 @@ def detect_qp_region(im, mode=QPDetectionMode.JP.value, debug_draw_image=False, 
     # 縦横2分割して4領域に分け、左下の領域だけ使う。
     # QP の領域を調べたいならそれで十分。
     im_h, im_w = im.shape[:2]
-    cropped = im[int(im_h/2):im_h, 0:int(im_w/2)]
+    # まれにスクリーンショット左端に余白が入ることがある。
+    # おそらく Android の機種や状況に依存？ この状態で左右を等分すると
+    # 中心が左にずれて QP 領域の囲みが見切れてしまい検出に失敗する。
+    # これを考慮し、切る位置をやや右にずらす。
+    cropped = im[int(im_h/2):im_h, 0:int(im_w/1.93)]
     cr_h, cr_w = cropped.shape[:2]
     logger.debug('cropped image size (for qp): (width, height) = (%s, %s)', cr_w, cr_h)
     im_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)

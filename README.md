@@ -29,14 +29,22 @@ https://github.com/fgophi/fgosccnt/wiki/Easy-Use
 # インストール
 
 * OpenCV をインストール
+```
+$ pip install -r requirements.txt
+```
 * Tesseract OCR をインストール
+* fgoscdata を使用できるようにする (submodule の初期化)
+```
+$ git submodule update --init
+```
 * makeitem.py, makechest.py, makecard.py をそれぞれ実行
 
 下記コマンドを実行
-
-    $ python makeitem.py
-    $ python makechest.py
-    $ python makecard.py
+```
+$ python makeitem.py
+$ python makechest.py
+$ python makecard.py
+```
 
 ※fgosccnt.py, item.xml chest.xml card.xmlを同じフォルダにいれること
 
