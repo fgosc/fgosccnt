@@ -1894,12 +1894,10 @@ def parse_img(
         prev_total_qp=QP_UNKNOWN,
         prev_gained_qp=QP_UNKNOWN,
         prev_itemlist=[],
-        prev_datetime=datetime.datetime(year=2015, month=7, day=30, hour=0),
-        debug=False):
+        prev_datetime=datetime.datetime(year=2015, month=7, day=30, hour=0)):
     parsed_img_data = {"status": "Incomplete"}
 
-    if debug:
-        print(file_path)
+    logger.debug("filename: %s", file_path)
     parsed_img_data["image_path"] = str(os.path.abspath(file_path))
 
     if not Path(file_path).exists():
@@ -1912,7 +1910,7 @@ def parse_img(
 
     try:
         screenshot = ScreenShot(
-            img_rgb, svm, svm_chest, svm_card, file_extention, debug)
+            img_rgb, svm, svm_chest, svm_card, file_extention)
 
         # If the previous image indicated more coming, check whether this is the fated one.
         if (prev_pages - prev_pagenum > 0 and screenshot.pagenum - prev_pagenum != 1) \
@@ -1934,19 +1932,18 @@ def parse_img(
         if prev_itemlist == screenshot.itemlist and prev_gained_qp == screenshot.qp_gained:
             if (screenshot.total_qp != 999999999 and screenshot.total_qp == prev_total_qp) \
                     or (screenshot.total_qp == 999999999 and time_delta.total_seconds() < args.timeout):
-                if debug:
-                    print("args.timeout: {}".format(args.timeout))
-                    print("filename: {}".format(file_path))
-                    print("prev_itemlist: {}".format(prev_itemlist))
-                    print("screenshot.itemlist: {}".format(
-                        screenshot.itemlist))
-                    print("screenshot.total_qp: {}".format(
-                        screenshot.total_qp))
-                    print("prev_total_qp: {}".format(prev_total_qp))
-                    print("datetime: {}".format(date_time))
-                    print("prev_datetime: {}".format(prev_datetime))
-                    print("td.total_second: {}".format(
-                        time_delta.total_seconds()))
+                logger.debug("args.timeout: {}".format(args.timeout))
+                logger.debug("filename: {}".format(file_path))
+                logger.debug("prev_itemlist: {}".format(prev_itemlist))
+                logger.debug("screenshot.itemlist: {}".format(
+                    screenshot.itemlist))
+                logger.debug("screenshot.total_qp: {}".format(
+                    screenshot.total_qp))
+                logger.debug("prev_total_qp: {}".format(prev_total_qp))
+                logger.debug("datetime: {}".format(date_time))
+                logger.debug("prev_datetime: {}".format(prev_datetime))
+                logger.debug("td.total_second: {}".format(
+                    time_delta.total_seconds()))
                 parsed_img_data["status"] = "Duplicate file"
                 return parsed_img_data
 
@@ -2012,8 +2009,6 @@ def parse_into_json(input_file_paths, args):
     """
     The version of output gathering used by AtlasAcademy. Made to resemble capy's output.
     """
-    debug = args.debug
-
     calc_dist_local()
     check_svms_trained()
 
@@ -2039,8 +2034,7 @@ def parse_into_json(input_file_paths, args):
             prev_total_qp,
             prev_gained_qp,
             prev_itemlist,
-            prev_datetime,
-            debug))
+            prev_datetime))
     return all_parsed_output
 
 
@@ -2059,8 +2053,7 @@ def __parse_into_json_process(input_queue, args):
             svm_chest,
             svm_card,
             input_file_path,
-            prev_pages=-1,
-            debug=args.debug)
+            prev_pages=-1)
         output_json([parsed_output], args.out_folder)
 
 
