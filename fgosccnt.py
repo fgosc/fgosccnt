@@ -23,6 +23,7 @@ import pageinfo
 
 PROGNAME = "FGOスクショカウント"
 VERSION = "0.4.0"
+DEFAULT_ITEM_LANG = "jpn"  # "jpn": japanese, "eng": English
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,7 @@ with open(drop_file, encoding='UTF-8') as f:
 
 # JSONファイルから各辞書を作成
 item_name = {item["id"]: item["name"] for item in drop_item}
+item_name_eng = {item["id"]: item["name_eng"] for item in drop_item if "name_eng" in item.keys()}
 item_shortname = {item["id"]: item["shortname"] for item in drop_item
                   if "shortname" in item.keys()}
 item_dropPriority = {item["id"]: item["dropPriority"] for item in drop_item}
@@ -152,7 +154,7 @@ class ScreenShot:
     戦利品スクリーンショットを表すクラス
     """
 
-    def __init__(self, img_rgb, svm, svm_chest, svm_card,
+    def __init__(self, args, img_rgb, svm, svm_chest, svm_card,
                  fileextention, reward_only=False):
         TRAINING_IMG_WIDTH = 1755
         threshold = 80
@@ -215,7 +217,7 @@ class ScreenShot:
                                           pt[0] + lx: pt[2] + lx]
             if logger.isEnabledFor(logging.DEBUG):
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
-            dropitem = Item(i, prev_item, item_img_rgb, item_img_gray,
+            dropitem = Item(args, i, prev_item, item_img_rgb, item_img_gray,
                             svm, svm_card, fileextention,
                             self.current_dropPriority, mode)
             if dropitem.id == -1:
@@ -688,7 +690,7 @@ def generate_booty_pts(criteria_left, criteria_top, item_width, item_height,
 
 
 class Item:
-    def __init__(self, pos, prev_item, img_rgb, img_gray, svm, svm_card,
+    def __init__(self, args, pos, prev_item, img_rgb, img_gray, svm, svm_card,
                  fileextention, current_dropPriority, mode='jp'):
         self.position = pos
         self.prev_item = prev_item
@@ -703,7 +705,7 @@ class Item:
 
         self.height, self.width = img_rgb.shape[:2]
         logger.debug("pos: %d", pos)
-        self.identify_item(pos, prev_item, svm_card,
+        self.identify_item(args, pos, prev_item, svm_card,
                            current_dropPriority)
         if self.id == -1:
             return
@@ -721,7 +723,7 @@ class Item:
         logger.debug("Bonus: %s", self.bonus)
         logger.debug("Stack: %s", self.dropnum)
 
-    def identify_item(self, pos, prev_item, svm_card,
+    def identify_item(self, args, pos, prev_item, svm_card,
                       current_dropPriority):
         self.hash_item = compute_hash(self.img_rgb)  # 画像の距離
         if prev_item is not None:
@@ -741,7 +743,14 @@ class Item:
             self.id = -1
             return
         self.id = self.classify_card(self.img_rgb, current_dropPriority)
-        self.name = item_name[self.id]
+        if args.lang == "jpn":
+            self.name = item_name[self.id]
+        else:
+            if self.id in item_name_eng.keys():
+                self.name = item_name_eng[self.id]
+            else:
+                self.name = item_name[self.id]
+
         if self.category == "":
             if self.id in item_type:
                 self.category = item_type[self.id]
@@ -1688,7 +1697,10 @@ def hex2hash(hexstr):
     return np.array([hashlist], dtype='uint8')
 
 
-def out_name(id):
+def out_name(args, id):
+    if args.lang == "eng":
+        if id in item_name_eng.keys():
+            return item_name_eng[id]
     if id in item_shortname.keys():
         name = item_shortname[id]
     else:
@@ -1762,7 +1774,7 @@ def get_output(filenames, args):
             fileextention = Path(filename).suffix
 
             try:
-                sc = ScreenShot(img_rgb,
+                sc = ScreenShot(args, img_rgb,
                                 svm, svm_chest, svm_card,
                                 fileextention)
 
@@ -1813,14 +1825,18 @@ def get_output(filenames, args):
 
                 sumdrop = len([d for d in sc.itemlist
                                if d["name"] != "クエストクリア報酬QP"])
-                output = {'filename': str(filename), 'ドロ数': sumdrop}
+                if args.lang == "jpn":
+                    drop_count = "ドロ数"
+                else:
+                    drop_count = "drop_count"
+                output = {'filename': str(filename), drop_count: sumdrop}
                 if sc.pagenum == 1:
                     if sc.lines >= 7:
-                        output["ドロ数"] = str(output["ドロ数"]) + "++"
+                        output[drop_count] = str(output[drop_count]) + "++"
                     elif sc.lines >= 4:
-                        output["ドロ数"] = str(output["ドロ数"]) + "+"
+                        output[drop_count] = str(output[drop_count]) + "+"
                 elif sc.pagenum == 2 and sc.lines >= 7:
-                    output["ドロ数"] = str(output["ドロ数"]) + "+"
+                    output[drop_count] = str(output[drop_count]) + "+"
 
             except Exception as e:
                 logger.error(e, exc_info=True)
@@ -1840,10 +1856,14 @@ def sort_files(files, ordering):
     raise ValueError(f'Unsupported ordering: {ordering}')
 
 
-def change_value(line):
-    line = re.sub('000000$', "百万", str(line))
-    line = re.sub('0000$', "万", str(line))
-    line = re.sub('000$', "千", str(line))
+def change_value(args, line):
+    if args.lang == 'jpn':
+        line = re.sub('000000$', "百万", str(line))
+        line = re.sub('0000$', "万", str(line))
+        line = re.sub('000$', "千", str(line))
+    else:
+        line = re.sub('000000$', "M", str(line))
+        line = re.sub('000$', "K", str(line))
     return line
 
 
@@ -1891,13 +1911,19 @@ def deside_quest(item_list):
     return quest_candidate
 
 
-def make_csv_header(item_list):
+def make_csv_header(args, item_list):
     """
     CSVのヘッダ情報を作成
     礼装のドロップが無いかつ恒常以外のアイテムが有るとき礼装0をつける
     """
+    if args.lang == 'jpn':
+        drop_count = 'ドロ数'
+        ce_str = '礼装'
+    else:
+        drop_count = 'drop_count'
+        ce_str = 'CE'
     if item_list == [[]]:
-        return ['filename', 'ドロ数'], False, ""
+        return ['filename', drop_count], False, ""
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
@@ -1908,7 +1934,7 @@ def make_csv_header(item_list):
                 not in [d.get('category') for d in flat_list]) \
                 and (max([d.get("id") for d in flat_list]) > 9707500)
     if ce0_flag:
-        short_list.append({"id": 99999990, "name": "礼装",
+        short_list.append({"id": 99999990, "name": ce_str,
                            "category": "Craft Essence",
                            "dropPriority": 9000, "dropnum": 0})
     # 重複する要素を除く
@@ -1921,23 +1947,23 @@ def make_csv_header(item_list):
     for nlist in new_list:
         if nlist['category'] in ['Quest Reward', 'Point'] \
            or nlist["name"] == "QP":
-            tmp = out_name(nlist['id']) \
-                  + "(+" + change_value(nlist["dropnum"]) + ")"
+            tmp = out_name(args, nlist['id']) \
+                  + "(+" + change_value(args, nlist["dropnum"]) + ")"
         elif nlist["dropnum"] > 1:
-            tmp = out_name(nlist['id']) \
-                  + "(x" + change_value(nlist["dropnum"]) + ")"
-        elif nlist["name"] == "礼装":
-            tmp = "礼装"
+            tmp = out_name(args, nlist['id']) \
+                  + "(x" + change_value(args, nlist["dropnum"]) + ")"
+        elif nlist["name"] == ce_str:
+            tmp = ce_str
         else:
-            tmp = out_name(nlist['id'])
+            tmp = out_name(args, nlist['id'])
         header.append(tmp)
     # クエスト名判定
     quest = deside_quest(new_list)
     quest_output = make_quest_output(quest)
-    return ['filename', 'ドロ数'] + header, ce0_flag, quest_output
+    return ['filename', drop_count] + header, ce0_flag, quest_output
 
 
-def make_csv_data(sc_list, ce0_flag):
+def make_csv_data(args, sc_list, ce0_flag):
     if sc_list == []:
         return [{}], [{}]
     csv_data = []
@@ -1947,32 +1973,39 @@ def make_csv_data(sc_list, ce0_flag):
         for item in sc:
             if item['category'] in ['Quest Reward', 'Point'] \
                or item["name"] == "QP":
-                tmp.append(out_name(item['id'])
-                           + "(+" + change_value(item["dropnum"]) + ")")
+                tmp.append(out_name(args, item['id'])
+                           + "(+" + change_value(args, item["dropnum"]) + ")")
             elif item["dropnum"] > 1:
-                tmp.append(out_name(item['id'])
-                           + "(x" + change_value(item["dropnum"]) + ")")
+                tmp.append(out_name(args, item['id'])
+                           + "(x" + change_value(args, item["dropnum"]) + ")")
             else:
-                tmp.append(out_name(item['id']))
+                tmp.append(out_name(args, item['id']))
         allitem = allitem + tmp
         csv_data.append(dict(Counter(tmp)))
     csv_sum = dict(Counter(allitem))
     if ce0_flag:
-        csv_sum.update({"礼装": 0})
+        if args.lang == 'jpn':
+            ce_str = '礼装'
+        else:
+            ce_str = 'CE'
+        csv_sum.update({ce_str: 0})
     return csv_sum, csv_data
 
 
 if __name__ == '__main__':
     # オプションの解析
-    parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
+    parser = argparse.ArgumentParser(description='Image Parse for FGO Battle Results')
     # 3. parser.add_argumentで受け取る引数を追加していく
-    parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
-    parser.add_argument('-f', '--folder', help='フォルダで指定')
-    parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
-                        help='QPカンスト時の重複チェック間隔(秒): デフォルト' + str(TIMEOUT) + '秒')
-    parser.add_argument('--ordering', help='ファイルの処理順序 (未指定の場合 notspecified)',
+    parser.add_argument('filenames', help='Input File(s)', nargs='*')    # 必須の引数を追加
+    parser.add_argument('--lang', default=DEFAULT_ITEM_LANG,
+                        choices=('jpn', 'eng'),
+                        help='Language to be used for output: Default ' + DEFAULT_ITEM_LANG)
+    parser.add_argument('-f', '--folder', help='Specify by folder')
+    parser.add_argument('--ordering', help='The order in which files are processed ',
                         type=Ordering,
                         choices=list(Ordering), default=Ordering.NOTSPECIFIED)
+    parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
+                        help='Duplicate check interval at QP MAX (sec): Default ' + str(TIMEOUT) + ' sec')
     parser.add_argument('--version', action='version',
                         version=PROGNAME + " " + VERSION)
     parser.add_argument('-l', '--loglevel',
@@ -1998,21 +2031,28 @@ if __name__ == '__main__':
     fileoutput, all_new_list = get_output(inputs, args)
 
     # CSVヘッダーをつくる
-    csv_heder, ce0_flag, questname = make_csv_header(all_new_list)
-    csv_sum, csv_data = make_csv_data(all_new_list, ce0_flag)
+    csv_heder, ce0_flag, questname = make_csv_header(args, all_new_list)
+    csv_sum, csv_data = make_csv_data(args, all_new_list, ce0_flag)
 
     writer = csv.DictWriter(sys.stdout, fieldnames=csv_heder,
                             lineterminator='\n')
     writer.writeheader()
+    if args.lang == 'jpn':
+        drop_count = 'ドロ数'
+    else:
+        drop_count = 'drop_count'
     if len(all_new_list) > 1:  # ファイル一つのときは合計値は出さない
         if questname == "":
-            questname = "合計"
-        a = {'filename': questname, 'ドロ数': ''}
+            if args.lang == 'jpn':
+               questname = "合計"
+            else:
+               questname = "SUM"
+        a = {'filename': questname, drop_count: ''}
         a.update(csv_sum)
         writer.writerow(a)
     for fo, cd in zip(fileoutput, csv_data):
         fo.update(cd)
         writer.writerow(fo)
-    if 'ドロ数' in fo.keys():  # issue: #55
-        if len(fileoutput) > 1 and str(fo['ドロ数']).endswith('+'):
+    if drop_count in fo.keys():  # issue: #55
+        if len(fileoutput) > 1 and str(fo[drop_count]).endswith('+'):
             writer.writerow({'filename': 'missing'})
