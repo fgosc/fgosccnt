@@ -2062,6 +2062,7 @@ def __parse_into_json_process(input_queue, args):
         # the technique depends on having the images sorted in chronological order. Sorting
         # files and processing them in order is not possible in a multiprocess environment.
         parsed_output = parse_img(
+            args,
             svm,
             svm_chest,
             svm_card,
