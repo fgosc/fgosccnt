@@ -753,9 +753,6 @@ class Item:
                     self.name = prev_item.name
                     return
         self.category = self.classify_category(svm_card)
-        if pos < 14 and self.category == "":
-            self.id = -1
-            return
         self.id = self.classify_card(self.img_rgb, current_dropPriority)
         if args.lang == "jpn":
             self.name = item_name[self.id]
