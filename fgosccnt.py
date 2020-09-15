@@ -1417,7 +1417,7 @@ class Item:
 
         return ""
 
-    def classify_ce(self, img):
+    def classify_ce_sub(self, img, hasher_prog, threshold):
         """
         imgとの距離を比較して近いアイテムを求める
         """
@@ -1431,15 +1431,23 @@ class Item:
         # 既存のアイテムとの距離を比較
         for i in dist_ce.keys():
             d = hasher.compare(hash_item, hex2hash(i))
-            if d <= 12:
+            if d <= threshold:
                 itemfiles[dist_ce[i]] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
+            logger.debug("itemfiles: %s", itemfiles)
             item = next(iter(itemfiles))
 
             return item[0]
 
         return ""
+
+    def classify_ce(self, img):
+        itemid =  self.classify_ce_sub(img, compute_hash_ce, 12)
+        if itemid == "":
+            itemid =  self.classify_ce_sub(img, compute_hash_ce_narrow, 15)
+        return itemid
+
 
     def classify_point(self, img):
         """
@@ -1656,6 +1664,16 @@ def compute_hash_ce(img_rgb):
     記述した比率はiPpd2018画像の実測値
     """
     img = img_rgb[12:176, 9:182]
+    return hasher.compute(img)
+
+
+def compute_hash_ce_narrow(img_rgb):
+    """
+    CE Identifier for scrolled down screenshot
+    """
+    height, width = img_rgb.shape[:2]
+    img = img_rgb[int(30/206*height):int(155/206*height),
+                  int(5/188*width):int(183/188*width)]
     return hasher.compute(img)
 
 
