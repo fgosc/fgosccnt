@@ -450,6 +450,8 @@ class ScreenShot:
             if y1 == y2 and y1 < height/2:
                 if upper_y < y1:
                     upper_y = y1
+        logger.debug("left_x: %d", left_x)
+        logger.debug("upper_y: %d", upper_y)
 
         # Detect Right line
         # Avoid catching the line of the scroll bar
@@ -465,6 +467,23 @@ class ScreenShot:
             if x1 == x2 and x1 > width*3/4 and (y1 < upper_y or y2 < upper_y):
                 if right_x > x1:
                     right_x = x1
+        if right_x > width - 80:
+            logger.warning("right_x detection failed.")
+            # Redefine right_x from the pseudo_bottom_y
+            pseudo_bottom_y = height
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                if y1 == y2 and y1 > height/2 and (x1 < width/2):
+                    if pseudo_bottom_y > y1:
+                        pseudo_bottom_y = y1
+            logger.debug("pseudo_bottom_y: %d", pseudo_bottom_y)
+            for line in lines:
+                x1, y1, x2, y2 = line[0]
+                if x1 == x2 and x1 > width*3/4 \
+                   and (y1 > pseudo_bottom_y or y2 > pseudo_bottom_y):
+                    if right_x > x1:
+                        right_x = x1
+        logger.debug("right_x: %d", right_x)
 
         # Detect Bottom line
         # Changed the underline of cut image to use the top of Next button.
@@ -473,6 +492,7 @@ class ScreenShot:
             if y1 == y2 and y1 > height/2 and (x1 > right_x or x2 > right_x):
                 if bottom_y > y1:
                     bottom_y = y1
+        logger.debug("bottom_y: %d", bottom_y)
 
         if logger.isEnabledFor(logging.DEBUG):
             tmpimg = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
@@ -488,7 +508,6 @@ class ScreenShot:
         scale = bottom_y - upper_y
         upper_y = upper_y - int(177*scale/847)
         bottom_y = bottom_y + int(124*scale/847)
-
         game_screen = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
         return game_screen
 
@@ -773,9 +792,6 @@ class Item:
                     self.name = prev_item.name
                     return
         self.category = self.classify_category(svm_card)
-        if pos < 14 and self.category == "":
-            self.id = -1
-            return
         self.id = self.classify_card(self.img_rgb, current_dropPriority)
         if args.lang == "jpn":
             self.name = item_name[self.id]
@@ -1448,7 +1464,7 @@ class Item:
 
         return ""
 
-    def classify_ce(self, img):
+    def classify_ce_sub(self, img, hasher_prog, threshold):
         """
         imgとの距離を比較して近いアイテムを求める
         """
@@ -1462,15 +1478,23 @@ class Item:
         # 既存のアイテムとの距離を比較
         for i in dist_ce.keys():
             d = hasher.compare(hash_item, hex2hash(i))
-            if d <= 12:
+            if d <= threshold:
                 itemfiles[dist_ce[i]] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
+            logger.debug("itemfiles: %s", itemfiles)
             item = next(iter(itemfiles))
 
             return item[0]
 
         return ""
+
+    def classify_ce(self, img):
+        itemid =  self.classify_ce_sub(img, compute_hash_ce, 12)
+        if itemid == "":
+            itemid =  self.classify_ce_sub(img, compute_hash_ce_narrow, 15)
+        return itemid
+
 
     def classify_point(self, img):
         """
@@ -1687,6 +1711,16 @@ def compute_hash_ce(img_rgb):
     記述した比率はiPpd2018画像の実測値
     """
     img = img_rgb[12:176, 9:182]
+    return hasher.compute(img)
+
+
+def compute_hash_ce_narrow(img_rgb):
+    """
+    CE Identifier for scrolled down screenshot
+    """
+    height, width = img_rgb.shape[:2]
+    img = img_rgb[int(30/206*height):int(155/206*height),
+                  int(5/188*width):int(183/188*width)]
     return hasher.compute(img)
 
 
