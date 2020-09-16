@@ -97,15 +97,20 @@ with open(drop_file, encoding='UTF-8') as f:
 
 # JSONファイルから各辞書を作成
 item_name = {item["id"]: item["name"] for item in drop_item}
-item_name_eng = {item["id"]: item["name_eng"] for item in drop_item if "name_eng" in item.keys()}
+item_name_eng = {item["id"]: item["name_eng"] for item in drop_item
+                 if "name_eng" in item.keys()}
 item_shortname = {item["id"]: item["shortname"] for item in drop_item
                   if "shortname" in item.keys()}
 item_dropPriority = {item["id"]: item["dropPriority"] for item in drop_item}
+item_background = {item["id"]: item["background"] for item in drop_item
+                   if "background" in item.keys()}
 item_type = {item["id"]: item["type"] for item in drop_item}
 dist_item = {item["phash_battle"]: item["id"] for item in drop_item
              if item["type"] == "Item" and "phash_battle" in item.keys()}
 dist_ce = {item["phash"]: item["id"] for item in drop_item
            if item["type"] == "Craft Essence"}
+dist_ce_narrow = {item["phash_narrow"]: item["id"] for item in drop_item
+                  if item["type"] == "Craft Essence"}
 dist_secret_gem = {item["id"]: item["phash_class"] for item in drop_item
                    if 6200 < item["id"] < 6208
                    and "phash_class" in item.keys()}
@@ -144,6 +149,12 @@ for evnetfile in evnetfiles:
             freequest = freequest + event
     except (OSError, UnicodeEncodeError) as e:
         logger.exception(e)
+
+npz = np.load(basedir / Path('background.npz'))
+sig_zero = npz["sig_zero"]
+sig_gold = npz["sig_gold"]
+sig_silver = npz["sig_silver"]
+sig_bronze = npz["sig_bronze"]
 
 
 def has_intersect(a, b):
@@ -758,11 +769,12 @@ class Item:
 
         self.height, self.width = img_rgb.shape[:2]
         logger.debug("pos: %d", pos)
-        self.identify_item(args, pos, prev_item, svm_card,
+        self.identify_item(args, prev_item, svm_card,
                            current_dropPriority)
         if self.id == -1:
             return
         logger.debug("id: %d", self.id)
+        logger.debug("background: %s", self.background)
         logger.debug("dropPriority: %s", item_dropPriority[self.id])
         logger.debug("Category: %s", self.category)
         logger.debug("Name: %s", self.name)
@@ -776,15 +788,17 @@ class Item:
         logger.debug("Bonus: %s", self.bonus)
         logger.debug("Stack: %s", self.dropnum)
 
-    def identify_item(self, args, pos, prev_item, svm_card,
+    def identify_item(self, args, prev_item, svm_card,
                       current_dropPriority):
+        self.background = classify_background(self.img_rgb)
         self.hash_item = compute_hash(self.img_rgb)  # 画像の距離
         if prev_item is not None:
-            if not (prev_item.id == ID_REWARD_QP or
-                    ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX or
-                    ID_PIECE_MIN <= prev_item.id <= ID_MONUMENT_MAX or
-                    ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
-                    ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX):
+            if not (prev_item.background == self.background and
+                    (prev_item.id == ID_REWARD_QP or
+                     ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX or
+                     ID_PIECE_MIN <= prev_item.id <= ID_MONUMENT_MAX or
+                     ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
+                     ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX)):
                 d = hasher.compare(self.hash_item, prev_item.hash_item)
                 if d <= 4:
                     self.category = prev_item.category
@@ -1361,7 +1375,8 @@ class Item:
         logger.debug("self.dropnum: %s", self.dropnum)
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
-        if self.id != ID_REWARD_QP and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
+        if self.id != ID_REWARD_QP \
+                and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
             dropnum_found = False
             for cache_item in self.dropnum_cache:
                 if cache_item["dropnum"] == self.dropnum:
@@ -1378,9 +1393,6 @@ class Item:
                        (width - margin_right, base_line))
                 cached_img = self.img_gray[pts[0][1]:pts[1][1],
                                            pts[0][0]:pts[1][0]]
-                # cv2.imshow("img", cv2.resize(cached_img, dsize=None, fx=1.5, fy=1.5))
-                # cv2.waitKey(0)
-                # cv2.destroyAllWindows()
                 tmp = {}
                 tmp["dropnum"] = self.dropnum
                 tmp["img"] = cached_img
@@ -1407,7 +1419,7 @@ class Item:
         return gem[0]
 
     def classify_item(self, img, currnet_dropPriority):
-        """
+        """)
         imgとの距離を比較して近いアイテムを求める
         id を返すように変更
         """
@@ -1420,8 +1432,10 @@ class Item:
             logger.debug("phash: %s", hex)
         # 既存のアイテムとの距離を比較
         for i in dist_item.keys():
+            itemid = dist_item[i]
+            item_bg = item_background[itemid]
             d = hasher.compare(hash_item, hex2hash(i))
-            if d <= 12:
+            if d <= 12 and item_bg == self.background:
                 # ポイントと種の距離が8という例有り(IMG_0274)→16に
                 # バーガーと脂の距離が10という例有り(IMG_2354)→14に
                 ids[dist_item[i]] = d
@@ -1444,42 +1458,26 @@ class Item:
                     id = self.gem_img2id(img, dist_gem)
                 else:
                     return ""
-            elif ID_PIECE_MIN <= id <= ID_MONUMENT_MAX:
-                if currnet_dropPriority < PRIORITY_PIECE_MIN:
-                    return ""
-                # ヒストグラム
-                img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-                h, w = img_hsv.shape[:2]
-                img_hsv = img_hsv[int(h/2-10): int(h/2+10),
-                                  int(w/2-10): int(w/2+10)]
-                hist_s = cv2.calcHist([img_hsv], [1], None,
-                                      [256], [0, 256])  # Bのヒストグラムを計算
-                _, _, _, maxLoc = cv2.minMaxLoc(hist_s)
-                if maxLoc[1] > 128:
-                    id = int(str(id)[0] + "1" + str(id)[2:])
-                else:
-                    id = int(str(id)[0] + "0" + str(id)[2:])
 
             return id
 
         return ""
 
-    def classify_ce_sub(self, img, hasher_prog, threshold):
+    def classify_ce_sub(self, img, hasher_prog, dist_dic, threshold):
         """
         imgとの距離を比較して近いアイテムを求める
         """
-        hash_item = compute_hash_ce(img)  # 画像の距離
+        hash_item = hasher_prog(img)  # 画像の距離
         itemfiles = {}
         if logger.isEnabledFor(logging.DEBUG):
             hex = ""
             for h in hash_item[0]:
                 hex = hex + "{:02x}".format(h)
-            logger.debug("phash: %s", hex)
         # 既存のアイテムとの距離を比較
-        for i in dist_ce.keys():
+        for i in dist_dic.keys():
             d = hasher.compare(hash_item, hex2hash(i))
             if d <= threshold:
-                itemfiles[dist_ce[i]] = d
+                itemfiles[dist_dic[i]] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
             logger.debug("itemfiles: %s", itemfiles)
@@ -1490,11 +1488,13 @@ class Item:
         return ""
 
     def classify_ce(self, img):
-        itemid =  self.classify_ce_sub(img, compute_hash_ce, 12)
+        itemid = self.classify_ce_sub(img, compute_hash_ce, dist_ce, 12)
         if itemid == "":
-            itemid =  self.classify_ce_sub(img, compute_hash_ce_narrow, 15)
+            logger.debug("use narrow image")
+            itemid = self.classify_ce_sub(
+                img, compute_hash_ce_narrow, dist_ce_narrow, 15
+            )
         return itemid
-
 
     def classify_point(self, img):
         """
@@ -1509,9 +1509,11 @@ class Item:
             logger.debug("phash: %s", hex)
         # 既存のアイテムとの距離を比較
         for i in dist_point.keys():
+            itemid = dist_point[i]
+            item_bg = item_background[itemid]
             d = hasher.compare(hash_item, hex2hash(i))
-            if d <= 12:
-                itemfiles[dist_point[i]] = d
+            if d <= 12 and item_bg == self.background:
+                itemfiles[itemid] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
             item = next(iter(itemfiles))
@@ -1555,8 +1557,7 @@ class Item:
             if itemfile.is_file():
                 continue
             else:
-                img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                cv2.imwrite(itemfile.as_posix(), img_gray)
+                cv2.imwrite(itemfile.as_posix(), img)
                 # id 候補を決める
                 for j in range(99999):
                     id = j + ID_START
@@ -1571,7 +1572,14 @@ class Item:
                 for h in hash[0]:
                     hash_hex = hash_hex + "{:02x}".format(h)
                 dist_dic[hash_hex] = id
+                if category == "Craft Essence":
+                    hash_narrow = compute_hash_ce_narrow(img)
+                    hash_hex_narrow = ""
+                    for h in hash_narrow[0]:
+                        hash_narrow = hash_narrow + "{:02x}".format(h)
+                    dist_ce_narrow[hash_hex_narrow] = id
                 item_name[id] = itemfile.stem
+                item_background[id] = classify_background(img)
                 item_dropPriority[id] = dropPriority
                 item_type[id] = category
                 break
@@ -1690,6 +1698,31 @@ class Item:
         return hasher.compute(img)
 
 
+def classify_background(img_rgb):
+    """
+    背景判別
+    """
+    # logger.info(sig_gold)
+    # logger.info(sig_silver)
+    # logger.info(sig_bronze)
+    img = img_rgb[30:119, 7:25]
+    target_hist = img_hist(img)
+    sig_img = img_to_sig(target_hist)
+    # logger.info(sig_img)
+    bg_dist = []
+    zdist, _, flow = cv2.EMD(sig_img, sig_zero, cv2.DIST_L2)
+    bg_dist.append({"background": "zero", "dist": zdist})
+    gdist, _, flow = cv2.EMD(sig_img, sig_gold, cv2.DIST_L2)
+    bg_dist.append({"background": "gold", "dist": gdist})
+    sdist, _, flow = cv2.EMD(sig_img, sig_silver, cv2.DIST_L2)
+    bg_dist.append({"background": "silver", "dist": sdist})
+    bdist, _, flow = cv2.EMD(sig_img, sig_bronze, cv2.DIST_L2)
+    bg_dist.append({"background": "bronze", "dist": bdist})
+    bg_dist = sorted(bg_dist, key=lambda x: x['dist'])
+    logger.debug("background dist: %s", bg_dist)
+    return (bg_dist[0]["background"])
+
+
 def compute_hash(img_rgb):
     """
     判別器
@@ -1755,6 +1788,33 @@ def search_file(search_dir, dist_dic, dropPriority, category):
         for h in hash[0]:
             hash_hex = hash_hex + "{:02x}".format(h)
         dist_dic[hash_hex] = id
+        if category == "Item":
+            item_background[id] = classify_background(img)
+        if category == "Craft Essence":
+            hash_narrow = compute_hash_ce_narrow(img)
+            hash_hex_narrow = ""
+            for h in hash_narrow[0]:
+                hash_hex_narrow = hash_hex_narrow + "{:02x}".format(h)
+            dist_ce_narrow[hash_hex_narrow] = id
+
+
+def img_to_sig(arr):
+    # cv2.EMDに渡す値は単精度浮動小数点数
+    sig = np.empty((arr.size, 3), dtype=np.float32)
+    count = 0
+    for i in range(arr.shape[0]):
+        for j in range(arr.shape[1]):
+            sig[count] = np.array([arr[i, j], i, j])
+            count += 1
+    return sig
+
+
+def img_hist(img):
+    hist1 = cv2.calcHist([img], [0], None, [256], [0, 256])
+    hist2 = cv2.calcHist([img], [1], None, [256], [0, 256])
+    hist3 = cv2.calcHist([img], [2], None, [256], [0, 256])
+
+    return np.hstack((hist1, hist2, hist3))
 
 
 def calc_dist_local():
@@ -1900,7 +1960,7 @@ def get_output(filenames, args):
                 prev_datetime = dt
 
                 sumdrop = len([d for d in sc.itemlist
-                               if d["name"] != "クエストクリア報酬QP"])
+                               if d["id"] != ID_REWARD_QP])
                 if args.lang == "jpn":
                     drop_count = "ドロ数"
                 else:
@@ -2258,10 +2318,10 @@ def make_csv_header(args, item_list):
         if nlist['category'] in ['Quest Reward', 'Point'] \
            or nlist["name"] == "QP":
             tmp = out_name(args, nlist['id']) \
-                  + "(+" + change_value(args, nlist["dropnum"]) + ")"
+                + "(+" + change_value(args, nlist["dropnum"]) + ")"
         elif nlist["dropnum"] > 1:
             tmp = out_name(args, nlist['id']) \
-                  + "(x" + change_value(args, nlist["dropnum"]) + ")"
+                + "(x" + change_value(args, nlist["dropnum"]) + ")"
         elif nlist["name"] == ce_str:
             tmp = ce_str
         else:
@@ -2318,7 +2378,9 @@ def output_json(parsed_output, out_folder):
 
 if __name__ == '__main__':
     # オプションの解析
-    parser = argparse.ArgumentParser(description='Image Parse for FGO Battle Results')
+    parser = argparse.ArgumentParser(
+        description='Image Parse for FGO Battle Results'
+    )
     # 3. parser.add_argumentで受け取る引数を追加していく
     parser.add_argument(
         '-i', '--filenames', help='image file to parse', nargs='+')    # 必須の引数を追加
@@ -2328,7 +2390,8 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--folder', help='Specify by folder')
     parser.add_argument('-o', '--out_folder',
                         help='folder to write parsed data to. If specified, parsed images will also be moved to here. Else, output will simply be written to stdout')
-    parser.add_argument('--ordering', help='The order in which files are processed ',
+    parser.add_argument('--ordering',
+                        help='The order in which files are processed ',
                         type=Ordering,
                         choices=list(Ordering), default=Ordering.NOTSPECIFIED)
     parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
