@@ -91,7 +91,8 @@ with open(drop_file, encoding='UTF-8') as f:
 
 # JSONファイルから各辞書を作成
 item_name = {item["id"]: item["name"] for item in drop_item}
-item_name_eng = {item["id"]: item["name_eng"] for item in drop_item if "name_eng" in item.keys()}
+item_name_eng = {item["id"]: item["name_eng"] for item in drop_item
+                 if "name_eng" in item.keys()}
 item_shortname = {item["id"]: item["shortname"] for item in drop_item
                   if "shortname" in item.keys()}
 item_dropPriority = {item["id"]: item["dropPriority"] for item in drop_item}
@@ -100,6 +101,8 @@ dist_item = {item["phash_battle"]: item["id"] for item in drop_item
              if item["type"] == "Item" and "phash_battle" in item.keys()}
 dist_ce = {item["phash"]: item["id"] for item in drop_item
            if item["type"] == "Craft Essence"}
+dist_ce_narrow = {item["phash_narrow"]: item["id"] for item in drop_item
+                  if item["type"] == "Craft Essence"}
 dist_secret_gem = {item["id"]: item["phash_class"] for item in drop_item
                    if 6200 < item["id"] < 6208
                    and "phash_class" in item.keys()}
@@ -1319,7 +1322,8 @@ class Item:
         logger.debug("self.dropnum: %s", self.dropnum)
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
-        if self.id != ID_REWARD_QP and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
+        if self.id != ID_REWARD_QP \
+                and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
             dropnum_found = False
             for cache_item in self.dropnum_cache:
                 if cache_item["dropnum"] == self.dropnum:
@@ -1336,9 +1340,6 @@ class Item:
                        (width - margin_right, base_line))
                 cached_img = self.img_gray[pts[0][1]:pts[1][1],
                                            pts[0][0]:pts[1][0]]
-                # cv2.imshow("img", cv2.resize(cached_img, dsize=None, fx=1.5, fy=1.5))
-                # cv2.waitKey(0)
-                # cv2.destroyAllWindows()
                 tmp = {}
                 tmp["dropnum"] = self.dropnum
                 tmp["img"] = cached_img
@@ -1417,11 +1418,11 @@ class Item:
 
         return ""
 
-    def classify_ce_sub(self, img, hasher_prog, threshold):
+    def classify_ce_sub(self, img, hasher_prog, dist_dic, threshold):
         """
         imgとの距離を比較して近いアイテムを求める
         """
-        hash_item = compute_hash_ce(img)  # 画像の距離
+        hash_item = hasher_prog(img)  # 画像の距離
         itemfiles = {}
         if logger.isEnabledFor(logging.DEBUG):
             hex = ""
@@ -1429,10 +1430,10 @@ class Item:
                 hex = hex + "{:02x}".format(h)
             logger.debug("phash: %s", hex)
         # 既存のアイテムとの距離を比較
-        for i in dist_ce.keys():
+        for i in dist_dic.keys():
             d = hasher.compare(hash_item, hex2hash(i))
             if d <= threshold:
-                itemfiles[dist_ce[i]] = d
+                itemfiles[dist_dic[i]] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
             logger.debug("itemfiles: %s", itemfiles)
@@ -1443,11 +1444,13 @@ class Item:
         return ""
 
     def classify_ce(self, img):
-        itemid =  self.classify_ce_sub(img, compute_hash_ce, 12)
+        itemid = self.classify_ce_sub(img, compute_hash_ce, dist_ce, 12)
         if itemid == "":
-            itemid =  self.classify_ce_sub(img, compute_hash_ce_narrow, 15)
+            logger.debug("use narrow image")
+            itemid = self.classify_ce_sub(
+                        img, compute_hash_ce_narrow, dist_ce_narrow, 15
+                        )
         return itemid
-
 
     def classify_point(self, img):
         """
@@ -1708,6 +1711,12 @@ def search_file(search_dir, dist_dic, dropPriority, category):
         for h in hash[0]:
             hash_hex = hash_hex + "{:02x}".format(h)
         dist_dic[hash_hex] = id
+        if category == "Craft Essence":
+            hash_narrow = compute_hash_ce_narrow(img)
+            hash_hex_narrow = ""
+            for h in hash_narrow[0]:
+                hash_hex_narrow = hash_hex_narrow + "{:02x}".format(h)
+            dist_ce_narrow[hash_hex_narrow] = id
 
 
 def calc_dist_local():
@@ -1853,7 +1862,7 @@ def get_output(filenames, args):
                 prev_datetime = dt
 
                 sumdrop = len([d for d in sc.itemlist
-                               if d["name"] != "クエストクリア報酬QP"])
+                               if d["id"] != ID_REWARD_QP])
                 if args.lang == "jpn":
                     drop_count = "ドロ数"
                 else:
@@ -2023,14 +2032,18 @@ def make_csv_data(args, sc_list, ce0_flag):
 
 if __name__ == '__main__':
     # オプションの解析
-    parser = argparse.ArgumentParser(description='Image Parse for FGO Battle Results')
+    parser = argparse.ArgumentParser(
+                        description='Image Parse for FGO Battle Results'
+                        )
     # 3. parser.add_argumentで受け取る引数を追加していく
-    parser.add_argument('filenames', help='Input File(s)', nargs='*')    # 必須の引数を追加
+    parser.add_argument('filenames',
+                        help='Input File(s)', nargs='*')    # 必須の引数を追加
     parser.add_argument('--lang', default=DEFAULT_ITEM_LANG,
                         choices=('jpn', 'eng'),
                         help='Language to be used for output: Default ' + DEFAULT_ITEM_LANG)
     parser.add_argument('-f', '--folder', help='Specify by folder')
-    parser.add_argument('--ordering', help='The order in which files are processed ',
+    parser.add_argument('--ordering',
+                        help='The order in which files are processed ',
                         type=Ordering,
                         choices=list(Ordering), default=Ordering.NOTSPECIFIED)
     parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
@@ -2073,9 +2086,9 @@ if __name__ == '__main__':
     if len(all_new_list) > 1:  # ファイル一つのときは合計値は出さない
         if questname == "":
             if args.lang == 'jpn':
-               questname = "合計"
+                questname = "合計"
             else:
-               questname = "SUM"
+                questname = "SUM"
         a = {'filename': questname, drop_count: ''}
         a.update(csv_sum)
         writer.writerow(a)
