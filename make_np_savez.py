@@ -39,7 +39,7 @@ def makeimg(file):
     #横幅188に拡大
     SIZE = 188
     img = cv2.resize(img, (0, 0),
-            fx=SIZE/(w - 5), fy=SIZE/(w - 5),
+            fx=SIZE/(w - 10), fy=SIZE/(w - 10),
             interpolation=cv2.INTER_AREA)
 
     return img
