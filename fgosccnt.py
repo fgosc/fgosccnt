@@ -1869,7 +1869,8 @@ def get_output(filenames, args):
                 sc = ScreenShot(args, img_rgb,
                                 svm, svm_chest, svm_card,
                                 fileextention)
-
+                if sc.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
+                    logger.warning("Page count recognition is failing: %s", filename)
                 # ドロップ内容が同じで下記のとき、重複除外
                 # QPカンストじゃない時、QPが前と一緒
                 # QPカンストの時、Exif内のファイル作成時間が15秒未満
