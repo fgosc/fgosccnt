@@ -802,8 +802,8 @@ class Item:
             if prev_item.id != ID_REWARD_QP \
                 and prev_item.background == self.background \
                 and not (ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX or
-                    ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
-                    ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX):
+                         ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
+                         ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX):
                 d = hasher.compare(self.hash_item, prev_item.hash_item)
                 if d <= 4:
                     self.category = prev_item.category
@@ -1914,7 +1914,10 @@ def get_output(filenames, args):
                                 svm, svm_chest, svm_card,
                                 fileextention)
                 if sc.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
-                    logger.warning("Page count recognition is failing: %s", filename)
+                    logger.warning(
+                                   "Page count recognition is failing: %s",
+                                   filename
+                                   )
                 # ドロップ内容が同じで下記のとき、重複除外
                 # QPカンストじゃない時、QPが前と一緒
                 # QPカンストの時、Exif内のファイル作成時間が15秒未満
@@ -1950,11 +1953,17 @@ def get_output(filenames, args):
                 # または前頁が最終頁なのに1頁じゃない
                 # 2. 前頁の続き頁なのにドロップ数や獲得QPが違う
                 if firstloop is False:
-                    if (prev_pages - prev_pagenum > 0
+                    if (
+                        prev_pages - prev_pagenum > 0
                         and sc.pagenum - prev_pagenum != 1) \
-                    or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1) \
-                    or sc.pagenum - prev_pagenum == 1 \
-                        and prev_qp_gained != sc.qp_gained or prev_chestnum != sc.chestnum:
+                        or (prev_pages - prev_pagenum == 0
+                            and sc.pagenum != 1) \
+                        or sc.pagenum != 1 \
+                            and sc.pagenum - prev_pagenum == 1 \
+                            and (
+                                 prev_qp_gained != sc.qp_gained
+                                 or prev_chestnum != sc.chestnum
+                                ):
                         fileoutput.append({'filename': 'missing'})
                         all_list.append([])
                 firstloop = False
@@ -2077,8 +2086,12 @@ def make_csv_header(args, item_list):
                    "dropPriority": a["dropPriority"], "dropnum": a["dropnum"]}
                   for a in flat_list]
     ce0_flag = ("Craft Essence"
-                not in [d.get('category') for d in flat_list]) \
-                and (max([d.get("id") for d in flat_list]) > 9707500)
+                not in [
+                        d.get('category') for d in flat_list
+                       ]
+                ) and (
+                       max([d.get("id") for d in flat_list]) > 9707500
+                )
     if ce0_flag:
         short_list.append({"id": 99999990, "name": ce_str,
                            "category": "Craft Essence",
