@@ -1893,7 +1893,10 @@ def get_output(filenames, args):
     prev_total_qp = QP_UNKNOWN
     prev_itemlist = []
     prev_datetime = datetime.datetime(year=2015, month=7, day=30, hour=0)
+    prev_qp_gained = 0
+    prev_chestnum = 0
     all_list = []
+    firstloop = True
 
     for filename in filenames:
         logger.debug("filename: %s", filename)
@@ -1943,11 +1946,18 @@ def get_output(filenames, args):
                         continue
 
                 # 2頁目以前のスクショが無い場合に migging と出力
-                if (prev_pages - prev_pagenum > 0
-                    and sc.pagenum - prev_pagenum != 1) \
-                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
-                    fileoutput.append({'filename': 'missing'})
-                    all_list.append([])
+                # 1. 前頁が最終頁じゃない&前頁の続き頁数じゃない
+                # または前頁が最終頁なのに1頁じゃない
+                # 2. 前頁の続き頁なのにドロップ数や獲得QPが違う
+                if firstloop is False:
+                    if (prev_pages - prev_pagenum > 0
+                        and sc.pagenum - prev_pagenum != 1) \
+                    or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1) \
+                    or sc.pagenum - prev_pagenum == 1 \
+                        and prev_qp_gained != sc.qp_gained or prev_chestnum != sc.chestnum:
+                        fileoutput.append({'filename': 'missing'})
+                        all_list.append([])
+                firstloop = False
 
                 all_list.append(sc.itemlist)
 
@@ -1956,6 +1966,8 @@ def get_output(filenames, args):
                 prev_total_qp = sc.total_qp
                 prev_itemlist = sc.itemlist
                 prev_datetime = dt
+                prev_qp_gained = sc.qp_gained
+                prev_chestnum = sc.chestnum
 
                 sumdrop = len([d for d in sc.itemlist
                                if d["id"] != ID_REWARD_QP])
