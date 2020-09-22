@@ -251,7 +251,7 @@ class ScreenShot:
         '''
         if self.pagenum == -1 or self.pages == -1 or self.lines == -1:
             return False
-        elif self.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
+        elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
             return False
         elif self.pagenum != 1 and self.lines != (self.chestnum + 1)/7:
             return False
@@ -261,19 +261,26 @@ class ScreenShot:
         rows = 7
         cols = 3
         if self.valid_pageinfo() is False:
-            self.pagenum = int(self.chestnum / (rows * cols)) + 1
-            self.lines = int(self.chestnum / rows)
+            logger.warning("pageinfo validation failed")
+            self.pages = int(self.chestnum / (rows * cols)) + 1
+            self.lines = int(self.chestnum / rows) + 1
             if self.itemlist[0]["id"] == ID_REWARD_QP:
-                self.pages = 1
-            elif self.chestnum < 21:
-                self.pages = 2
-            elif self.chestnum < 63:
-                if (self.chestnum + 1) % 7 != 0:
-                    self.pages = 3
+                self.pagenum = 1
+            elif 20 < self.chestnum < 42:
+                self.pagenum = 2
+            elif 42 <= self.chestnum < 63:
+                # 2頁目か3頁目かの推測
+                # 端数がぴたりじゃない場合のみ推測可能
+                if (self.chestnum + 1) % 7 == 0:
+                    self.pagenum = -1
+                elif len(self.itemlist) % 7 == 0:
+                    self.pagenum = 2
                 else:
-                    self.pages = -1
-                    logger.warning("pages guess failure")
-                    
+                    self.pagenum = 3
+            else:
+                self.pagenum = -1
+        if self.pages == -1:
+            logger.warning("pages guess failure")
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
