@@ -169,7 +169,10 @@ class ScreenShot:
                  fileextention, reward_only=False):
         TRAINING_IMG_WIDTH = 1755
         threshold = 80
-        self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
+        try:
+            self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
+        except pageinfo.TooManyAreasDetectedError:
+            self.pagenum, self.pages, self.lines = (-1, -1, -1)
         self.img_rgb_orig = img_rgb
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
@@ -240,6 +243,44 @@ class ScreenShot:
         self.itemlist = self.makeitemlist()
         self.total_qp = self.get_qp(mode)
         self.qp_gained = self.get_qp_gained(mode)
+        self.correct_pageinfo()
+
+    def valid_pageinfo(self):
+        '''
+        Checking the content of pageinfo and correcting it when it fails
+        '''
+        if self.pagenum == -1 or self.pages == -1 or self.lines == -1:
+            return False
+        elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
+            return False
+        elif self.pagenum != 1 and self.lines != int(self.chestnum/7) + 1:
+            return False
+        return True
+
+    def correct_pageinfo(self):
+        rows = 7
+        cols = 3
+        if self.valid_pageinfo() is False:
+            logger.warning("pageinfo validation failed")
+            self.pages = int(self.chestnum / (rows * cols)) + 1
+            self.lines = int(self.chestnum / rows) + 1
+            if self.itemlist[0]["id"] == ID_REWARD_QP:
+                self.pagenum = 1
+            elif 20 < self.chestnum < 42:
+                self.pagenum = 2
+            elif 42 <= self.chestnum < 63:
+                # 2頁目か3頁目かの推測
+                # 端数がぴたりじゃない場合のみ推測可能
+                if (self.chestnum + 1) % 7 == 0:
+                    self.pagenum = -1
+                elif len(self.itemlist) % 7 == 0:
+                    self.pagenum = 2
+                else:
+                    self.pagenum = 3
+            else:
+                self.pagenum = -1
+        if self.pages == -1:
+            logger.warning("pages guess failure")
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
@@ -1869,7 +1910,8 @@ def get_output(filenames, args):
                 sc = ScreenShot(args, img_rgb,
                                 svm, svm_chest, svm_card,
                                 fileextention)
-
+                if sc.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
+                    logger.warning("Page count recognition is failing: %s", filename)
                 # ドロップ内容が同じで下記のとき、重複除外
                 # QPカンストじゃない時、QPが前と一緒
                 # QPカンストの時、Exif内のファイル作成時間が15秒未満
