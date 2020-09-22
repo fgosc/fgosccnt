@@ -272,9 +272,9 @@ def guess_lines(actual_width, actual_height, entire_width, entire_height):
         return 5
     elif ratio > 0.48:  # 実測値 0.50-0.51
         return 6
-    elif ratio > 0.40:  # サンプルなし 参考値 1/2.333 = 0.429, 1/2.5 = 0.4
+    elif ratio > 0.42:  # 実測値 0.44
         return 7
-    elif ratio > 0.36:  # サンプルなし 参考値 1/2.666 = 0.375, 1/2.77 = 0.361
+    elif ratio > 0.38:  # 実測値 0.40-0.41
         return 8
     else:
         # 10 行以上は考慮しない
