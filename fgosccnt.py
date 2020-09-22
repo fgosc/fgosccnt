@@ -171,7 +171,7 @@ class ScreenShot:
         threshold = 80
         try:
             self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
-        except (pageinfo.TooManyAreasDetectedError, pageinfo.CannotGuessError):
+        except pageinfo.TooManyAreasDetectedError:
             self.pagenum, self.pages, self.lines = (-1, -1, -1)
         self.img_rgb_orig = img_rgb
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
@@ -253,7 +253,7 @@ class ScreenShot:
             return False
         elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
             return False
-        elif self.pagenum != 1 and self.lines != (self.chestnum + 1)/7:
+        elif self.pagenum != 1 and self.lines != int(self.chestnum/7) + 1:
             return False
         return True
 
