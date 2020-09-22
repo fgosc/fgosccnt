@@ -576,7 +576,7 @@ class ScreenShot:
             area = cv2.contourArea(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
             if ret[2] < int(w/2) and area > 80 and ret[1] < h/2 \
-                    and 0.4 < ret[2]/ret[3] < 0.85 and ret[3] > h/2:
+                    and 0.35 < ret[2]/ret[3] < 0.85 and ret[3] > h * 0.45:
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt):
@@ -793,12 +793,15 @@ class Item:
         self.background = classify_background(self.img_rgb)
         self.hash_item = compute_hash(self.img_rgb)  # 画像の距離
         if prev_item is not None:
-            if not (prev_item.background == self.background and
-                    (prev_item.id == ID_REWARD_QP or
-                     ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX or
-                     ID_PIECE_MIN <= prev_item.id <= ID_MONUMENT_MAX or
-                     ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
-                     ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX)):
+            # [Requirements for Caching]
+            # 1. previous item is not a reward QP.
+            # 2. Same background as the previous item
+            # 3. Not (similarity is close) dice, gem or EXP
+            if prev_item.id != ID_REWARD_QP \
+                and prev_item.background == self.background \
+                and not (ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX or
+                    ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
+                    ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX):
                 d = hasher.compare(self.hash_item, prev_item.hash_item)
                 if d <= 4:
                     self.category = prev_item.category
