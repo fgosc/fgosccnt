@@ -169,7 +169,10 @@ class ScreenShot:
                  fileextention, reward_only=False):
         TRAINING_IMG_WIDTH = 1755
         threshold = 80
-        self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
+        try:
+            self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
+        except (pageinfo.TooManyAreasDetectedError, pageinfo.CannotGuessError):
+            self.pagenum, self.pages, self.lines = (-1, -1, -1)
         self.img_rgb_orig = img_rgb
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
@@ -240,6 +243,37 @@ class ScreenShot:
         self.itemlist = self.makeitemlist()
         self.total_qp = self.get_qp(mode)
         self.qp_gained = self.get_qp_gained(mode)
+        self.correct_pageinfo()
+
+    def valid_pageinfo(self):
+        '''
+        Checking the content of pageinfo and correcting it when it fails
+        '''
+        if self.pagenum == -1 or self.pages == -1 or self.lines == -1:
+            return False
+        elif self.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
+            return False
+        elif self.pagenum != 1 and self.lines != (self.chestnum + 1)/7:
+            return False
+        return True
+
+    def correct_pageinfo(self):
+        rows = 7
+        cols = 3
+        if self.valid_pageinfo() is False:
+            self.pagenum = int(self.chestnum / (rows * cols)) + 1
+            self.lines = int(self.chestnum / rows)
+            if self.itemlist[0]["id"] == ID_REWARD_QP:
+                self.pages = 1
+            elif self.chestnum < 21:
+                self.pages = 2
+            elif self.chestnum < 63:
+                if (self.chestnum + 1) % 7 != 0:
+                    self.pages = 3
+                else:
+                    self.pages = -1
+                    logger.warning("pages guess failure")
+                    
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
