@@ -537,7 +537,7 @@ class ScreenShot:
             area = cv2.contourArea(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
             if ret[2] < int(w/2) and area > 80 and ret[1] < h/2 \
-                     and 0.35 < ret[2]/ret[3] < 0.85 and ret[3] > h *0.45:
+                    and 0.35 < ret[2]/ret[3] < 0.85 and ret[3] > h * 0.45:
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt):
