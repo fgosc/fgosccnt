@@ -49,29 +49,25 @@ def main():
         download_file(aadb_url, "listframes" + str(i) + "_bg.png")
     img_zero = makeimg(zero_flame)
     img_zero = img_zero[30:119, 7:25]
-    target_hist = img_hist(img_zero)
-    sig_zero = img_to_sig(target_hist)
+    hist_zero = img_hist(img_zero)
 
     img_gold = makeimg(gold_flame)
     img_gold = img_gold[30:119, 7:25]
-    target_hist = img_hist(img_gold)
-    sig_gold = img_to_sig(target_hist)
+    hist_gold = img_hist(img_gold)
 
     img_silver = makeimg(silver_flame)
     img_silver = img_silver[30:119, 7:25]
-    target_hist = img_hist(img_silver)
-    sig_silver = img_to_sig(target_hist)
+    hist_silver = img_hist(img_silver)
 
     img_bronze = makeimg(bronze_flame)
     img_bronze = img_bronze[30:119, 7:25]
-    target_hist = img_hist(img_bronze)
-    sig_bronze = img_to_sig(target_hist)
+    hist_bronze = img_hist(img_bronze)
 
     np.savez(output,
-             sig_zero=sig_zero,
-             sig_gold=sig_gold,
-             sig_silver=sig_silver,
-             sig_bronze=sig_bronze)
+             hist_zero=hist_zero,
+             hist_gold=hist_gold,
+             hist_silver=hist_silver,
+             hist_bronze=hist_bronze)
 
 if __name__ == '__main__':
     os.makedirs(img_dir, exist_ok=True)
