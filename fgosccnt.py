@@ -145,10 +145,10 @@ for evnetfile in evnetfiles:
         logger.exception(e)
 
 npz = np.load(basedir / Path('background.npz'))
-sig_zero = npz["sig_zero"]
-sig_gold = npz["sig_gold"]
-sig_silver = npz["sig_silver"]
-sig_bronze = npz["sig_bronze"]
+hist_zero = npz["hist_zero"]
+hist_gold = npz["hist_gold"]
+hist_silver = npz["hist_silver"]
+hist_bronze = npz["hist_bronze"]
 
 
 def has_intersect(a, b):
@@ -1699,25 +1699,21 @@ def classify_background(img_rgb):
     """
     背景判別
     """
-    # logger.info(sig_gold)
-    # logger.info(sig_silver)
-    # logger.info(sig_bronze)
     img = img_rgb[30:119, 7:25]
     target_hist = img_hist(img)
-    sig_img = img_to_sig(target_hist)
-    # logger.info(sig_img)
-    bg_dist = []
-    zdist, _, flow = cv2.EMD(sig_img, sig_zero, cv2.DIST_L2)
-    bg_dist.append({"background": "zero", "dist": zdist})
-    gdist, _, flow = cv2.EMD(sig_img, sig_gold, cv2.DIST_L2)
-    bg_dist.append({"background": "gold", "dist": gdist})
-    sdist, _, flow = cv2.EMD(sig_img, sig_silver, cv2.DIST_L2)
-    bg_dist.append({"background": "silver", "dist": sdist})
-    bdist, _, flow = cv2.EMD(sig_img, sig_bronze, cv2.DIST_L2)
-    bg_dist.append({"background": "bronze", "dist": bdist})
-    bg_dist = sorted(bg_dist, key=lambda x: x['dist'])
-    logger.debug("background dist: %s", bg_dist)
-    return (bg_dist[0]["background"])
+    bg_score = []
+    score_z = calc_hist_score(target_hist, hist_zero)
+    bg_score.append({"background": "zero", "dist": score_z})
+    score_g = calc_hist_score(target_hist, hist_gold)
+    bg_score.append({"background": "gold", "dist": score_g})
+    score_s = calc_hist_score(target_hist, hist_silver)
+    bg_score.append({"background": "silver", "dist": score_s})
+    score_b = calc_hist_score(target_hist, hist_bronze)
+    bg_score.append({"background": "bronze", "dist": score_b})
+
+    bg_score = sorted(bg_score, key=lambda x: x['dist'])
+    logger.debug("background dist: %s", bg_score)
+    return (bg_score[0]["background"])
 
 
 def compute_hash(img_rgb):
@@ -1795,15 +1791,12 @@ def search_file(search_dir, dist_dic, dropPriority, category):
             dist_ce_narrow[hash_hex_narrow] = id
 
 
-def img_to_sig(arr):
-    # cv2.EMDに渡す値は単精度浮動小数点数
-    sig = np.empty((arr.size, 3), dtype=np.float32)
-    count = 0
-    for i in range(arr.shape[0]):
-        for j in range(arr.shape[1]):
-            sig[count] = np.array([arr[i, j], i, j])
-            count += 1
-    return sig
+def calc_hist_score(hist1, hist2):
+    scores = []
+    for channel1, channel2 in zip(hist1, hist2):
+        score = cv2.compareHist(channel1, channel2, cv2.HISTCMP_BHATTACHARYYA)
+        scores.append(score)
+    return np.mean(scores)
 
 
 def img_hist(img):
@@ -1811,7 +1804,7 @@ def img_hist(img):
     hist2 = cv2.calcHist([img], [1], None, [256], [0, 256])
     hist3 = cv2.calcHist([img], [2], None, [256], [0, 256])
 
-    return np.hstack((hist1, hist2, hist3))
+    return hist1, hist2, hist3
 
 
 def calc_dist_local():
@@ -1896,7 +1889,6 @@ def get_output(filenames, args):
     prev_qp_gained = 0
     prev_chestnum = 0
     all_list = []
-    firstloop = True
 
     for filename in filenames:
         logger.debug("filename: %s", filename)
@@ -1952,21 +1944,19 @@ def get_output(filenames, args):
                 # 1. 前頁が最終頁じゃない&前頁の続き頁数じゃない
                 # または前頁が最終頁なのに1頁じゃない
                 # 2. 前頁の続き頁なのにドロップ数や獲得QPが違う
-                if firstloop is False:
-                    if (
-                        prev_pages - prev_pagenum > 0
-                        and sc.pagenum - prev_pagenum != 1) \
-                        or (prev_pages - prev_pagenum == 0
-                            and sc.pagenum != 1) \
-                        or sc.pagenum != 1 \
-                            and sc.pagenum - prev_pagenum == 1 \
-                            and (
-                                 prev_qp_gained != sc.qp_gained
-                                 or prev_chestnum != sc.chestnum
-                                ):
-                        fileoutput.append({'filename': 'missing'})
-                        all_list.append([])
-                firstloop = False
+                if (
+                    prev_pages - prev_pagenum > 0
+                    and sc.pagenum - prev_pagenum != 1) \
+                    or (prev_pages - prev_pagenum == 0
+                        and sc.pagenum != 1) \
+                    or sc.pagenum != 1 \
+                        and sc.pagenum - prev_pagenum == 1 \
+                        and (
+                                prev_qp_gained != sc.qp_gained
+                                or prev_chestnum != sc.chestnum
+                            ):
+                    fileoutput.append({'filename': 'missing'})
+                    all_list.append([])
 
                 all_list.append(sc.itemlist)
 
