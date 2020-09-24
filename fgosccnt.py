@@ -243,7 +243,47 @@ class ScreenShot:
         self.itemlist = self.makeitemlist()
         self.total_qp = self.get_qp(mode)
         self.qp_gained = self.get_qp_gained(mode)
-        self.correct_pageinfo()
+        self.pagenum, self.pages, self.lines = self.correct_pageinfo()
+
+    def detect_scroll_bar(self):
+        '''
+        Modified from determine_scroll_position()
+        '''
+        width = self.img_rgb.shape[1]
+        topleft = (width - 90, 180)
+        bottomright = (width, 180 + 674)
+
+        if logger.isEnabledFor(logging.DEBUG):
+            img_copy = self.img_rgb.copy()
+            cv2.rectangle(img_copy, topleft, bottomright, (0, 0, 255), 3)
+            cv2.imwrite("./scroll_bar_selected2.jpg", img_copy)
+
+        gray_image = self.img_gray[
+                                   topleft[1]: bottomright[1],
+                                   topleft[0]: bottomright[0]
+                                   ]
+        _, binary = cv2.threshold(gray_image, 200, 255, cv2.THRESH_BINARY)
+        if logger.isEnabledFor(logging.DEBUG):
+            cv2.imwrite("scroll_bar_binary2.png", binary)
+        contours = cv2.findContours(
+                                    binary,
+                                    cv2.RETR_LIST,
+                                    cv2.CHAIN_APPROX_NONE
+                                    )[0]
+        pts = []
+        for cnt in contours:
+            ret = cv2.boundingRect(cnt)
+            pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
+            if ret[3] > 10:
+                pts.append(pt)
+        if len(pts) == 0:
+            logger.debug("Can't find scroll bar")
+            return -1, -1
+        elif len(pts) > 1:
+            logger.warning("Too many objects.")
+            return -1, -1
+        else:
+            return pt[1], pt[3] - pt[1]
 
     def valid_pageinfo(self):
         '''
@@ -253,34 +293,25 @@ class ScreenShot:
             return False
         elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
             return False
-        elif self.pagenum != 1 and self.lines != int(self.chestnum/7) + 1:
+        elif self.chestnum != -1 and self.pagenum != 1 \
+                and self.lines != int(self.chestnum/7) + 1:
             return False
         return True
 
     def correct_pageinfo(self):
-        rows = 7
-        cols = 3
         if self.valid_pageinfo() is False:
             logger.warning("pageinfo validation failed")
-            self.pages = int(self.chestnum / (rows * cols)) + 1
-            self.lines = int(self.chestnum / rows) + 1
-            if self.itemlist[0]["id"] == ID_REWARD_QP:
-                self.pagenum = 1
-            elif 20 < self.chestnum < 42:
-                self.pagenum = 2
-            elif 42 <= self.chestnum < 63:
-                # 2頁目か3頁目かの推測
-                # 端数がぴたりじゃない場合のみ推測可能
-                if (self.chestnum + 1) % 7 == 0:
-                    self.pagenum = -1
-                elif len(self.itemlist) % 7 == 0:
-                    self.pagenum = 2
-                else:
-                    self.pagenum = 3
-            else:
-                self.pagenum = -1
-        if self.pages == -1:
-            logger.warning("pages guess failure")
+            asr_y, actual_height = self.detect_scroll_bar()
+            if asr_y == -1 or actual_height == -1:
+                return 1, 1, 0
+            entire_height = 649
+            esr_y = 17
+            pagenum = pageinfo.guess_pagenum(asr_y, esr_y, entire_height)
+            pages = pageinfo.guess_pages(actual_height, entire_height)
+            lines = pageinfo.guess_lines(actual_height, entire_height)
+            return pagenum, pages, lines
+        else:
+            return self.pagenum, self.pages, self.lines
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
@@ -2151,23 +2182,26 @@ if __name__ == '__main__':
                         help='Input File(s)', nargs='*')    # 必須の引数を追加
     parser.add_argument('--lang', default=DEFAULT_ITEM_LANG,
                         choices=('jpn', 'eng'),
-                        help='Language to be used for output: Default ' + DEFAULT_ITEM_LANG)
+                        help='Language to be used for output: Default '
+                             + DEFAULT_ITEM_LANG)
     parser.add_argument('-f', '--folder', help='Specify by folder')
     parser.add_argument('--ordering',
                         help='The order in which files are processed ',
                         type=Ordering,
                         choices=list(Ordering), default=Ordering.NOTSPECIFIED)
+    text_timeout = 'Duplicate check interval at QP MAX (sec): Default '
     parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
-                        help='Duplicate check interval at QP MAX (sec): Default ' + str(TIMEOUT) + ' sec')
+                        help=text_timeout + str(TIMEOUT) + ' sec')
     parser.add_argument('--version', action='version',
                         version=PROGNAME + " " + VERSION)
     parser.add_argument('-l', '--loglevel',
                         choices=('debug', 'info'), default='info')
 
     args = parser.parse_args()    # 引数を解析
+    lformat = '%(name)s <%(filename)s-L%(lineno)s> [%(levelname)s] %(message)s'
     logging.basicConfig(
         level=logging.INFO,
-        format='%(name)s <%(filename)s-L%(lineno)s> [%(levelname)s] %(message)s',
+        format=lformat,
     )
     logger.setLevel(args.loglevel.upper())
 
