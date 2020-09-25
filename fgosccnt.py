@@ -151,10 +151,10 @@ for evnetfile in evnetfiles:
         logger.exception(e)
 
 npz = np.load(basedir / Path('background.npz'))
-sig_zero = npz["sig_zero"]
-sig_gold = npz["sig_gold"]
-sig_silver = npz["sig_silver"]
-sig_bronze = npz["sig_bronze"]
+hist_zero = npz["hist_zero"]
+hist_gold = npz["hist_gold"]
+hist_silver = npz["hist_silver"]
+hist_bronze = npz["hist_bronze"]
 
 
 def has_intersect(a, b):
@@ -175,7 +175,10 @@ class ScreenShot:
                  fileextention, reward_only=False):
         TRAINING_IMG_WIDTH = 1755
         threshold = 80
-        self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
+        try:
+            self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
+        except pageinfo.TooManyAreasDetectedError:
+            self.pagenum, self.pages, self.lines = (-1, -1, -1)
         self.img_rgb_orig = img_rgb
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
@@ -246,35 +249,81 @@ class ScreenShot:
         self.itemlist = self.makeitemlist()
         self.total_qp = self.get_qp(mode)
         self.qp_gained = self.get_qp_gained(mode)
-        self.scroll_position = self.determine_scroll_position(
-            logger.isEnabledFor(logging.DEBUG))
+        asr_y, actual_height = self.detect_scroll_bar()
+        if asr_y == -1 or actual_height == -1:
+            self.scroll_position = -1
+        else:
+            entire_height = 649  # from correct_pageinfo()
+            self.scroll_position = asr_y / entire_height
+        self.pagenum, self.pages, self.lines = self.correct_pageinfo()
 
-    def determine_scroll_position(self, debug=False):
+    def detect_scroll_bar(self):
+        '''
+        Modified from determine_scroll_position()
+        '''
         width = self.img_rgb.shape[1]
-        # TODO: is it okay to hardcode this?
         topleft = (width - 90, 180)
-        bottomright = (width, 180 + 660)
+        bottomright = (width, 180 + 674)
 
-        if debug:
+        if logger.isEnabledFor(logging.DEBUG):
             img_copy = self.img_rgb.copy()
             cv2.rectangle(img_copy, topleft, bottomright, (0, 0, 255), 3)
-            cv2.imwrite("./scroll_bar_selected.jpg", img_copy)
+            cv2.imwrite("./scroll_bar_selected2.jpg", img_copy)
 
-        gray_image = self.img_gray[topleft[1]: bottomright[1], topleft[0]: bottomright[0]]
-        _, binary = cv2.threshold(gray_image, 225, 255, cv2.THRESH_BINARY)
-        if debug:
-            cv2.imwrite("scroll_bar_binary.png", binary)
-        _, template = cv2.threshold(
-            cv2.imread("./data/other/scroll_bar_upper.png",
-                       cv2.IMREAD_GRAYSCALE),
-            225,
-            255,
-            cv2.THRESH_BINARY,
-        )
+        gray_image = self.img_gray[
+                                   topleft[1]: bottomright[1],
+                                   topleft[0]: bottomright[0]
+                                   ]
+        _, binary = cv2.threshold(gray_image, 200, 255, cv2.THRESH_BINARY)
+        if logger.isEnabledFor(logging.DEBUG):
+            cv2.imwrite("scroll_bar_binary2.png", binary)
+        contours = cv2.findContours(
+                                    binary,
+                                    cv2.RETR_LIST,
+                                    cv2.CHAIN_APPROX_NONE
+                                    )[0]
+        pts = []
+        for cnt in contours:
+            ret = cv2.boundingRect(cnt)
+            pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
+            if ret[3] > 10:
+                pts.append(pt)
+        if len(pts) == 0:
+            logger.debug("Can't find scroll bar")
+            return -1, -1
+        elif len(pts) > 1:
+            logger.warning("Too many objects.")
+            return -1, -1
+        else:
+            return pt[1], pt[3] - pt[1]
 
-        res = cv2.matchTemplate(binary, template, cv2.TM_CCOEFF_NORMED)
-        _, maxValue, _, max_loc = cv2.minMaxLoc(res)
-        return max_loc[1] / gray_image.shape[0] if maxValue > 0.5 else -1
+    def valid_pageinfo(self):
+        '''
+        Checking the content of pageinfo and correcting it when it fails
+        '''
+        if self.pagenum == -1 or self.pages == -1 or self.lines == -1:
+            return False
+        elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
+            return False
+        elif self.chestnum != -1 and self.pagenum != 1 \
+                and self.lines != int(self.chestnum/7) + 1:
+            return False
+        return True
+
+    def correct_pageinfo(self):
+        if self.valid_pageinfo() is False:
+            logger.warning("pageinfo validation failed")
+            asr_y, actual_height = self.detect_scroll_bar()
+            if asr_y == -1 or actual_height == -1:
+                return 1, 1, 0
+            entire_height = 649
+            esr_y = 17
+            pagenum = pageinfo.guess_pagenum(asr_y, esr_y, entire_height)
+            pages = pageinfo.guess_pages(actual_height, entire_height)
+            lines = pageinfo.guess_lines(actual_height, entire_height)
+            return pagenum, pages, lines
+        else:
+            return self.pagenum, self.pages, self.lines
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
@@ -800,8 +849,8 @@ class Item:
             if prev_item.id != ID_REWARD_QP \
                 and prev_item.background == self.background \
                 and not (ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX or
-                    ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
-                    ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX):
+                         ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
+                         ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX):
                 d = hasher.compare(self.hash_item, prev_item.hash_item)
                 if d <= 4:
                     self.category = prev_item.category
@@ -1705,25 +1754,21 @@ def classify_background(img_rgb):
     """
     背景判別
     """
-    # logger.info(sig_gold)
-    # logger.info(sig_silver)
-    # logger.info(sig_bronze)
     img = img_rgb[30:119, 7:25]
     target_hist = img_hist(img)
-    sig_img = img_to_sig(target_hist)
-    # logger.info(sig_img)
-    bg_dist = []
-    zdist, _, flow = cv2.EMD(sig_img, sig_zero, cv2.DIST_L2)
-    bg_dist.append({"background": "zero", "dist": zdist})
-    gdist, _, flow = cv2.EMD(sig_img, sig_gold, cv2.DIST_L2)
-    bg_dist.append({"background": "gold", "dist": gdist})
-    sdist, _, flow = cv2.EMD(sig_img, sig_silver, cv2.DIST_L2)
-    bg_dist.append({"background": "silver", "dist": sdist})
-    bdist, _, flow = cv2.EMD(sig_img, sig_bronze, cv2.DIST_L2)
-    bg_dist.append({"background": "bronze", "dist": bdist})
-    bg_dist = sorted(bg_dist, key=lambda x: x['dist'])
-    logger.debug("background dist: %s", bg_dist)
-    return (bg_dist[0]["background"])
+    bg_score = []
+    score_z = calc_hist_score(target_hist, hist_zero)
+    bg_score.append({"background": "zero", "dist": score_z})
+    score_g = calc_hist_score(target_hist, hist_gold)
+    bg_score.append({"background": "gold", "dist": score_g})
+    score_s = calc_hist_score(target_hist, hist_silver)
+    bg_score.append({"background": "silver", "dist": score_s})
+    score_b = calc_hist_score(target_hist, hist_bronze)
+    bg_score.append({"background": "bronze", "dist": score_b})
+
+    bg_score = sorted(bg_score, key=lambda x: x['dist'])
+    logger.debug("background dist: %s", bg_score)
+    return (bg_score[0]["background"])
 
 
 def compute_hash(img_rgb):
@@ -1801,15 +1846,12 @@ def search_file(search_dir, dist_dic, dropPriority, category):
             dist_ce_narrow[hash_hex_narrow] = id
 
 
-def img_to_sig(arr):
-    # cv2.EMDに渡す値は単精度浮動小数点数
-    sig = np.empty((arr.size, 3), dtype=np.float32)
-    count = 0
-    for i in range(arr.shape[0]):
-        for j in range(arr.shape[1]):
-            sig[count] = np.array([arr[i, j], i, j])
-            count += 1
-    return sig
+def calc_hist_score(hist1, hist2):
+    scores = []
+    for channel1, channel2 in zip(hist1, hist2):
+        score = cv2.compareHist(channel1, channel2, cv2.HISTCMP_BHATTACHARYYA)
+        scores.append(score)
+    return np.mean(scores)
 
 
 def img_hist(img):
@@ -1817,7 +1859,7 @@ def img_hist(img):
     hist2 = cv2.calcHist([img], [1], None, [256], [0, 256])
     hist3 = cv2.calcHist([img], [2], None, [256], [0, 256])
 
-    return np.hstack((hist1, hist2, hist3))
+    return hist1, hist2, hist3
 
 
 def calc_dist_local():
@@ -1899,6 +1941,8 @@ def get_output(filenames, args):
     prev_total_qp = QP_UNKNOWN
     prev_itemlist = []
     prev_datetime = datetime.datetime(year=2015, month=7, day=30, hour=0)
+    prev_qp_gained = 0
+    prev_chestnum = 0
     all_list = []
 
     for filename in filenames:
@@ -1916,7 +1960,11 @@ def get_output(filenames, args):
                 sc = ScreenShot(args, img_rgb,
                                 svm, svm_chest, svm_card,
                                 fileextention)
-
+                if sc.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
+                    logger.warning(
+                                   "Page count recognition is failing: %s",
+                                   filename
+                                   )
                 # ドロップ内容が同じで下記のとき、重複除外
                 # QPカンストじゃない時、QPが前と一緒
                 # QPカンストの時、Exif内のファイル作成時間が15秒未満
@@ -1948,9 +1996,20 @@ def get_output(filenames, args):
                         continue
 
                 # 2頁目以前のスクショが無い場合に migging と出力
-                if (prev_pages - prev_pagenum > 0
+                # 1. 前頁が最終頁じゃない&前頁の続き頁数じゃない
+                # または前頁が最終頁なのに1頁じゃない
+                # 2. 前頁の続き頁なのにドロップ数や獲得QPが違う
+                if (
+                    prev_pages - prev_pagenum > 0
                     and sc.pagenum - prev_pagenum != 1) \
-                   or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1):
+                    or (prev_pages - prev_pagenum == 0
+                        and sc.pagenum != 1) \
+                    or sc.pagenum != 1 \
+                        and sc.pagenum - prev_pagenum == 1 \
+                        and (
+                                prev_qp_gained != sc.qp_gained
+                                or prev_chestnum != sc.chestnum
+                            ):
                     fileoutput.append({'filename': 'missing'})
                     all_list.append([])
 
@@ -1961,6 +2020,8 @@ def get_output(filenames, args):
                 prev_total_qp = sc.total_qp
                 prev_itemlist = sc.itemlist
                 prev_datetime = dt
+                prev_qp_gained = sc.qp_gained
+                prev_chestnum = sc.chestnum
 
                 sumdrop = len([d for d in sc.itemlist
                                if d["id"] != ID_REWARD_QP])
@@ -2304,8 +2365,12 @@ def make_csv_header(args, item_list):
                    "dropPriority": a["dropPriority"], "dropnum": a["dropnum"]}
                   for a in flat_list]
     ce0_flag = ("Craft Essence"
-                not in [d.get('category') for d in flat_list]) \
-        and (max([d.get("id") for d in flat_list]) > 9707500)
+                not in [
+                        d.get('category') for d in flat_list
+                       ]
+                ) and (
+                       max([d.get("id") for d in flat_list]) > 9707500
+                )
     if ce0_flag:
         short_list.append({"id": 99999990, "name": ce_str,
                            "category": "Craft Essence",
@@ -2389,7 +2454,8 @@ if __name__ == '__main__':
         '-i', '--filenames', help='image file to parse', nargs='+')    # 必須の引数を追加
     parser.add_argument('--lang', default=DEFAULT_ITEM_LANG,
                         choices=('jpn', 'eng'),
-                        help='Language to be used for output: Default ' + DEFAULT_ITEM_LANG)
+                        help='Language to be used for output: Default '
+                             + DEFAULT_ITEM_LANG)
     parser.add_argument('-f', '--folder', help='Specify by folder')
     parser.add_argument('-o', '--out_folder',
                         help='folder to write parsed data to. If specified, parsed images will also be moved to here. Else, output will simply be written to stdout')
@@ -2397,8 +2463,9 @@ if __name__ == '__main__':
                         help='The order in which files are processed ',
                         type=Ordering,
                         choices=list(Ordering), default=Ordering.NOTSPECIFIED)
+    text_timeout = 'Duplicate check interval at QP MAX (sec): Default '
     parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
-                        help='Duplicate check interval at QP MAX (sec): Default ' + str(TIMEOUT) + ' sec')
+                        help=text_timeout + str(TIMEOUT) + ' sec')
     parser.add_argument('--version', action='version',
                         version=PROGNAME + " " + VERSION)
     parser.add_argument('-l', '--loglevel',
@@ -2428,9 +2495,10 @@ if __name__ == '__main__':
     )
 
     args = parser.parse_args()    # 引数を解析
+    lformat = '%(name)s <%(filename)s-L%(lineno)s> [%(levelname)s] %(message)s'
     logging.basicConfig(
         level=logging.INFO,
-        format='%(name)s <%(filename)s-L%(lineno)s> [%(levelname)s] %(message)s',
+        format=lformat,
     )
     logger.setLevel(args.loglevel.upper())
 
