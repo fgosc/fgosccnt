@@ -253,7 +253,8 @@ class ScreenShot:
         if asr_y == -1 or actual_height == -1:
             self.scroll_position = -1
         else:
-            self.scroll_position = asr_y / actual_height
+            entire_height = 649  # from correct_pageinfo()
+            self.scroll_position = asr_y / entire_height
         self.pagenum, self.pages, self.lines = self.correct_pageinfo()
 
     def detect_scroll_bar(self):
