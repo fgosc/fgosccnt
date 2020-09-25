@@ -32,7 +32,7 @@ import sys
 
 import cv2
 
-logger = logging.getLogger('fgo')
+logger = logging.getLogger(__name__)
 
 NOSCROLL_PAGE_INFO = (1, 1, 0)
 
@@ -53,15 +53,7 @@ class PageInfoError(Exception):
     pass
 
 
-class CannotGuessError(PageInfoError):
-    pass
-
-
 class TooManyAreasDetectedError(PageInfoError):
-    pass
-
-
-class ScrollableAreaNotFoundError(PageInfoError):
     pass
 
 
@@ -83,42 +75,6 @@ def filter_contour_qp(contour, im):
     if not (w * 1.2 < im_w < w * 2):
         return False
     logger.debug('qp region: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
-    return True
-
-
-def filter_contour_scrollbar(contour, im):
-    """
-        スクロールバー領域を拾い、それ以外を除外するフィルター
-    """
-    im_h, im_w = im.shape[:2]
-    # 画像全体に対する検出領域の面積比が一定以上であること。
-    # 明らかに小さすぎる領域はここで捨てる。
-    if cv2.contourArea(contour) * 80 < im_w * im_h:
-        return False
-    x, y, w, h = cv2.boundingRect(contour)
-    logger.debug('scrollbar candidate: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
-    # 縦長領域なので、幅に対して十分大きい高さになっていること。
-    if h < w * 5:
-        return False
-    logger.debug('scrollbar region: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
-    return True
-
-
-def filter_contour_scrollable_area(contour, im):
-    """
-        スクロール可能領域を拾い、それ以外を除外するフィルター
-    """
-    im_w, im_h = im.shape[:2]
-    # 画像全体に対する検出領域の面積比が一定以上であること。
-    # 明らかに小さすぎる領域はここで捨てる。
-    if cv2.contourArea(contour) * 50 < im_w * im_h:
-        return False
-    x, y, w, h = cv2.boundingRect(contour)
-    logger.debug('scrollable area candidate: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
-    # 縦長領域なので、幅に対して十分大きい高さになっていること。
-    if h < w * 10:
-        return False
-    logger.debug('scrollable area region: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
     return True
 
 
@@ -203,19 +159,10 @@ def detect_qp_region(im, mode=QPDetectionMode.JP.value, debug_draw_image=False, 
     return candidate
 
 
-def guess_pages(actual_width, actual_height, entire_width, entire_height):
+def guess_pages(actual_height, entire_height):
     """
         スクロールバー領域の高さからドロップ枠が何ページあるか推定する
     """
-    delta = abs(entire_width - actual_width)
-    if delta > 15:
-        # 比較しようとしている領域が異なる可能性が高い
-        raise CannotGuessError(
-            f'幅の誤差が大きすぎます: delta = {delta}, '
-            f'entire_width = {entire_width}, '
-            f'actual_width = {actual_width}'
-        )
-
     if actual_height * 1.1 > entire_height:
         return 1
     if actual_height * 2.2 > entire_height:
@@ -224,13 +171,10 @@ def guess_pages(actual_width, actual_height, entire_width, entire_height):
     return 3
 
 
-def guess_pagenum(actual_x, actual_y, entire_x, entire_y, entire_height):
+def guess_pagenum(actual_y, entire_y, entire_height):
     """
         スクロールバー領域の y 座標の位置からドロップ画像のページ数を推定する
     """
-    if abs(actual_x - entire_x) > 12:
-        # 比較しようとしている領域が異なる可能性が高い
-        raise CannotGuessError(f'x 座標の誤差が大きすぎます: entire_x = {entire_x}, actual_x = {actual_x}')
 
     # スクロールバーと上端との空き領域の縦幅 delta と
     # スクロール可能領域の縦幅 entire_height との比率で位置を推定する。
@@ -248,20 +192,11 @@ def guess_pagenum(actual_x, actual_y, entire_x, entire_y, entire_height):
     return 3
 
 
-def guess_lines(actual_width, actual_height, entire_width, entire_height):
+def guess_lines(actual_height, entire_height):
     """
         スクロールバー領域の高さからドロップ枠が何行あるか推定する
         スクロールバーを用いる関係上、原理的に 2 行以下は推定不可
     """
-    delta = abs(entire_width - actual_width)
-    if delta > 15:
-        # 比較しようとしている領域が異なる可能性が高い
-        raise CannotGuessError(
-            f'幅の誤差が大きすぎます: delta = {delta}, '
-            f'entire_width = {entire_width}, '
-            f'actual_width = {actual_width}'
-        )
-
     ratio = actual_height / entire_height
     logger.debug('scrollbar ratio: %s', ratio)
     if ratio > 0.90:    # 実測値 0.94
@@ -272,19 +207,114 @@ def guess_lines(actual_width, actual_height, entire_width, entire_height):
         return 5
     elif ratio > 0.48:  # 実測値 0.50-0.51
         return 6
-    elif ratio > 0.40:  # サンプルなし 参考値 1/2.333 = 0.429, 1/2.5 = 0.4
+    elif ratio > 0.42:  # 実測値 0.44
         return 7
-    elif ratio > 0.36:  # サンプルなし 参考値 1/2.666 = 0.375, 1/2.77 = 0.361
+    elif ratio > 0.38:  # 実測値 0.40-0.41
         return 8
     else:
         # 10 行以上は考慮しない
         return 9
 
 
-def _detect_scrollbar_region(im, binary_threshold, filter_func):
+def filter_contour_scrollbar(contour, im):
+    """
+        スクロールバー領域を拾い、それ以外を除外するフィルター
+
+        適合する場合は contour オブジェクトを、適合しない場合は None を返す。
+    """
+    im_h, im_w = im.shape[:2]
+    # 画像全体に対する検出領域の面積比が一定以上であること。
+    # 明らかに小さすぎる領域はここで捨てる。
+    if cv2.contourArea(contour) * 80 < im_w * im_h:
+        return None
+    x, y, w, h = cv2.boundingRect(contour)
+    logger.debug('scrollbar candidate: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
+    # 縦長領域なので、幅に対して十分大きい高さになっていること。
+    if h < w * 5:
+        return None
+    logger.debug('scrollbar region: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
+    logger.debug('found')
+    return contour
+
+
+def filter_contour_scrollable_area(contour, scrollbar_contour, im):
+    """
+        スクロール可能領域を拾い、それ以外を除外するフィルター
+
+        適合する場合は contour オブジェクトを、適合しない場合は None を返す。
+        ただし contour オブジェクトは近似図形に補正されることがある。
+    """
+    im_w, im_h = im.shape[:2]
+    # 画像全体に対する検出領域の面積比が一定以上であること。
+    # 明らかに小さすぎる領域はここで捨てる。
+    if cv2.contourArea(contour) * 50 < im_w * im_h:
+        return None
+    x, y, w, h = cv2.boundingRect(contour)
+    logger.debug('scrollable area candidate: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
+
+    sx, sy, sw, sh = cv2.boundingRect(scrollbar_contour)
+
+    # スクロールバーより高さが低いものはダメ
+    if h < sh:
+        logger.debug('NG: height %s is less than scrollbar %s', h, sh)
+        return None
+
+    # 長方形に近似する
+    epsilon = 0.05 * cv2.arcLength(contour, True)
+    approx = cv2.approxPolyDP(contour, epsilon, True)
+    ax, ay, aw, ah = cv2.boundingRect(approx)
+    logger.debug('approx rectangle: (x, y, width, height) = (%s, %s, %s, %s)', ax, ay, aw, ah)
+
+    # 近似図形の幅はスクロールバーの幅+5以下
+    if aw > sw + 5:
+        logger.debug('NG: approx width %s is greater than scrollbar %s + 5', aw, sw)
+        return None
+
+    # 近似図形の x 座標はスクロールバーの幅 + 10 に収まること
+    if ax < sx - 10:
+        logger.debug('NG: approx x %s is more left than scrollbar %s - 10 = %s', ax, sx, sx - 10)
+        return None
+    if ax > sx + sw + 10:
+        logger.debug('NG: approx x %s is more right than scrollbar %s + width %s + 10 = %s', ax, sx, sw, sx + sw + 10)
+        return None
+
+    # 近似図形の上端はスクロールバーよりも高い位置
+    if ay > sy:
+        logger.debug('NG: approx top position %s is under the scrollbar top %s', ay, sy)
+        return None
+    # 近似図形の下端はスクロールバーよりも低い位置
+    if ay + ah < sy + sh:
+        logger.debug('NG: approx bottom position %s is over the scrollbar bottom %s', ay + ah, sy + sh)
+        return None
+
+    # 近似図形の高さはスクロールバーの幅の13倍以上16倍以下
+    if sw * 13 > ah:
+        logger.debug('NG: approx height %s is less than scrollbar width %s * 13 = %s', ah, sw, sw * 13)
+        return None
+    # TODO このアルゴリズムでは NA 版の昔の形式のスクリーンショットはうまく解釈できない。
+    # なぜなら、NA 版の昔の形式のスクリーンショットは幅がとても細いため、スクロールバーの
+    # 幅の16倍以下という条件をクリアできないから。
+    # 一時的にこの制限を外して検証してみるか？ 幅とx座標の位置を事前に検証済みなので
+    # 16倍以下の制限はなくてもいいかもしれない。
+    # if sw * 16 < ah:
+    #    return None
+
+    logger.debug('found')
+    return approx
+
+
+def _detect_scrollbar_region(im, binary_threshold):
     _, th1 = cv2.threshold(im, binary_threshold, 255, cv2.THRESH_BINARY)
     contours, _ = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    return [c for c in contours if filter_func(c, im)]
+    filtered = [filter_contour_scrollbar(c, im) for c in contours]
+    return [c for c in filtered if c is not None]
+
+
+def _detect_scrollable_area(im, binary_threshold, scrollbar_contour):
+    _, th1 = cv2.threshold(im, binary_threshold, 255, cv2.THRESH_BINARY)
+    contours, _ = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    filtered = [filter_contour_scrollable_area(c, scrollbar_contour, im) for c in contours]
+    return [c for c in filtered if c is not None]
 
 
 def _likely_to_same_contour(contour0, contour1):
@@ -317,10 +347,9 @@ def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, **kwargs):
     # トライしていく。閾値が低くなるほど検出されやすいが、矩形がゆがみ
     # やすくなり、後の誤検出につながる。そのため、高い閾値で検出できれば
     # それを正とするのがよい。
-    thresholds_for_entire = range(27, 17, -1)
+    thresholds_for_entire = range(27, 15, -1)
 
-    actual_scrollbar_contours = _detect_scrollbar_region(
-        im_gray, threshold_for_actual, filter_contour_scrollbar)
+    actual_scrollbar_contours = _detect_scrollbar_region(im_gray, threshold_for_actual)
     if len(actual_scrollbar_contours) == 0:
         return (None, None)
 
@@ -335,8 +364,8 @@ def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, **kwargs):
 
     scrollable_area_contour = None
     for th in thresholds_for_entire:
-        scrollable_area_contours = _detect_scrollbar_region(
-            im_gray, th, filter_contour_scrollable_area)
+        scrollable_area_contours = _detect_scrollable_area(im_gray, th, actual_scrollbar_contour)
+
         if len(scrollable_area_contours) == 0:
             logger.debug(f'th {th}: scrollbar was found, but scrollable area is not found, retry')
             continue
@@ -402,12 +431,12 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
         # どちらの場合もスクロールバーなしとして扱う。
         return NOSCROLL_PAGE_INFO
 
-    asr_x, asr_y, asr_w, asr_h = cv2.boundingRect(actual_scrollbar_region)
-    esr_x, esr_y, esr_w, esr_h = cv2.boundingRect(scrollable_area_region)
+    _, asr_y, _, asr_h = cv2.boundingRect(actual_scrollbar_region)
+    _, esr_y, _, esr_h = cv2.boundingRect(scrollable_area_region)
 
-    pages = guess_pages(asr_w, asr_h, esr_w, esr_h)
-    pagenum = guess_pagenum(asr_x, asr_y, esr_x, esr_y, esr_h)
-    lines = guess_lines(asr_w, asr_h, esr_w, esr_h)
+    pages = guess_pages(asr_h, esr_h)
+    pagenum = guess_pagenum(asr_y, esr_y, esr_h)
+    lines = guess_lines(asr_h, esr_h)
     return (pagenum, pages, lines)
 
 
