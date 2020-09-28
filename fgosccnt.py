@@ -86,6 +86,14 @@ TIMEOUT = 15
 QP_UNKNOWN = -1
 
 
+class FgosccntError(Exception):
+    pass
+
+
+class GainedQPandDropMissMatchError(FgosccntError):
+    pass
+
+
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
 
@@ -243,6 +251,8 @@ class ScreenShot:
         self.itemlist = self.makeitemlist()
         self.total_qp = self.get_qp(mode)
         self.qp_gained = self.get_qp_gained(mode)
+        if self.qp_gained > 0 and len(self.itemlist) == 0:
+            raise GainedQPandDropMissMatchError
         self.pagenum, self.pages, self.lines = self.correct_pageinfo()
 
     def detect_scroll_bar(self):
@@ -673,6 +683,8 @@ class ScreenShot:
         """
         オフセットを反映
         """
+        if len(pts) == 0:
+            return std_pts
         # Y列でソート
         pts.sort(key=lambda x: x[1])
         if len(pts) > 1:  # fix #107
