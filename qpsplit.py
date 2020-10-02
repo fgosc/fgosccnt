@@ -10,7 +10,7 @@ train_chest = Path(__file__).resolve().parent / Path("chest.xml") #ドロップ�
 train_card = Path(__file__).resolve().parent / Path("card.xml") #ドロップ数
 
 
-def file_Assignment(files):
+def file_Assignment(args, files):
     svm = cv2.ml.SVM_load(str(train_item))
     svm_chest = cv2.ml.SVM_load(str(train_chest))
     svm_card = cv2.ml.SVM_load(str(train_card))
@@ -26,7 +26,7 @@ def file_Assignment(files):
             img_rgb = fgosccnt.imread(filename)
             fileextention = f.suffix
             try:
-                a = fgosccnt.ScreenShot(img_rgb, svm, svm_chest, svm_card,
+                a = fgosccnt.ScreenShot(args, img_rgb, svm, svm_chest, svm_card,
                                             fileextention, reward_only=True)
             except:
                 print(Path(f).name, end=": ")
@@ -55,10 +55,14 @@ def file_Assignment(files):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='FGOスクショからアイテムをCSV出力する')
+    parser.add_argument('--lang', default=fgosccnt.DEFAULT_ITEM_LANG,
+                        choices=('jpn', 'eng'),
+                        help='Language to be used for output: Default '
+                             + fgosccnt.DEFAULT_ITEM_LANG)
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
     args = parser.parse_args()    # 引数を解析
 
-    file_Assignment(args.filenames)
+    file_Assignment(args, args.filenames)
     
 ##    svm = cv2.ml.SVM_load(str(train_item))
 ##    svm_chest = cv2.ml.SVM_load(str(train_chest))
