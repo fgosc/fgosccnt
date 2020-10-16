@@ -112,9 +112,10 @@ def output_header(lines):
         # 場所からドロップリストを決定
         drop = []
         for fq in freequest:
-            if place == fq["shortname"]:
-                drop = fq["drop"]
-                break
+            if "shortname" in fq.keys():
+                if place == fq["shortname"]:
+                    drop = fq["drop"]
+                    break
         if drop == []:
             logger.critical("dropの取得に失敗")
             exit()
