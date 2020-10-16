@@ -1941,7 +1941,7 @@ def get_output(filenames, args):
             output = {'filename': str(filename) + ': not found'}
             all_list.append([])
         elif f.suffix.upper() not in ['.PNG', '.JPG', '.JPEG']:
-            output = { 'filename': str(filename) + ': Not Supported' }
+            output = {'filename': str(filename) + ': Not Supported'}
             all_list.append([])
         else:
             img_rgb = imread(filename)
@@ -2121,17 +2121,28 @@ def make_csv_header(args, item_list):
     short_list = [{"id": a["id"], "name": a["name"], "category": a["category"],
                    "dropPriority": a["dropPriority"], "dropnum": a["dropnum"]}
                   for a in flat_list]
+    # 概念礼装のカテゴリのアイテムが無くかつイベントアイテム(>ID_EXM_MAX)がある
+    if args.lang == 'jpn':
+        no_ce_exp_list = [
+                          k for k in flat_list
+                          if not k["name"].startswith("概念礼装EXPカード：")
+                          ]
+    else:
+        no_ce_exp_list = [
+                          k for k in flat_list
+                          if not k["name"].startswith("CE EXP Card:")
+                          ]
     ce0_flag = ("Craft Essence"
                 not in [
-                        d.get('category') for d in flat_list
+                        d.get('category') for d in no_ce_exp_list
                        ]
                 ) and (
-                       max([d.get("id") for d in flat_list]) > 9707500
+                       max([d.get("id") for d in flat_list]) > ID_EXP_MAX
                 )
     if ce0_flag:
         short_list.append({"id": 99999990, "name": ce_str,
                            "category": "Craft Essence",
-                           "dropPriority": 9000, "dropnum": 0})
+                           "dropPriority": 9005, "dropnum": 0})
     # 重複する要素を除く
     unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
     # ソート
