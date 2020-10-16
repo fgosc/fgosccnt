@@ -99,7 +99,7 @@ def output_header(lines):
         freequest = []
         eventfiles = eventquest_dir.glob('**/*.json')
         for eventfile in eventfiles:
-            if eventfile.stem in ["freequest", "syuernquest"]:
+            if eventfile.stem in ["freequest", "syurenquest"]:
                 continue
             try:
                 with open(eventfile, encoding='UTF-8') as f:
