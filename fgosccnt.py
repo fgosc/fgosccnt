@@ -619,7 +619,7 @@ class ScreenShot:
             area = cv2.contourArea(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
             if ret[2] < int(w/2) and area > 80 and ret[1] < h/2 \
-                    and 0.35 < ret[2]/ret[3] < 0.85 and ret[3] > h * 0.45:
+                    and 0.3 < ret[2]/ret[3] < 0.85 and ret[3] > h * 0.45:
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt):
@@ -651,7 +651,7 @@ class ScreenShot:
         for pt in item_pts:
             test = []
 
-            tmpimg = im_th[pt[1]:pt[3], pt[0]:pt[2]]
+            tmpimg = im_th[pt[1]:pt[3], pt[0]-1:pt[2]+1]
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size,
                                     block_stride, cell_size, bins)
@@ -667,7 +667,7 @@ class ScreenShot:
         """
         宝箱数をOCRする関数
         """
-        pt = [1443, 20, 1505, 61]
+        pt = [1448, 20, 1505, 54]
         img_num = self.img_th[pt[1]:pt[3], pt[0]:pt[2]]
         im_th = cv2.bitwise_not(img_num)
         h, w = im_th.shape[:2]
