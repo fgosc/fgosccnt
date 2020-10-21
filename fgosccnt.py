@@ -92,6 +92,14 @@ DEFAULT_POLL_FREQ = 60
 DEFAULT_AMT_PROCESSES = 1
 
 
+class FgosccntError(Exception):
+    pass
+
+
+class GainedQPandDropMissMatchError(FgosccntError):
+    pass
+
+
 with open(drop_file, encoding='UTF-8') as f:
     drop_item = json.load(f)
 
@@ -255,6 +263,8 @@ class ScreenShot:
         else:
             entire_height = 649  # from correct_pageinfo()
             self.scroll_position = asr_y / entire_height
+        if self.qp_gained > 0 and len(self.itemlist) == 0:
+            raise GainedQPandDropMissMatchError
         self.pagenum, self.pages, self.lines = self.correct_pageinfo()
 
     def detect_scroll_bar(self):
@@ -553,6 +563,13 @@ class ScreenShot:
                 if bottom_y > y1:
                     bottom_y = y1
         logger.debug("bottom_y: %d", bottom_y)
+        if bottom_y == height:
+            TEMPLATE_WIDTH = 1238 - 95
+            TEMPLATE_HEIGHT = 668 - 116
+            scale = TEMPLATE_WIDTH / TEMPLATE_HEIGHT
+            bottom_y = upper_y + int((right_x - left_x) / scale)
+            logger.warning("bottom line detection failed")
+            logger.debug("redefine bottom_y: %s", bottom_y)
 
         if logger.isEnabledFor(logging.DEBUG):
             tmpimg = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
@@ -625,7 +642,7 @@ class ScreenShot:
             area = cv2.contourArea(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
             if ret[2] < int(w/2) and area > 80 and ret[1] < h/2 \
-                    and 0.35 < ret[2]/ret[3] < 0.85 and ret[3] > h * 0.45:
+                    and 0.3 < ret[2]/ret[3] < 0.85 and ret[3] > h * 0.45:
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt):
@@ -657,7 +674,7 @@ class ScreenShot:
         for pt in item_pts:
             test = []
 
-            tmpimg = im_th[pt[1]:pt[3], pt[0]:pt[2]]
+            tmpimg = im_th[pt[1]:pt[3], pt[0]-1:pt[2]+1]
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size,
                                     block_stride, cell_size, bins)
@@ -673,7 +690,7 @@ class ScreenShot:
         """
         宝箱数をOCRする関数
         """
-        pt = [1443, 20, 1505, 61]
+        pt = [1448, 20, 1505, 54]
         img_num = self.img_th[pt[1]:pt[3], pt[0]:pt[2]]
         im_th = cv2.bitwise_not(img_num)
         h, w = im_th.shape[:2]
@@ -689,6 +706,8 @@ class ScreenShot:
         """
         オフセットを反映
         """
+        if len(pts) == 0:
+            return std_pts
         # Y列でソート
         pts.sort(key=lambda x: x[1])
         if len(pts) > 1:  # fix #107
@@ -1836,7 +1855,7 @@ def search_file(search_dir, dist_dic, dropPriority, category):
         for h in hash[0]:
             hash_hex = hash_hex + "{:02x}".format(h)
         dist_dic[hash_hex] = id
-        if category == "Item":
+        if category == "Item" or category == "Point":
             item_background[id] = classify_background(img)
         if category == "Craft Essence":
             hash_narrow = compute_hash_ce_narrow(img)
@@ -1951,6 +1970,9 @@ def get_output(filenames, args):
 
         if f.exists() is False:
             output = {'filename': str(filename) + ': not found'}
+            all_list.append([])
+        elif f.suffix.upper() not in ['.PNG', '.JPG', '.JPEG']:
+            output = {'filename': str(filename) + ': Not Supported'}
             all_list.append([])
         else:
             img_rgb = imread(filename)
@@ -2364,17 +2386,28 @@ def make_csv_header(args, item_list):
     short_list = [{"id": a["id"], "name": a["name"], "category": a["category"],
                    "dropPriority": a["dropPriority"], "dropnum": a["dropnum"]}
                   for a in flat_list]
+    # 概念礼装のカテゴリのアイテムが無くかつイベントアイテム(>ID_EXM_MAX)がある
+    if args.lang == 'jpn':
+        no_ce_exp_list = [
+                          k for k in flat_list
+                          if not k["name"].startswith("概念礼装EXPカード：")
+                          ]
+    else:
+        no_ce_exp_list = [
+                          k for k in flat_list
+                          if not k["name"].startswith("CE EXP Card:")
+                          ]
     ce0_flag = ("Craft Essence"
                 not in [
-                        d.get('category') for d in flat_list
+                        d.get('category') for d in no_ce_exp_list
                        ]
                 ) and (
-                       max([d.get("id") for d in flat_list]) > 9707500
+                       max([d.get("id") for d in flat_list]) > ID_EXP_MAX
                 )
     if ce0_flag:
         short_list.append({"id": 99999990, "name": ce_str,
                            "category": "Craft Essence",
-                           "dropPriority": 9000, "dropnum": 0})
+                           "dropPriority": 9005, "dropnum": 0})
     # 重複する要素を除く
     unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
     # ソート
