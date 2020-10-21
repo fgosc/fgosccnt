@@ -549,6 +549,13 @@ class ScreenShot:
                 if bottom_y > y1:
                     bottom_y = y1
         logger.debug("bottom_y: %d", bottom_y)
+        if bottom_y == height:
+            TEMPLATE_WIDTH = 1238 - 95
+            TEMPLATE_HEIGHT = 668 - 116
+            scale = TEMPLATE_WIDTH / TEMPLATE_HEIGHT
+            bottom_y = upper_y + int((right_x - left_x) / scale)
+            logger.warning("bottom line detection failed")
+            logger.debug("redefine bottom_y: %s", bottom_y)
 
         if logger.isEnabledFor(logging.DEBUG):
             tmpimg = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
