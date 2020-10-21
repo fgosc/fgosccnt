@@ -1831,7 +1831,7 @@ def search_file(search_dir, dist_dic, dropPriority, category):
         for h in hash[0]:
             hash_hex = hash_hex + "{:02x}".format(h)
         dist_dic[hash_hex] = id
-        if category == "Item":
+        if category == "Item" or category == "Point":
             item_background[id] = classify_background(img)
         if category == "Craft Essence":
             hash_narrow = compute_hash_ce_narrow(img)

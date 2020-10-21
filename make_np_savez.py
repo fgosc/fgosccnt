@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import urllib.request
 
-from fgosccnt import img_hist, img_to_sig
+from fgosccnt import img_hist
 
 aadb_url = "https://raw.githubusercontent.com/atlasacademy/aa-db/master/build/assets/list/"
 img_dir = "data/misc/"
