@@ -549,6 +549,13 @@ class ScreenShot:
                 if bottom_y > y1:
                     bottom_y = y1
         logger.debug("bottom_y: %d", bottom_y)
+        if bottom_y == height:
+            TEMPLATE_WIDTH = 1238 - 95
+            TEMPLATE_HEIGHT = 668 - 116
+            scale = TEMPLATE_WIDTH / TEMPLATE_HEIGHT
+            bottom_y = upper_y + int((right_x - left_x) / scale)
+            logger.warning("bottom line detection failed")
+            logger.debug("redefine bottom_y: %s", bottom_y)
 
         if logger.isEnabledFor(logging.DEBUG):
             tmpimg = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
@@ -1824,7 +1831,7 @@ def search_file(search_dir, dist_dic, dropPriority, category):
         for h in hash[0]:
             hash_hex = hash_hex + "{:02x}".format(h)
         dist_dic[hash_hex] = id
-        if category == "Item":
+        if category == "Item" or category == "Point":
             item_background[id] = classify_background(img)
         if category == "Craft Essence":
             hash_narrow = compute_hash_ce_narrow(img)
