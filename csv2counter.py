@@ -138,10 +138,12 @@ def output_header(lines):
         # 場所からドロップリストを決定
         drop = []
         questid = place2id(place, freequest)
+        logger.debug("questid: %d", questid)
 
         if not (ID_FREEQUEST_MIN <= questid <= ID_FREEQUEST_MAX) \
-           and (ID_SYUERNQUEST_MIN <= questid <= ID_SYURENQUEST_MAX):
+           and not (ID_SYUERNQUEST_MIN <= questid <= ID_SYURENQUEST_MAX):
            # 通常フリクエと修練場は除く
+            logger.debug("フリクエでも修練場でもないクエスト")
             for fq in freequest:
                 if "shortname" in fq.keys():
                     if place == fq["shortname"]:
