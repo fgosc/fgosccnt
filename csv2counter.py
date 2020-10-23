@@ -40,6 +40,10 @@ ID_PIECE_MIN = 7001
 ID_MONUMENT_MAX = 7107
 ID_STAMDARD_ITEM_MIN = 6501
 ID_STAMDARD_ITEM_MAX = 6599
+ID_FREEQUEST_MIN = 93000001
+ID_FREEQUEST_MAX = 93099999
+ID_SYUERNQUEST_MIN = 94006801
+ID_SYURENQUEST_MAX = 94006828
 
 output = ""
 ce_exp_list = []
@@ -87,6 +91,30 @@ def output_warning(lines):
 {}###############################################""".format(warning))
 
 
+def place2id(place, freequest):
+    """
+    フリクエと修練場のidが変換できればよい
+    """
+    tmp = place.split(" ")
+    if len(tmp) >= 2:
+        chapter = tmp[0]
+        name = tmp[1]
+    else:
+        return -1
+    for fq in freequest:
+        if chapter == fq["chapter"] and name == fq["name"]:
+            # 北米以外のフリクエ
+            return fq["id"]
+        elif chapter == fq["chapter"] and name == fq["place"]:
+            # 北米以外のフリクエ(同じ場所に二つクエストがある場合)
+            # 修練場もここで判定
+            return fq["id"]
+        elif chapter == fq["place"] and name == fq["name"]:
+            # 北米
+            return fq["id"]
+    return -1
+
+
 def output_header(lines):
     global ce_list
     global ce_exp_list
@@ -99,8 +127,6 @@ def output_header(lines):
         freequest = []
         eventfiles = eventquest_dir.glob('**/*.json')
         for eventfile in eventfiles:
-            if eventfile.stem in ["freequest", "syurenquest"]:
-                continue
             try:
                 with open(eventfile, encoding='UTF-8') as f:
                     event = json.load(f)
@@ -111,23 +137,28 @@ def output_header(lines):
         place = lines[0]["filename"]
         # 場所からドロップリストを決定
         drop = []
-        for fq in freequest:
-            if "shortname" in fq.keys():
-                if place == fq["shortname"]:
-                    drop = fq["drop"]
-                    break
-        if drop == []:
-            logger.critical("dropの取得に失敗")
-            exit()
-        # CEリストの作成
-        for equip in drop:
-            if equip["type"] == "Craft Essence":
-                if equip["name"].startswith("概念礼装EXPカード："):
-                    ce_exp_list.append(equip)
-                else:
-                    ce_list.append(equip)
-        logger.debug("ce_list: %s", ce_list)
-        logger.debug("ce_exp_list: %s", ce_exp_list)
+        questid = place2id(place, freequest)
+
+        if not (ID_FREEQUEST_MIN <= questid <= ID_FREEQUEST_MAX) \
+           and (ID_SYUERNQUEST_MIN <= questid <= ID_SYURENQUEST_MAX):
+           # 通常フリクエと修練場は除く
+            for fq in freequest:
+                if "shortname" in fq.keys():
+                    if place == fq["shortname"]:
+                        drop = fq["drop"]
+                        break
+            if drop == []:
+                logger.critical("dropの取得に失敗")
+                exit()
+            # CEリストの作成
+            for equip in drop:
+                if equip["type"] == "Craft Essence":
+                    if equip["name"].startswith("概念礼装EXPカード："):
+                        ce_exp_list.append(equip)
+                    else:
+                        ce_list.append(equip)
+            logger.debug("ce_list: %s", ce_list)
+            logger.debug("ce_exp_list: %s", ce_exp_list)
     else:
         place = "周回場所"
     if args.place:
