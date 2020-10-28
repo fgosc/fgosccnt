@@ -121,7 +121,7 @@ def output_header(lines):
     global output
     output_warning(lines)
     place = ""
-    if lines[0]["filename"] != "合計":
+    if lines[0]["filename"] != "合計" and len(lines) > 2:
         # fgosccnt がクエスト名判別に成功した
         eventquest_dir = basedir / Path("fgoscdata/data/json/")
         freequest = []
