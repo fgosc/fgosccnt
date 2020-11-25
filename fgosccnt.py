@@ -186,9 +186,10 @@ class ScreenShot:
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
                                             threshold, 255, cv2.THRESH_BINARY)
 
-        game_screen = self.extract_game_screen()
+        game_screen, drop_count_img = self.extract_game_screen()
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite('game_screen.png', game_screen)
+            cv2.imwrite('drop_count_img.png', drop_count_img)
 
         _, width_g, _ = game_screen.shape
         wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
@@ -198,10 +199,16 @@ class ScreenShot:
             self.img_rgb = cv2.resize(game_screen, (0, 0),
                                       fx=resizeScale, fy=resizeScale,
                                       interpolation=cv2.INTER_CUBIC)
+            dcnt_img_rs = cv2.resize(drop_count_img, (0, 0),
+                                     fx=resizeScale, fy=resizeScale,
+                                     interpolation=cv2.INTER_CUBIC)
         else:
             self.img_rgb = cv2.resize(game_screen, (0, 0),
                                       fx=resizeScale, fy=resizeScale,
                                       interpolation=cv2.INTER_AREA)
+            dcnt_img_rs = cv2.resize(drop_count_img, (0, 0),
+                                     fx=resizeScale, fy=resizeScale,
+                                     interpolation=cv2.INTER_AREA)
 
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite('game_screen_resize.png', self.img_rgb)
@@ -216,7 +223,7 @@ class ScreenShot:
         self.svm_chest = svm_chest
 
         self.height, self.width = self.img_rgb.shape[:2]
-        self.chestnum = self.ocr_tresurechest()
+        self.chestnum = self.ocr_tresurechest(dcnt_img_rs)
         logger.debug("Total Drop (OCR): %d", self.chestnum)
         item_pts = self.img2points()
 
@@ -260,8 +267,8 @@ class ScreenShot:
         Modified from determine_scroll_position()
         '''
         width = self.img_rgb.shape[1]
-        topleft = (width - 90, 180)
-        bottomright = (width, 180 + 674)
+        topleft = (width - 90, 2)
+        bottomright = (width, 2 + 674)
 
         if logger.isEnabledFor(logging.DEBUG):
             img_copy = self.img_rgb.copy()
@@ -569,10 +576,24 @@ class ScreenShot:
         # Correcting to be a gamescreen
         # Actual iPad (2048x1536) measurements
         scale = bottom_y - upper_y
-        upper_y = upper_y - int(177*scale/847)
+        logger.debug("scale: %d", scale)
         bottom_y = bottom_y + int(124*scale/847)
+        logger.debug(bottom_y)
         game_screen = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
-        return game_screen
+        left_dx = left_x + int(1446*scale/847)
+        right_dx = left_dx + int(53*scale/847)
+        upper_dy = upper_y - int(156*scale/847)
+        if upper_dy < 0:
+            upper_dy = int(22*scale/847)
+        bottom_dy = upper_dy + int(35*scale/847)
+        logger.debug("left_dx: %d", left_dx)
+        logger.debug("right_dx: %d", right_dx)
+        logger.debug("upper_dy: %d", upper_dy)
+        logger.debug("bottom_dy: %d", bottom_dy)
+        drop_count_img = self.img_rgb_orig[upper_dy: bottom_dy,
+                                           left_dx: right_dx]
+
+        return game_screen, drop_count_img
 
     def area_select(self):
         """
@@ -585,7 +606,7 @@ class ScreenShot:
                                dtype='uint8'),
                 'na': np.array([[70, 153, 57, 102, 6, 144, 148, 73]],
                                dtype='uint8')}
-        img = self.img_rgb[1028:1134, 1416:1754]
+        img = self.img_rgb[848:964, 1416:1754]
 
         hash_img = hasher.compute(img)
         logger.debug("hash_img: %s", hash_img)
@@ -670,12 +691,14 @@ class ScreenShot:
 
         return int(res)
 
-    def ocr_tresurechest(self):
+    def ocr_tresurechest(self, drop_count_img):
         """
         宝箱数をOCRする関数
         """
-        pt = [1448, 20, 1505, 54]
-        img_num = self.img_th[pt[1]:pt[3], pt[0]:pt[2]]
+        threshold = 80
+        img_gray = cv2.cvtColor(drop_count_img, cv2.COLOR_BGR2GRAY)
+        _, img_num = cv2.threshold(img_gray,
+                                   threshold, 255, cv2.THRESH_BINARY)
         im_th = cv2.bitwise_not(img_num)
         h, w = im_th.shape[:2]
 
@@ -761,7 +784,7 @@ class ScreenShot:
         解像度別に設定
         """
         criteria_left = 102
-        criteria_top = 198
+        criteria_top = 20
         item_width = 188
         item_height = 206
         margin_width = 32
