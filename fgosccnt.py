@@ -49,6 +49,7 @@ train_chest = basedir / Path("chest.xml")  # ドロップ数
 train_card = basedir / Path("card.xml")  # ドロップ数
 drop_file = basedir / Path("fgoscdata/hash_drop.json")
 eventquest_dir = basedir / Path("fgoscdata/data/json/")
+items_img = basedir / Path("data/misc/items_img.png")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -213,12 +214,11 @@ class ScreenShot:
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite('game_screen_resize.png', self.img_rgb)
 
-        mode = self.area_select()
-        logger.debug("Area Mode: %s", mode)
-
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
         _, self.img_th = cv2.threshold(self.img_gray,
                                        threshold, 255, cv2.THRESH_BINARY)
+        mode = self.area_select()
+        logger.debug("Area Mode: %s", mode)
         self.svm = svm
         self.svm_chest = svm_chest
 
@@ -226,6 +226,7 @@ class ScreenShot:
         self.chestnum = self.ocr_tresurechest(dcnt_img_rs)
         logger.debug("Total Drop (OCR): %d", self.chestnum)
         item_pts = self.img2points()
+        logger.debug("item_pts:%s", item_pts)
 
         self.items = []
         self.current_dropPriority = PRIORITY_REWARD_QP
@@ -236,6 +237,7 @@ class ScreenShot:
         for i, pt in enumerate(item_pts):
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
+            logger.debug("lx: %d", lx)
             item_img_th = self.img_th[pt[1]: pt[3] - 30,
                                       pt[0] + lx: pt[2] + lx]
             if self.is_empty_box(item_img_th):
@@ -267,8 +269,8 @@ class ScreenShot:
         Modified from determine_scroll_position()
         '''
         width = self.img_rgb.shape[1]
-        topleft = (width - 90, 2)
-        bottomright = (width, 2 + 674)
+        topleft = (width - 90, 81)
+        bottomright = (width, 2 + 753)
 
         if logger.isEnabledFor(logging.DEBUG):
             img_copy = self.img_rgb.copy()
@@ -577,15 +579,16 @@ class ScreenShot:
         # Actual iPad (2048x1536) measurements
         scale = bottom_y - upper_y
         logger.debug("scale: %d", scale)
+        upper_y = upper_y - int(79*scale/847)
         bottom_y = bottom_y + int(124*scale/847)
         logger.debug(bottom_y)
         game_screen = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
         left_dx = left_x + int(1446*scale/847)
         right_dx = left_dx + int(53*scale/847)
-        upper_dy = upper_y - int(156*scale/847)
+        upper_dy = upper_y - int(81*scale/847)
         if upper_dy < 0:
             upper_dy = int(22*scale/847)
-        bottom_dy = upper_dy + int(35*scale/847)
+        bottom_dy = upper_dy + int(37*scale/847)
         logger.debug("left_dx: %d", left_dx)
         logger.debug("right_dx: %d", right_dx)
         logger.debug("upper_dy: %d", upper_dy)
@@ -600,23 +603,22 @@ class ScreenShot:
         FGOアプリの地域を選択
         'na', 'jp'に対応
 
-        'Next' '次へ'ボタンを読み込んで判別する
+        'items_img.png' とのオブジェクトマッチングで判定
         """
-        dist = {'jp': np.array([[198, 41, 185, 146, 50, 100, 140, 200]],
-                               dtype='uint8'),
-                'na': np.array([[70, 153, 57, 102, 6, 144, 148, 73]],
-                               dtype='uint8')}
-        img = self.img_rgb[848:964, 1416:1754]
+        img_gray = self.img_gray[0:100, 0:500]
+        template = imread(items_img, 0)
+        res = cv2.matchTemplate(
+                                img_gray,
+                                template,
+                                cv2.TM_CCOEFF_NORMED
+                                )
+        threshold = 0.9
+        loc = np.where(res >= threshold)
+        for pt in zip(*loc[::-1]):
+            return 'na'
+            break
+        return 'jp'
 
-        hash_img = hasher.compute(img)
-        logger.debug("hash_img: %s", hash_img)
-        hashorder = {}
-        for i in dist.keys():
-            dt = hasher.compare(hash_img, dist[i])
-            hashorder[i] = dt
-        hashorder = sorted(hashorder.items(), key=lambda x: x[1])
-        logger.debug("hashorder: %s", hashorder)
-        return next(iter(hashorder))[0]
 
     def makeitemlist(self):
         """
@@ -666,6 +668,7 @@ class ScreenShot:
             # Recognizing Failure
             return -1
         item_pts.sort()
+        logger.debug("ocr item_pts: %s", item_pts)
         logger.debug("ドロップ桁数(OCR): %d", len(item_pts))
 
         # Hog特徴のパラメータ
@@ -679,7 +682,10 @@ class ScreenShot:
         for pt in item_pts:
             test = []
 
-            tmpimg = im_th[pt[1]:pt[3], pt[0]-1:pt[2]+1]
+            if pt[0] == 0:
+                tmpimg = im_th[pt[1]:pt[3], pt[0]:pt[2]+1]
+            else:
+                tmpimg = im_th[pt[1]:pt[3], pt[0]-1:pt[2]+1]
             tmpimg = cv2.resize(tmpimg, (win_size))
             hog = cv2.HOGDescriptor(win_size, block_size,
                                     block_stride, cell_size, bins)
@@ -768,13 +774,14 @@ class ScreenShot:
                 approx = cv2.approxPolyDP(cnt, epsilon, True)
                 if len(approx) == 6:  # 六角形のみ認識
                     ret = cv2.boundingRect(cnt)
-                    if ret[1] > self.height * 0.15 \
-                       and ret[1] + ret[3] < self.height * 0.76:
+                    if ret[1] > self.height * 0.15 - 101 \
+                       and ret[1] + ret[3] < self.height * 0.76  - 101:
                         # 小数の数値はだいたいの実測
                         pts = [ret[0], ret[1],
                                ret[0] + ret[2], ret[1] + ret[3]]
                         leftcell_pts.append(pts)
         item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
+        logger.debug("leftcell_pts: %s", leftcell_pts)
 
         return item_pts
 
@@ -784,7 +791,7 @@ class ScreenShot:
         解像度別に設定
         """
         criteria_left = 102
-        criteria_top = 20
+        criteria_top = 99
         item_width = 188
         item_height = 206
         margin_width = 32
