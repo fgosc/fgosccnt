@@ -176,6 +176,7 @@ class ScreenShot:
 
     def __init__(self, args, img_rgb, svm, svm_chest, svm_card,
                  fileextention, reward_only=False):
+        self.ui_type = "new"
         TRAINING_IMG_WIDTH = 1755
         threshold = 80
         try:
@@ -223,7 +224,10 @@ class ScreenShot:
         self.svm_chest = svm_chest
 
         self.height, self.width = self.img_rgb.shape[:2]
-        self.chestnum = self.ocr_tresurechest(dcnt_img_rs)
+        if self.ui_type == "old":
+            self.chestnum = self.ocr_tresurechest(dcnt_img_rs)
+        else:
+            self.chestnum = -1
         logger.debug("Total Drop (OCR): %d", self.chestnum)
         item_pts = self.img2points()
         logger.debug("item_pts:%s", item_pts)
@@ -561,6 +565,34 @@ class ScreenShot:
                 if bottom_y > y1:
                     bottom_y = y1
         logger.debug("bottom_y: %d", bottom_y)
+        logger.debug("height: %d", height)
+        if width/height > 16/9.01:
+            # 上下青枠以外
+            logger.debug("no border or side blue border")
+            if (bottom_y - upper_y)/height >= 0.7:
+                if upper_y/height < (height - bottom_y)/height:
+                    logger.debug("New UI")
+                    self.ui_type = "new"
+                else:
+                    logger.debug("Old UI")
+                    self.ui_type = "old"
+            else:
+                # iPhone X type blue border
+                logger.debug("Old UI")
+                self.ui_type = "old"
+        else:
+            # 上下青枠
+            logger.debug("top & bottom blue border")
+            game_height = width * 9 / 16
+            bh = (height - game_height)/2  # blue border height
+            upper_width = (upper_y - bh)/(height - bh * 2)
+            bottom_width = (height - bottom_y - bh)/(height - bh * 2)
+            if upper_width < bottom_width:
+                logger.debug("New UI")
+                self.ui_type = "new"
+            else:
+                logger.debug("Old UI")
+                self.ui_type = "old"
         if bottom_y == height:
             TEMPLATE_WIDTH = 1238 - 95
             TEMPLATE_HEIGHT = 668 - 116
@@ -586,12 +618,16 @@ class ScreenShot:
         bottom_y = bottom_y + int(124*scale/847)
         logger.debug(bottom_y)
         game_screen = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
-        left_dx = left_x + int(1446*scale/847)
-        right_dx = left_dx + int(53*scale/847)
-        upper_dy = upper_y - int(81*scale/847)
-        if upper_dy < 0:
-            upper_dy = int(22*scale/847)
+        if self.ui_type == "old":
+            left_dx = left_x + int(1446*scale/847)
+            right_dx = left_dx + int(53*scale/847)
+            upper_dy = upper_y - int(81*scale/847)
+        else:
+            left_dx = left_x + int(1400*scale/847)
+            right_dx = left_dx + int(340*scale/847)
+            upper_dy = upper_y - int(20*scale/847)
         bottom_dy = upper_dy + int(37*scale/847)
+
         logger.debug("left_dx: %d", left_dx)
         logger.debug("right_dx: %d", right_dx)
         logger.debug("upper_dy: %d", upper_dy)
@@ -621,7 +657,6 @@ class ScreenShot:
             return 'na'
             break
         return 'jp'
-
 
     def makeitemlist(self):
         """
@@ -778,7 +813,7 @@ class ScreenShot:
                 if len(approx) == 6:  # 六角形のみ認識
                     ret = cv2.boundingRect(cnt)
                     if ret[1] > self.height * 0.15 - 101 \
-                       and ret[1] + ret[3] < self.height * 0.76  - 101:
+                       and ret[1] + ret[3] < self.height * 0.76 - 101:
                         # 小数の数値はだいたいの実測
                         pts = [ret[0], ret[1],
                                ret[0] + ret[2], ret[1] + ret[3]]
