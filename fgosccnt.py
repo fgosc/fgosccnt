@@ -238,7 +238,8 @@ class ScreenShot:
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
             logger.debug("lx: %d", lx)
-            item_img_th = self.img_th[pt[1]: pt[3] - 30,
+            # pt[1] + 37 for information window (new UI)
+            item_img_th = self.img_th[pt[1] + 37: pt[3] - 30,
                                       pt[0] + lx: pt[2] + lx]
             if self.is_empty_box(item_img_th):
                 break
