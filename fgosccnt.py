@@ -44,9 +44,10 @@ basedir = Path(__file__).resolve().parent
 Item_dir = basedir / Path("item/equip/")
 CE_dir = basedir / Path("item/ce/")
 Point_dir = basedir / Path("item/point/")
-train_item = basedir / Path("item.xml")  # アイテム下部
-train_chest = basedir / Path("chest.xml")  # ドロップ数
-train_card = basedir / Path("card.xml")  # ドロップ数
+train_item = basedir / Path("item.xml")  # item stack & bonus
+train_chest = basedir / Path("chest.xml")  # drop_coount (Old UI)
+train_dcnt = basedir / Path("dcnt.xml")  # drop_coount (New UI)
+train_card = basedir / Path("card.xml")  # card name
 drop_file = basedir / Path("fgoscdata/hash_drop.json")
 eventquest_dir = basedir / Path("fgoscdata/data/json/")
 items_img = basedir / Path("data/misc/items_img.png")
@@ -174,7 +175,7 @@ class ScreenShot:
     戦利品スクリーンショットを表すクラス
     """
 
-    def __init__(self, args, img_rgb, svm, svm_chest, svm_card,
+    def __init__(self, args, img_rgb, svm, svm_chest, svm_dcnt, svm_card,
                  fileextention, reward_only=False):
         self.ui_type = "new"
         TRAINING_IMG_WIDTH = 1755
@@ -191,7 +192,6 @@ class ScreenShot:
         game_screen, drop_count_img = self.extract_game_screen()
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite('game_screen.png', game_screen)
-            cv2.imwrite('drop_count_img.png', drop_count_img)
 
         _, width_g, _ = game_screen.shape
         wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
@@ -214,6 +214,7 @@ class ScreenShot:
 
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite('game_screen_resize.png', self.img_rgb)
+            cv2.imwrite('drop_count.png', dcnt_img_rs)
 
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
         _, self.img_th = cv2.threshold(self.img_gray,
@@ -222,13 +223,15 @@ class ScreenShot:
         logger.debug("Area Mode: %s", mode)
         self.svm = svm
         self.svm_chest = svm_chest
+        self.svm_dcnt = svm_dcnt
 
         self.height, self.width = self.img_rgb.shape[:2]
         if self.ui_type == "old":
             self.chestnum = self.ocr_tresurechest(dcnt_img_rs)
         else:
-            self.chestnum = -1
-        logger.debug("Total Drop (OCR): %d", self.chestnum)
+            self.chestnum = self.ocr_dcnt(dcnt_img_rs)
+        # logger.debug("Total Drop (OCR): %d", self.chestnum)
+        logger.info("Total Drop (OCR): %d", self.chestnum)
         item_pts = self.img2points()
         logger.debug("item_pts:%s", item_pts)
 
@@ -752,6 +755,86 @@ class ScreenShot:
         for x in range(w):  # ドロップ数7のときバグる対策 #54
             im_th[0, x] = 255
         return self.ocr_text(im_th)
+
+    def pred_dcnt(self, img):
+        """
+        for JP new UI
+        """
+        # Hog特徴のパラメータ
+        win_size = (120, 60)
+        block_size = (16, 16)
+        block_stride = (4, 4)
+        cell_size = (4, 4)
+        bins = 9
+        char = []
+
+        tmpimg = cv2.resize(img, (win_size))
+        hog = cv2.HOGDescriptor(win_size, block_size,
+                                block_stride, cell_size, bins)
+        char.append(hog.compute(tmpimg))  # 特徴量の格納
+        char = np.array(char)
+
+        pred = self.svm_dcnt.predict(char)
+        res = str(int(pred[1][0][0]))
+
+        return int(res)
+
+    def ocr_dcnt(self, drop_count_img):
+        """
+        ocr drop_count (for New UI)
+        """
+        char_w = 26
+        threshold = 100
+        kernel = np.ones((2, 3), np.uint8)
+        img = cv2.cvtColor(drop_count_img, cv2.COLOR_BGR2GRAY)
+        _, img_th = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
+        img_th = cv2.dilate(img_th, kernel, iterations=1)
+        height, width = img_th.shape[:2]
+
+        end = -1
+        for i in range(height):
+            if end == -1 and img_th[height - i - 1, width - 1] == 255:
+                end = height - i
+                break
+        start = end - 3
+
+        for j in range(width):
+            for k in range(end - start):
+                img_th[start + k, j] = 0
+
+        contours = cv2.findContours(img_th,
+                                    cv2.RETR_EXTERNAL,
+                                    cv2.CHAIN_APPROX_SIMPLE)[0]
+        item_pts = []
+        for cnt in contours:
+            ret = cv2.boundingRect(cnt)
+            pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
+            if ret[1] > 0 and ret[3] > 8 and ret[1] + ret[3] == start \
+               and ret[2] < char_w:
+                item_pts.append(pt)
+
+        item_pts.sort()
+        c_center = int(item_pts[-1][0] + (item_pts[-1][2] - item_pts[-1][0])/2)
+        # newimg = img[:, item_pts[-1][0]-1:item_pts[-1][2]+1]
+        newimg = img[:, int(c_center - char_w/2):int(c_center + char_w/2)]
+
+        threshold2 = 10
+        ret, newimg_th = cv2.threshold(newimg,
+                                       threshold2,
+                                       255,
+                                       cv2.THRESH_BINARY)
+        # 上部はもとのやつを上書き
+        # for w in range(item_pts[-1][2] - item_pts[-1][0] + 2):
+        for w in range(char_w):
+            for h in range(end + 1):
+                newimg_th[h, w] = img_th[h, w + int(c_center - char_w/2)]
+        #        newimg_th[h, w] = img_th[h, w + item_pts[-1][0]]
+            newimg_th[height - 1, w] = 0
+            newimg_th[height - 2, w] = 0
+            newimg_th[height - 3, w] = 0
+
+        res = self.pred_dcnt(newimg_th)
+        return res
 
     def calc_offset(self, pts, std_pts, margin_x):
         """
@@ -1990,12 +2073,17 @@ def get_output(filenames, args):
         logger.critical("chest.xml is not found")
         logger.critical("Try to run 'python makechest.py'")
         sys.exit(1)
+    if train_dcnt.exists() is False:
+        logger.critical("dcnt.xml is not found")
+        logger.critical("Try to run 'python makedcnt.py'")
+        sys.exit(1)
     if train_card.exists() is False:
         logger.critical("card.xml is not found")
         logger.critical("Try to run 'python makecard.py'")
         sys.exit(1)
     svm = cv2.ml.SVM_load(str(train_item))
     svm_chest = cv2.ml.SVM_load(str(train_chest))
+    svm_dcnt = cv2.ml.SVM_load(str(train_dcnt))
     svm_card = cv2.ml.SVM_load(str(train_card))
 
     fileoutput = []  # 出力
@@ -2026,7 +2114,7 @@ def get_output(filenames, args):
 
             try:
                 sc = ScreenShot(args, img_rgb,
-                                svm, svm_chest, svm_card,
+                                svm, svm_chest, svm_dcnt, svm_card,
                                 fileextention)
                 if sc.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
                     logger.warning(
