@@ -510,7 +510,7 @@ class ScreenShot:
                                 threshold=80, minLineLength=int(height/5),
                                 maxLineGap=6)
 
-        left_x = upper_y = 0
+        left_x = upper_y = b_line_y = 0
         right_x = width
         bottom_y = height
         for line in lines:
@@ -521,11 +521,16 @@ class ScreenShot:
                     left_x = x1
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            # Detect Upper line
+            # Detect Broken line line
             if y1 == y2 and y1 < height/2 and x1 < left_x + 200:
+                if b_line_y < y1:
+                    b_line_y = y1
+            # Detect Upper line
+            if y1 == y2 and y1 < height/2 and x1 < left_x + 10:
                 if upper_y < y1:
                     upper_y = y1
         logger.debug("left_x: %d", left_x)
+        logger.debug("b_line_y: %d", b_line_y)
         logger.debug("upper_y: %d", upper_y)
 
         # Detect Right line
@@ -539,10 +544,10 @@ class ScreenShot:
                 line_img = cv2.line(line_img, (x1, y1), (x2, y2),
                                     (0, 0, 255), 1)
                 cv2.imwrite("line_img.png", line_img)
-            if x1 == x2 and x1 > width*3/4 and (y1 < upper_y or y2 < upper_y):
+            if x1 == x2 and x1 > width*3/4 and (y1 < b_line_y or y2 < b_line_y):
                 if right_x > x1:
                     right_x = x1
-        if right_x > width - 80:
+        if right_x > width - 50:
             logger.warning("right_x detection failed.")
             # Redefine right_x from the pseudo_bottom_y
             pseudo_bottom_y = height
@@ -572,8 +577,8 @@ class ScreenShot:
         if width/height > 16/9.01:
             # 上下青枠以外
             logger.debug("no border or side blue border")
-            if (bottom_y - upper_y)/height >= 0.7:
-                if upper_y/height < (height - bottom_y)/height:
+            if (bottom_y - upper_y)/height >= 0.765:
+                if upper_y/(height - bottom_y) < 0.3:
                     logger.debug("New UI")
                     self.ui_type = "new"
                 else:
@@ -588,9 +593,9 @@ class ScreenShot:
             logger.debug("top & bottom blue border")
             game_height = width * 9 / 16
             bh = (height - game_height)/2  # blue border height
-            upper_width = (upper_y - bh)/(height - bh * 2)
-            bottom_width = (height - bottom_y - bh)/(height - bh * 2)
-            if upper_width < bottom_width:
+            upper_h = upper_y - bh
+            bottom_h = height - bottom_y - bh
+            if upper_h/bottom_h < 0.3:
                 logger.debug("New UI")
                 self.ui_type = "new"
             else:
@@ -617,19 +622,20 @@ class ScreenShot:
         # Actual iPad (2048x1536) measurements
         scale = bottom_y - upper_y
         logger.debug("scale: %d", scale)
-        upper_y = upper_y - int(79*scale/847)
-        bottom_y = bottom_y + int(124*scale/847)
+        # upper_y = upper_y - int(79*scale/847)
+        bottom_y = bottom_y + int(124*scale/924)
         logger.debug(bottom_y)
         game_screen = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
         if self.ui_type == "old":
-            left_dx = left_x + int(1446*scale/847)
-            right_dx = left_dx + int(53*scale/847)
-            upper_dy = upper_y - int(81*scale/847)
+            left_dx = left_x + int(1446*scale/924)
+            right_dx = left_dx + int(53*scale/924)
+            upper_dy = upper_y - int(81*scale/924)
         else:
-            left_dx = left_x + int(1400*scale/847)
-            right_dx = left_dx + int(340*scale/847)
-            upper_dy = upper_y - int(20*scale/847)
-        bottom_dy = upper_dy + int(37*scale/847)
+            left_dx = left_x + int(1400*scale/924)
+            right_dx = left_dx + int(305*scale/924)
+            upper_dy = upper_y - int(20*scale/924)
+        bottom_dy = upper_dy + int(37*scale/924)
+        # bottom_dy = upper_dy + int(41*scale/847)
 
         logger.debug("left_dx: %d", left_dx)
         logger.debug("right_dx: %d", right_dx)
@@ -779,42 +785,9 @@ class ScreenShot:
 
         return int(res)
 
-    def ocr_dcnt(self, drop_count_img):
-        """
-        ocr drop_count (for New UI)
-        """
-        char_w = 26
-        threshold = 100
-        kernel = np.ones((2, 3), np.uint8)
-        img = cv2.cvtColor(drop_count_img, cv2.COLOR_BGR2GRAY)
-        _, img_th = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
-        img_th = cv2.dilate(img_th, kernel, iterations=1)
-        height, width = img_th.shape[:2]
-
-        end = -1
-        for i in range(height):
-            if end == -1 and img_th[height - i - 1, width - 1] == 255:
-                end = height - i
-                break
-        start = end - 3
-
-        for j in range(width):
-            for k in range(end - start):
-                img_th[start + k, j] = 0
-
-        contours = cv2.findContours(img_th,
-                                    cv2.RETR_EXTERNAL,
-                                    cv2.CHAIN_APPROX_SIMPLE)[0]
-        item_pts = []
-        for cnt in contours:
-            ret = cv2.boundingRect(cnt)
-            pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
-            if ret[1] > 0 and ret[3] > 8 and ret[1] + ret[3] == start \
-               and ret[2] < char_w:
-                item_pts.append(pt)
-
-        item_pts.sort()
-        c_center = int(item_pts[-1][0] + (item_pts[-1][2] - item_pts[-1][0])/2)
+    def img2num(self, img, img_th, pts, char_w, end):
+        height, width = img.shape[:2]
+        c_center = int(pts[0] + (pts[2] - pts[0])/2)
         # newimg = img[:, item_pts[-1][0]-1:item_pts[-1][2]+1]
         newimg = img[:, int(c_center - char_w/2):int(c_center + char_w/2)]
 
@@ -834,6 +807,52 @@ class ScreenShot:
             newimg_th[height - 3, w] = 0
 
         res = self.pred_dcnt(newimg_th)
+        return res
+
+    def ocr_dcnt(self, drop_count_img):
+        """
+        ocr drop_count (for New UI)
+        """
+        char_w = 28
+        threshold = 100
+        kernel = np.ones((2, 3), np.uint8)
+        img = cv2.cvtColor(drop_count_img, cv2.COLOR_BGR2GRAY)
+        _, img_th = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
+        img_th = cv2.dilate(img_th, kernel, iterations=1)
+        height, width = img_th.shape[:2]
+
+        end = -1
+        for i in range(height):
+            if end == -1 and img_th[height - i - 1, width - 1] == 255:
+                end = height - i
+                break
+        start = end - 4
+
+        for j in range(width):
+            for k in range(end - start):
+                img_th[start + k, j] = 0
+
+        contours = cv2.findContours(img_th,
+                                    cv2.RETR_EXTERNAL,
+                                    cv2.CHAIN_APPROX_SIMPLE)[0]
+        item_pts = []
+        for cnt in contours:
+            ret = cv2.boundingRect(cnt)
+            pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
+            if ret[1] > 0 and ret[3] > 8 and ret[1] + ret[3] == start \
+               and ret[2] < char_w:
+                item_pts.append(pt)
+
+        if len(item_pts) == 0:
+            return -1
+        item_pts.sort()
+
+        res = self.img2num(img, img_th, item_pts[-1], char_w, end)
+        if len(item_pts) >= 2:
+            if item_pts[-1][0] - item_pts[-2][2] < char_w / 2:
+                res2 = self.img2num(img, img_th, item_pts[-2], char_w, end)
+                res = res2 * 10 + res
+
         return res
 
     def calc_offset(self, pts, std_pts, margin_x):
