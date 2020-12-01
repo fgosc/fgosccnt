@@ -189,7 +189,7 @@ class ScreenShot:
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
                                             threshold, 255, cv2.THRESH_BINARY)
 
-        game_screen, drop_count_img = self.extract_game_screen()
+        game_screen, dcnt_old, dcnt_new = self.extract_game_screen()
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite('game_screen.png', game_screen)
 
@@ -201,20 +201,30 @@ class ScreenShot:
             self.img_rgb = cv2.resize(game_screen, (0, 0),
                                       fx=resizeScale, fy=resizeScale,
                                       interpolation=cv2.INTER_CUBIC)
-            dcnt_img_rs = cv2.resize(drop_count_img, (0, 0),
+            if self.ui_type == "old":
+                dcnt_old_rs = cv2.resize(dcnt_old, (0, 0),
+                                         fx=resizeScale, fy=resizeScale,
+                                         interpolation=cv2.INTER_CUBIC)
+            dcnt_new_rs = cv2.resize(dcnt_new, (0, 0),
                                      fx=resizeScale, fy=resizeScale,
                                      interpolation=cv2.INTER_CUBIC)
         else:
             self.img_rgb = cv2.resize(game_screen, (0, 0),
                                       fx=resizeScale, fy=resizeScale,
                                       interpolation=cv2.INTER_AREA)
-            dcnt_img_rs = cv2.resize(drop_count_img, (0, 0),
+            if self.ui_type == "old":
+                dcnt_old_rs = cv2.resize(dcnt_old, (0, 0),
+                                         fx=resizeScale, fy=resizeScale,
+                                         interpolation=cv2.INTER_AREA)
+            dcnt_new_rs = cv2.resize(dcnt_new, (0, 0),
                                      fx=resizeScale, fy=resizeScale,
                                      interpolation=cv2.INTER_AREA)
 
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite('game_screen_resize.png', self.img_rgb)
-            cv2.imwrite('drop_count.png', dcnt_img_rs)
+            if self.ui_type == "old":
+                cv2.imwrite('dcnt_old.png', dcnt_old_rs)
+            cv2.imwrite('dcnt_new.png', dcnt_new_rs)
 
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
         _, self.img_th = cv2.threshold(self.img_gray,
@@ -227,9 +237,11 @@ class ScreenShot:
 
         self.height, self.width = self.img_rgb.shape[:2]
         if self.ui_type == "old":
-            self.chestnum = self.ocr_tresurechest(dcnt_img_rs)
+            self.chestnum = self.ocr_tresurechest(dcnt_old_rs)
+            if self.chestnum == -1:
+                self.chestnum = self.ocr_dcnt(dcnt_new_rs)
         else:
-            self.chestnum = self.ocr_dcnt(dcnt_img_rs)
+            self.chestnum = self.ocr_dcnt(dcnt_new_rs)
         # logger.debug("Total Drop (OCR): %d", self.chestnum)
         logger.info("Total Drop (OCR): %d", self.chestnum)
         item_pts = self.img2points()
@@ -626,14 +638,17 @@ class ScreenShot:
         bottom_y = bottom_y + int(124*scale/924)
         logger.debug(bottom_y)
         game_screen = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
+        dcnt_old = None
         if self.ui_type == "old":
-            left_dx = left_x + int(1446*scale/924)
-            right_dx = left_dx + int(53*scale/924)
-            upper_dy = upper_y - int(81*scale/924)
-        else:
-            left_dx = left_x + int(1400*scale/924)
-            right_dx = left_dx + int(305*scale/924)
-            upper_dy = upper_y - int(20*scale/924)
+            left_dxo = left_x + int(1446*scale/924)
+            right_dxo = left_dxo + int(53*scale/924)
+            upper_dyo = upper_y - int(81*scale/924)
+            bottom_dyo = upper_dyo + int(37*scale/924)
+            dcnt_old = self.img_rgb_orig[upper_dyo: bottom_dyo,
+                                         left_dxo: right_dxo]
+        left_dx = left_x + int(1400*scale/924)
+        right_dx = left_dx + int(305*scale/924)
+        upper_dy = upper_y - int(20*scale/924)
         bottom_dy = upper_dy + int(37*scale/924)
         # bottom_dy = upper_dy + int(41*scale/847)
 
@@ -641,10 +656,10 @@ class ScreenShot:
         logger.debug("right_dx: %d", right_dx)
         logger.debug("upper_dy: %d", upper_dy)
         logger.debug("bottom_dy: %d", bottom_dy)
-        drop_count_img = self.img_rgb_orig[upper_dy: bottom_dy,
-                                           left_dx: right_dx]
+        dcnt_new = self.img_rgb_orig[upper_dy: bottom_dy,
+                                     left_dx: right_dx]
 
-        return game_screen, drop_count_img
+        return game_screen, dcnt_old, dcnt_new
 
     def area_select(self):
         """
@@ -814,7 +829,7 @@ class ScreenShot:
         ocr drop_count (for New UI)
         """
         char_w = 28
-        threshold = 100
+        threshold = 80
         kernel = np.ones((2, 3), np.uint8)
         img = cv2.cvtColor(drop_count_img, cv2.COLOR_BGR2GRAY)
         _, img_th = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
@@ -826,7 +841,7 @@ class ScreenShot:
             if end == -1 and img_th[height - i - 1, width - 1] == 255:
                 end = height - i
                 break
-        start = end - 4
+        start = end - 5
 
         for j in range(width):
             for k in range(end - start):
@@ -840,7 +855,7 @@ class ScreenShot:
             ret = cv2.boundingRect(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
             if ret[1] > 0 and ret[3] > 8 and ret[1] + ret[3] == start \
-               and ret[2] < char_w:
+               and ret[2] < char_w and ret[0] + ret[2] != width:
                 item_pts.append(pt)
 
         if len(item_pts) == 0:
