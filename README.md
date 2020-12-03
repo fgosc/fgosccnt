@@ -16,15 +16,17 @@ https://github.com/fgophi/fgosccnt/wiki/Easy-Use
 2. makeitem.py item.xml を作成
 3. makechest.py chest.xml を作成
 4. makecard.py card.xml を作成
-5. data フォルダ 2.3.4.で用いられるファイル
-6. csv2counter.py (おまけ)fgosccnt.pyの出力CSVをFGO周回カウンタ書式にする
-7. qpsplit.py (おまけ)スクショファイルを報酬QPごとにフォルダ分けする
+5. makedcnt.py dcnt.xml を生成
+6. data フォルダ 2.3.4.5.で用いられるファイル
+7. csv2counter.py (おまけ)fgosccnt.pyの出力CSVをFGO周回カウンタ書式にする
+8. qpsplit.py (おまけ)スクショファイルを報酬QPごとにフォルダ分けする
 
 以下は2.3.4.実行時に作成される
 
-8. item.xml: アイテム下部の文字を読むSVMのトレーニングファイル
-9. chest.xml:  ドロップ数の文字を読むSVMのトレーニングファイル
-10. card.xml:  カード下部の文字を読むSVMのトレーニングファイル
+9. item.xml: アイテム下部の文字を読むSVMのトレーニングファイル
+10. chest.xml:  旧UIのドロップ数の文字を読むSVMのトレーニングファイル
+11. card.xml:  カード下部の文字を読むSVMのトレーニングファイル
+12. dcnt.xml: 新UIのドロップ数の文字を読むSVMのトレーニングファイル
 
 # インストール
 
@@ -44,9 +46,10 @@ $ git submodule update --init
 $ python makeitem.py
 $ python makechest.py
 $ python makecard.py
+$ python makedcnt.py
 ```
 
-※fgosccnt.py, item.xml chest.xml card.xmlを同じフォルダにいれること
+※fgosccnt.py, item.xml chest.xml card.xml dcnt.xml を同じフォルダにいれること
 
 
 # 使い方
