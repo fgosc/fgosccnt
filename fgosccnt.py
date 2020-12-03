@@ -243,7 +243,7 @@ class ScreenShot:
         else:
             self.chestnum = self.ocr_dcnt(dcnt_new_rs)
         # logger.debug("Total Drop (OCR): %d", self.chestnum)
-        logger.info("Total Drop (OCR): %d", self.chestnum)
+        logger.debug("Total Drop (OCR): %d", self.chestnum)
         item_pts = self.img2points()
         logger.debug("item_pts:%s", item_pts)
 
@@ -283,6 +283,31 @@ class ScreenShot:
         if self.qp_gained > 0 and len(self.itemlist) == 0:
             raise GainedQPandDropMissMatchError
         self.pagenum, self.pages, self.lines = self.correct_pageinfo()
+        self.check_page_mismatch()
+
+    def check_page_mismatch(self):
+        count_miss = False
+        if self.pages == 1:
+            if self.chestnum + 1 != len(self.itemlist):
+                count_miss = True
+        elif self.pages == 2:
+            if not 21 <= self.chestnum <= 41:
+                count_miss = True
+            if self.pagenum == 2:
+                item_count = self.chestnum - 20 + (6 - self.lines)*7
+                if item_count != len(self.itemlist):
+                    count_miss = True
+        elif self.pages == 3:
+            if not 42 <= self.chestnum <= 62:
+                count_miss = True
+            if self.pagenum == 3:
+                item_count = self.chestnum - 41 + (9 - self.lines)*7
+                if item_count != len(self.itemlist):
+                    count_miss = True
+        if count_miss:
+            logger.warning("drops_count is a mismatch:")
+            logger.warning("drops_count = %d", self.chestnum)
+            logger.warning("drops_found = %d", len(self.itemlist))
 
     def detect_scroll_bar(self):
         '''
