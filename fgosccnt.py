@@ -564,8 +564,10 @@ class ScreenShot:
                     b_line_y = y1
             # Detect Upper line
 #            if y1 == y2 and y1 < height/2 and x1 < left_x + 15:
-            if y1 == y2 and y1 < height/2 \
-               and x1 > left_x - 5 and y1 < b_line_y - 15:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            if y1 == y2 and y1 < left_x + 180 \
+               and x1 > left_x - 5 and y1 < b_line_y - 30:
                 if upper_y < y1:
                     upper_y = y1
         logger.debug("left_x: %d", left_x)
