@@ -264,8 +264,9 @@ def otuput_item(lines):
             # logger.debug("i: %s", i)
             # logger.debug("item: %s", item)
             # logger.debug("id: %s", id)
-            if id2type[id] == "Craft Essence":
-                continue
+            if not item.startswith("item"):
+                if id2type[id] == "Craft Essence":
+                    continue
             # 改行出力ルーチン
             if stditem_flag is False \
                and ID_STAMDARD_ITEM_MIN <= id <= ID_STAMDARD_ITEM_MAX:
@@ -302,8 +303,10 @@ def otuput_item(lines):
             elif qp_flag and not item.startswith('QP(+'):
                 output = output[:-1] + "\n"
                 qp_flag = False
-
-            output = output + item + lines[0][item] + "-"
+            if item[-1].isdigit():
+                output = output + item + "_" + lines[0][item] + "-"
+            else:
+                output = output + item + lines[0][item] + "-"
     output = output.replace('ポイント(+', args.point + '(+')
 
 

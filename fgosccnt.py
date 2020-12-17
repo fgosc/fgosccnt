@@ -896,6 +896,7 @@ class ScreenShot:
         if len(item_pts) == 0:
             return -1
         item_pts.sort()
+        logger.info(item_pts)
 
         res = self.img2num(img, img_th, item_pts[-1], char_w, end)
         if len(item_pts) >= 2:
