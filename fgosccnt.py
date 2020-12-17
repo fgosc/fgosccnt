@@ -899,7 +899,7 @@ class ScreenShot:
 
         res = self.img2num(img, img_th, item_pts[-1], char_w, end)
         if len(item_pts) >= 2:
-            if item_pts[-1][0] - item_pts[-2][2] < char_w / 2:
+            if item_pts[-1][0] - item_pts[-2][2] < char_w / (2 / 3):
                 res2 = self.img2num(img, img_th, item_pts[-2], char_w, end)
                 res = res2 * 10 + res
 
