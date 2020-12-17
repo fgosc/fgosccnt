@@ -437,7 +437,10 @@ class ScreenShot:
             )
             qp_total = self.ocr_text(im_th)
         if use_tesseract or qp_total == -1:
-            pt = ((288, 948), (838, 1024))
+            if self.ui_type == "old":
+                pt = ((288, 948), (838, 1024))
+            else:
+                pt = ((288, 838), (838, 914))
             logger.debug('Use tesseract')
             qp_total_text = self.extract_text_from_image(
                 self.img_rgb[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
@@ -460,7 +463,10 @@ class ScreenShot:
         bounds = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
         if bounds is None:
             # fall back on hardcoded bound
-            bounds = ((398, 858), (948, 934))
+            if self.ui_type == "old":
+                bounds = ((398, 858), (948, 934))
+            else:
+                bounds = ((398, 748), (948, 824))
             use_tesseract = True
         else:
             # Detecting the QP box with different shading is "easy", while detecting the absence of it
@@ -566,7 +572,7 @@ class ScreenShot:
 #            if y1 == y2 and y1 < height/2 and x1 < left_x + 15:
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            if y1 == y2 and y1 < left_x + 180 \
+            if y1 == y2 and x1 < left_x + 180 \
                and x1 > left_x - 5 and y1 < b_line_y - 30:
                 if upper_y < y1:
                     upper_y = y1
@@ -2229,6 +2235,13 @@ def get_output(filenames, args):
                                 prev_qp_gained != sc.qp_gained
                                 or prev_chestnum != sc.chestnum
                             ):
+                    logger.debug("prev_pages: %s", prev_pages)
+                    logger.debug("prev_pagenum: %s", prev_pagenum)
+                    logger.debug("sc.pagenum: %s", sc.pagenum)
+                    logger.debug("prev_qp_gained: %s", prev_qp_gained)
+                    logger.debug("sc.qp_gained: %s", sc.qp_gained)
+                    logger.debug("prev_chestnum: %s", prev_chestnum)
+                    logger.debug("sc.chestnum: %s", sc.chestnum)
                     fileoutput.append({'filename': 'missing'})
                     all_list.append([])
 
