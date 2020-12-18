@@ -865,7 +865,7 @@ class ScreenShot:
         """
         char_w = 28
         threshold = 80
-        kernel = np.ones((2, 3), np.uint8)
+        kernel = np.ones((4, 4), np.uint8)
         img = cv2.cvtColor(drop_count_img, cv2.COLOR_BGR2GRAY)
         _, img_th = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
         img_th = cv2.dilate(img_th, kernel, iterations=1)
@@ -876,7 +876,7 @@ class ScreenShot:
             if end == -1 and img_th[height - i - 1, width - 1] == 255:
                 end = height - i
                 break
-        start = end - 5
+        start = end - 6
 
         for j in range(width):
             for k in range(end - start):
@@ -2225,7 +2225,7 @@ def get_output(filenames, args):
                 # 2頁目以前のスクショが無い場合に migging と出力
                 # 1. 前頁が最終頁じゃない&前頁の続き頁数じゃない
                 # または前頁が最終頁なのに1頁じゃない
-                # 2. 前頁の続き頁なのにドロップ数や獲得QPが違う
+                # 2. 前頁の続き頁なのに獲得QPが違う
                 if (
                     prev_pages - prev_pagenum > 0
                     and sc.pagenum - prev_pagenum != 1) \
@@ -2235,7 +2235,6 @@ def get_output(filenames, args):
                         and sc.pagenum - prev_pagenum == 1 \
                         and (
                                 prev_qp_gained != sc.qp_gained
-                                or prev_chestnum != sc.chestnum
                             ):
                     logger.debug("prev_pages: %s", prev_pages)
                     logger.debug("prev_pagenum: %s", prev_pagenum)
