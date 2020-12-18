@@ -946,7 +946,7 @@ class ScreenShot:
         row_size = 7  # アイテム表示最大列
         col_size = 3  # アイテム表示最大行
         margin_x = 15
-        area_size_lower = 15000  # アイテム枠の面積の最小値
+        area_size_lower = 37000  # アイテム枠の面積の最小値
         img_1strow = self.img_th[0:self.height,
                                  std_pts[0][0] - margin_x:
                                  std_pts[0][2] + margin_x]
@@ -964,7 +964,7 @@ class ScreenShot:
                and area < self.height * self.width / (row_size * col_size):
                 epsilon = 0.01*cv2.arcLength(cnt, True)
                 approx = cv2.approxPolyDP(cnt, epsilon, True)
-                if len(approx) == 6:  # 六角形のみ認識
+                if 4 <= len(approx) <= 6:  # 六角形のみ認識
                     ret = cv2.boundingRect(cnt)
                     if ret[1] > self.height * 0.15 - 101 \
                        and ret[1] + ret[3] < self.height * 0.76 - 101:
