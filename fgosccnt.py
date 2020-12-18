@@ -950,8 +950,8 @@ class ScreenShot:
         img_1strow = self.img_th[0:self.height,
                                  std_pts[0][0] - margin_x:
                                  std_pts[0][2] + margin_x]
-        kernel = np.ones((5,1),np.uint8)
-        img_1strow = cv2.dilate(img_1strow,kernel,iterations = 1)
+        # kernel = np.ones((5,1),np.uint8)
+        # img_1strow = cv2.dilate(img_1strow,kernel,iterations = 1)
 
         # 輪郭を抽出
         contours = cv2.findContours(img_1strow, cv2.RETR_TREE,
