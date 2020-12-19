@@ -890,7 +890,7 @@ class ScreenShot:
             ret = cv2.boundingRect(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
             if ret[1] > 0 and ret[3] > 8 and ret[1] + ret[3] == start \
-               and 8 < ret[2] < char_w and ret[0] + ret[2] != width:
+               and 8 < ret[2] < char_w + 4 and ret[0] + ret[2] != width:
                 item_pts.append(pt)
 
         if len(item_pts) == 0:
@@ -2272,6 +2272,7 @@ def get_output(filenames, args):
                     output[drop_count] = str(output[drop_count]) + "+"
 
             except Exception as e:
+                logger.error(filename)
                 logger.error(e, exc_info=True)
                 output = ({'filename': str(filename) + ': not valid'})
                 all_list.append([])
