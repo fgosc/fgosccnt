@@ -876,7 +876,7 @@ class ScreenShot:
             if end == -1 and img_th[height - i - 1, width - 1] == 255:
                 end = height - i
                 break
-        start = end - 6
+        start = end - 7
 
         for j in range(width):
             for k in range(end - start):
