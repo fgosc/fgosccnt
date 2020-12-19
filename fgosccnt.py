@@ -573,7 +573,7 @@ class ScreenShot:
         for line in lines:
             x1, y1, x2, y2 = line[0]
             if y1 == y2 and x1 < left_x + 180 \
-               and x1 > left_x - 5 and y1 < b_line_y - 30:
+               and x2 > left_x + 200 and y1 < b_line_y - 30:
                 if upper_y < y1:
                     upper_y = y1
         logger.debug("left_x: %d", left_x)
@@ -890,7 +890,7 @@ class ScreenShot:
             ret = cv2.boundingRect(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
             if ret[1] > 0 and ret[3] > 8 and ret[1] + ret[3] == start \
-               and 8 < ret[2] < char_w + 4 and ret[0] + ret[2] != width:
+               and 12 < ret[2] < char_w + 4 and ret[0] + ret[2] != width:
                 item_pts.append(pt)
 
         if len(item_pts) == 0:
