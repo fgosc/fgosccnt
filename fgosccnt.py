@@ -686,8 +686,8 @@ class ScreenShot:
             dcnt_old = self.img_rgb_orig[upper_dyo: bottom_dyo,
                                          left_dxo: right_dxo]
         if upper_lower_blue_border:
-            left_dx = left_x + int(1470*scale/924)
-            right_dx = left_dx + int(60*scale/924)
+            left_dx = left_x + int(1467*scale/924)
+            right_dx = left_dx + int(63*scale/924)
         else:
             left_dx = left_x + int(1400*scale/924)
             right_dx = left_dx + int(305*scale/924)
