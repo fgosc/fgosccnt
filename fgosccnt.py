@@ -539,6 +539,7 @@ class ScreenShot:
         1. Make cutting image using edge and line detection
         2. Correcting to be a gamescreen from cutting image
         """
+        upper_lower_blue_border = False  # For New UI
         # 1. Edge detection
         height, width = self.img_gray_orig.shape[:2]
         canny_img = cv2.Canny(self.img_gray_orig, 80, 80)
@@ -628,6 +629,8 @@ class ScreenShot:
                 if upper_y/(height - bottom_y) < 0.3:
                     logger.debug("New UI")
                     self.ui_type = "new"
+                    if width/height < 16/8.99:
+                        upper_lower_blue_border = True
                 else:
                     logger.debug("Old UI")
                     self.ui_type = "old"
@@ -645,6 +648,7 @@ class ScreenShot:
             if upper_h/bottom_h < 0.3:
                 logger.debug("New UI")
                 self.ui_type = "new"
+                upper_lower_blue_border = True
             else:
                 logger.debug("Old UI")
                 self.ui_type = "old"
@@ -681,8 +685,12 @@ class ScreenShot:
             bottom_dyo = upper_dyo + int(37*scale/924)
             dcnt_old = self.img_rgb_orig[upper_dyo: bottom_dyo,
                                          left_dxo: right_dxo]
-        left_dx = left_x + int(1400*scale/924)
-        right_dx = left_dx + int(305*scale/924)
+        if upper_lower_blue_border:
+            left_dx = left_x + int(1470*scale/924)
+            right_dx = left_dx + int(60*scale/924)
+        else:
+            left_dx = left_x + int(1400*scale/924)
+            right_dx = left_dx + int(305*scale/924)
         upper_dy = upper_y - int(20*scale/924)
         bottom_dy = upper_dy + int(37*scale/924)
         # bottom_dy = upper_dy + int(41*scale/847)
