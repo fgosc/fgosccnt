@@ -573,7 +573,7 @@ class ScreenShot:
 #            if y1 == y2 and y1 < height/2 and x1 < left_x + 15:
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            if y1 == y2 and x1 < left_x + 180 \
+            if y1 == y2 and x1 < left_x + 200 \
                and x2 > left_x + 200 and y1 < b_line_y - 30:
                 if upper_y < y1:
                     upper_y = y1
@@ -686,8 +686,8 @@ class ScreenShot:
             dcnt_old = self.img_rgb_orig[upper_dyo: bottom_dyo,
                                          left_dxo: right_dxo]
         if upper_lower_blue_border:
-            left_dx = left_x + int(1467*scale/924)
-            right_dx = left_dx + int(63*scale/924)
+            left_dx = left_x + int(1463*scale/924)
+            right_dx = left_dx + int(67*scale/924)
         else:
             left_dx = left_x + int(1400*scale/924)
             right_dx = left_dx + int(305*scale/924)
