@@ -566,7 +566,7 @@ class ScreenShot:
         for line in lines:
             x1, y1, x2, y2 = line[0]
             # Detect Broken line line
-            if y1 == y2 and y1 < height/2 and x1 < left_x + 200:
+            if y1 == y2 and y1 < height/2 and x1 < left_x + 200 and x2 > left_x:
                 if b_line_y < y1:
                     b_line_y = y1
             # Detect Upper line
@@ -617,7 +617,7 @@ class ScreenShot:
         # Changed the underline of cut image to use the top of Next button.
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            if y1 == y2 and y1 > height/2 and (x1 > right_x or x2 > right_x):
+            if y1 == y2 and y1 > height/2 and (x1 < right_x and x2 > right_x):
                 if bottom_y > y1:
                     bottom_y = y1
         logger.debug("bottom_y: %d", bottom_y)
