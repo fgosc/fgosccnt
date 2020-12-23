@@ -560,7 +560,7 @@ class ScreenShot:
         for line in lines:
             x1, y1, x2, y2 = line[0]
             # Detect Left line
-            if x1 == x2 and x1 < width/2:
+            if x1 == x2 and x1 < width/2 and abs(y2 - y1) > height/2:
                 if left_x < x1:
                     left_x = x1
         for line in lines:
@@ -1176,12 +1176,9 @@ class Item:
         # それ以外は3桁のときに変わるはず(未確認)
         # ここのmargin_right はドロップ数の下一桁目までの距離
         base_line = 181 if mode == "na" else 179
-        pattern_tiny = r"^\([\+x]\d{4,5}0\)$"
-        pattern_tiny_qp = r"^\(\+\d{4,5}0\)$"
-        pattern_small = r"^\([\+x]\d{5}0\)$"
-        pattern_small_qp = r"^\(\+\d{5}0\)$"
-        pattern_normal = r"^\([\+x]\d+\)$"
-        pattern_normal_qp = r"^\(\+[1-9]\d+\)$"
+        pattern_tiny = r"^\(\+\d{4,5}0\)$"
+        pattern_small = r"^\(\+\d{5}0\)$"
+        pattern_normal = r"^\(\+[1-9]\d+\)$"
         # 1-5桁の読み込み
         font_size = FONTSIZE_NORMAL
         if mode == 'na':
@@ -1190,8 +1187,6 @@ class Item:
             margin_right = 26
         line, pts = self.get_number4jpg(base_line, margin_right, font_size)
         logger.debug("Read BONUS NORMAL: %s", line)
-        if self.id == ID_QP or self.category == "Point":
-            pattern_normal = pattern_normal_qp
         m_normal = re.match(pattern_normal, line)
         if m_normal:
             logger.debug("Font Size: %d", font_size)
@@ -1204,8 +1199,6 @@ class Item:
         font_size = FONTSIZE_SMALL
         line, pts = self.get_number4jpg(base_line, margin_right, font_size)
         logger.debug("Read BONUS SMALL: %s", line)
-        if self.id == ID_QP or self.category == "Point":
-            pattern_small = pattern_small_qp
         m_small = re.match(pattern_small, line)
         if m_small:
             logger.debug("Font Size: %d", font_size)
@@ -1218,8 +1211,6 @@ class Item:
             margin_right = 24
         line, pts = self.get_number4jpg(base_line, margin_right, font_size)
         logger.debug("Read BONUS TINY: %s", line)
-        if self.id == ID_QP or self.category == "Point":
-            pattern_tiny = pattern_tiny_qp
         m_tiny = re.match(pattern_tiny, line)
         if m_tiny:
             logger.debug("Font Size: %d", font_size)
@@ -1992,7 +1983,7 @@ def classify_background(img_rgb):
     bg_score.append({"background": "bronze", "dist": score_b})
 
     bg_score = sorted(bg_score, key=lambda x: x['dist'])
-    logger.debug("background dist: %s", bg_score)
+    # logger.debug("background dist: %s", bg_score)
     return (bg_score[0]["background"])
 
 
