@@ -283,7 +283,8 @@ class ScreenShot:
         if self.qp_gained > 0 and len(self.itemlist) == 0:
             raise GainedQPandDropMissMatchError
         self.pagenum, self.pages, self.lines = self.correct_pageinfo()
-        self.check_page_mismatch()
+        if not reward_only:
+            self.check_page_mismatch()
 
     def check_page_mismatch(self):
         count_miss = False
