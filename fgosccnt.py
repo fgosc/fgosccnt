@@ -186,6 +186,7 @@ class ScreenShot:
             self.pagenum, self.pages, self.lines = (-1, -1, -1)
         self.img_rgb_orig = img_rgb
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
+        self.img_hsv_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
                                             threshold, 255, cv2.THRESH_BINARY)
 
@@ -524,14 +525,43 @@ class ScreenShot:
                 break
         lx = i
         for j in range(edge_width):
-            img_th_x = img_th[:, width - j: width - j + 1]
+            img_th_x = img_th[:, width - j - 1: width - j]
             # ヒストグラムを計算
             hist = cv2.calcHist([img_th_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
             _, _, _, maxLoc = cv2.minMaxLoc(hist)
             if maxLoc[1] == 0:
                 break
-        rx = i
+        rx = j
+
+        return lx, rx
+
+    def find_notch(self, img_hsv):
+        """
+        直線検出で検出されなかったフチ幅を検出
+        """
+        edge_width = 150
+
+        height, width = img_hsv.shape[:2]
+        target_color = 0
+        for i in range(edge_width):
+            img_hsv_x = img_hsv[:, i:i + 1]
+            # ヒストグラムを計算
+            hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
+            # 最小値・最大値・最小値の位置・最大値の位置を取得
+            _, maxVal, _, maxLoc = cv2.minMaxLoc(hist)
+            if not (maxLoc[1] == target_color and maxVal > height * 0.9):
+                break
+        lx = i
+        for j in range(edge_width):
+            img_hsv_x = img_hsv[:, width - j - 1: width - j]
+            # ヒストグラムを計算
+            hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
+            # 最小値・最大値・最小値の位置・最大値の位置を取得
+            _, maxVal, _, maxLoc = cv2.minMaxLoc(hist)
+            if not (maxLoc[1] == target_color and maxVal > height * 0.9):
+                break
+        rx = j
 
         return lx, rx
 
@@ -582,6 +612,11 @@ class ScreenShot:
         logger.debug("b_line_y: %d", b_line_y)
         logger.debug("upper_y: %d", upper_y)
 
+        # Define Center
+        lx, rx = self.find_notch(self.img_hsv_orig)
+        logger.debug("notch_lx = %d, notch_rx = %d", lx, rx)
+        center = int((width - lx - rx)/2) + lx
+
         # Detect Right line
         # Avoid catching the line of the scroll bar
         if logger.isEnabledFor(logging.DEBUG):
@@ -593,7 +628,8 @@ class ScreenShot:
                 line_img = cv2.line(line_img, (x1, y1), (x2, y2),
                                     (0, 0, 255), 1)
                 cv2.imwrite("line_img.png", line_img)
-            if x1 == x2 and x1 > width*3/4 and (y1 < b_line_y or y2 < b_line_y):
+            # if x1 == x2 and x1 > width*3/4 and (y1 < b_line_y or y2 < b_line_y):
+            if x1 == x2 and x1 >= center + (center - left_x) - 5 and (y1 < b_line_y or y2 < b_line_y):
                 if right_x > x1:
                     right_x = x1
         if right_x > width - 50:
