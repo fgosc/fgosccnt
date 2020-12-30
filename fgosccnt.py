@@ -573,7 +573,7 @@ class ScreenShot:
         upper_lower_blue_border = False  # For New UI
         # 1. Edge detection
         height, width = self.img_gray_orig.shape[:2]
-        canny_img = cv2.Canny(self.img_gray_orig, 70, 70)
+        canny_img = cv2.Canny(self.img_gray_orig, 80, 80)
 
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite("canny_img.png", canny_img)
@@ -594,10 +594,16 @@ class ScreenShot:
             if x1 == x2 and x1 < width/2 and abs(y2 - y1) > height/2:
                 if left_x < x1:
                     left_x = x1
+        # Define Center
+        lx, rx = self.find_notch(self.img_hsv_orig)
+        logger.debug("notch_lx = %d, notch_rx = %d", lx, rx)
+        center = int((width - lx - rx)/2) + lx
         for line in lines:
             x1, y1, x2, y2 = line[0]
             # Detect Broken line line
-            if y1 == y2 and y1 < height/2 and x1 < left_x + 200 and x2 > left_x:
+            if y1 == y2 and y1 < height/2 \
+               and ((x1 < left_x + 200 and x2 > left_x) \
+               or (center + (center - left_x) - 200 < x2 < center + (center - left_x))):
                 if b_line_y < y1:
                     b_line_y = y1
             # Detect Upper line
@@ -612,10 +618,6 @@ class ScreenShot:
         logger.debug("b_line_y: %d", b_line_y)
         logger.debug("upper_y: %d", upper_y)
 
-        # Define Center
-        lx, rx = self.find_notch(self.img_hsv_orig)
-        logger.debug("notch_lx = %d, notch_rx = %d", lx, rx)
-        center = int((width - lx - rx)/2) + lx
 
         # Detect Right line
         # Avoid catching the line of the scroll bar
