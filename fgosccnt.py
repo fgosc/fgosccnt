@@ -573,7 +573,7 @@ class ScreenShot:
         upper_lower_blue_border = False  # For New UI
         # 1. Edge detection
         height, width = self.img_gray_orig.shape[:2]
-        canny_img = cv2.Canny(self.img_gray_orig, 80, 80)
+        canny_img = cv2.Canny(self.img_gray_orig, 70, 70)
 
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite("canny_img.png", canny_img)
