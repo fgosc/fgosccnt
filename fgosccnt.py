@@ -601,7 +601,7 @@ class ScreenShot:
         for line in lines:
             x1, y1, x2, y2 = line[0]
             # Detect Broken line line
-            if y1 == y2 and y1 < height/2 \
+            if y1 == y2 and y1 < height/3 \
                and ((x1 < left_x + 200 and x2 > left_x) \
                or (center + (center - left_x) - 200 < x2 < center + (center - left_x))):
                 if b_line_y < y1:
