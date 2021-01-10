@@ -1217,7 +1217,7 @@ class Item:
         base_line = 181 if mode == "na" else 179
         pattern_tiny = r"^\(\+\d{4,5}0\)$"
         pattern_small = r"^\(\+\d{5}0\)$"
-        pattern_normal = r"^\(\+[1-9]\d+\)$"
+        pattern_normal = r"^\(\+[1-9]\d*\)$"
         # 1-5桁の読み込み
         font_size = FONTSIZE_NORMAL
         if mode == 'na':
