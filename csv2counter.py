@@ -207,6 +207,13 @@ def output_ce(lines):
                     for ce in ce_output.keys():
                         output = output + ce + str(ce_output[ce]) + "-"
                     break
+    else:
+        for i, item in enumerate(lines[0].keys()):
+            if i > 2:
+                if item.endswith("礼装"):
+                    output = output + item + lines[0][item] + "-"
+
+
 
 
 def output_ce_exp(lines):
