@@ -48,6 +48,7 @@ ID_SYURENQUEST_MAX = 94006828
 output = ""
 ce_exp_list = []
 ce_list = []
+jyohakyu_flag = False
 
 
 def delete_brackets(s):
@@ -119,6 +120,7 @@ def output_header(lines):
     global ce_list
     global ce_exp_list
     global output
+    global jyohakyu_flag
     output_warning(lines)
     place = ""
     if lines[0]["filename"] != "合計" and len(lines) > 2:
@@ -136,6 +138,8 @@ def output_header(lines):
 
         place = lines[0]["filename"]
         # 場所からドロップリストを決定
+        if " 序" in place or " 破" in place or " 急" in place:
+            jyohakyu_flag = True
         drop = []
         questid = place2id(place, freequest)
         logger.debug("questid: %d", questid)
@@ -345,3 +349,5 @@ if __name__ == '__main__':
 
     print(output[:-1])
     print("#FGO周回カウンタ http://aoshirobo.net/fatego/rc/")
+    if jyohakyu_flag:
+        print("追加出現率 %")
