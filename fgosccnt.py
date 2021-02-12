@@ -691,10 +691,11 @@ class ScreenShot:
             else:
                 logger.debug("Old UI")
                 self.ui_type = "old"
-        if bottom_y == height:
-            TEMPLATE_WIDTH = 1238 - 95
-            TEMPLATE_HEIGHT = 668 - 116
-            scale = TEMPLATE_WIDTH / TEMPLATE_HEIGHT
+        TEMPLATE_WIDTH = 1902 - 146
+        TEMPLATE_HEIGHT = 1158 - 234
+        scale = TEMPLATE_WIDTH / TEMPLATE_HEIGHT
+        lack_of_height = (right_x - left_x)/(bottom_y - upper_y + 10) > scale
+        if bottom_y == height or lack_of_height:
             bottom_y = upper_y + int((right_x - left_x) / scale)
             logger.warning("bottom line detection failed")
             logger.debug("redefine bottom_y: %s", bottom_y)
