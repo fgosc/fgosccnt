@@ -598,10 +598,18 @@ class ScreenShot:
         lx, rx = self.find_notch(self.img_hsv_orig)
         logger.debug("notch_lx = %d, notch_rx = %d", lx, rx)
         center = int((width - lx - rx)/2) + lx
+        # 旧UIの破線y座標位置以上にする
+        # 一行目のアイテムの下部にできる直線さけ
+        # BlueStacksのスクショをメニューバーとともにスクショにとる人のため上部直線ではとらないことでマージンにする
+        # 一行目のアイテムの上部に直線ができるケースがあったら改めて考える
+        if width/height > 16/9.01:
+            b_line_y_border = 300 * width / 2048
+        else:
+            b_line_y_border = 300 * width / 2048 + int((height - width * 9/16)/2)
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            # Detect Broken line line
-            if y1 == y2 and y1 < height/3 \
+            # Detect Broken line
+            if y1 == y2 and y1 < b_line_y_border \
                and ((x1 < left_x + 200 and x2 > left_x) \
                or (center + (center - left_x) - 200 < x2 < center + (center - left_x))):
                 if b_line_y < y1:
