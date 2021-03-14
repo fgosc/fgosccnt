@@ -603,7 +603,7 @@ class ScreenShot:
         # BlueStacksのスクショをメニューバーとともにスクショにとる人のため上部直線ではとらないことでマージンにする
         # 一行目のアイテムの上部に直線ができるケースがあったら改めて考える
         if width/height > 16/9.01:
-            b_line_y_border = 300 * width / 2048
+            b_line_y_border = 300 * height / 1152
         else:
             b_line_y_border = 300 * width / 2048 + int((height - width * 9/16)/2)
         for line in lines:
