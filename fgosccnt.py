@@ -895,7 +895,7 @@ class ScreenShot:
         height, width = img.shape[:2]
         c_center = int(pts[0] + (pts[2] - pts[0])/2)
         # newimg = img[:, item_pts[-1][0]-1:item_pts[-1][2]+1]
-        newimg = img[:, int(c_center - char_w/2):int(c_center + char_w/2)]
+        newimg = img[:, max(int(c_center - char_w/2), 0):int(c_center + char_w/2)]
 
         threshold2 = 10
         ret, newimg_th = cv2.threshold(newimg,
@@ -904,7 +904,7 @@ class ScreenShot:
                                        cv2.THRESH_BINARY)
         # 上部はもとのやつを上書き
         # for w in range(item_pts[-1][2] - item_pts[-1][0] + 2):
-        for w in range(char_w):
+        for w in range(int(c_center + char_w/2) - max(int(c_center - char_w/2), 0)):
             for h in range(end + 1):
                 newimg_th[h, w] = img_th[h, w + int(c_center - char_w/2)]
         #        newimg_th[h, w] = img_th[h, w + item_pts[-1][0]]
