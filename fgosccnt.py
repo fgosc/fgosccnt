@@ -821,6 +821,9 @@ class ScreenShot:
             # Recognizing Failure
             return -1
         item_pts.sort()
+        if len(item_pts) > 9:
+            # QP may be misrecognizing the 10th digit or more, so cut it
+            item_pts = item_pts[1:]
         logger.debug("ocr item_pts: %s", item_pts)
         logger.debug("ドロップ桁数(OCR): %d", len(item_pts))
 
