@@ -908,7 +908,7 @@ class ScreenShot:
         # 上部はもとのやつを上書き
         # for w in range(item_pts[-1][2] - item_pts[-1][0] + 2):
         for w in range(int(c_center + char_w/2) - max(int(c_center - char_w/2), 0)):
-            for h in range(end + 1):
+            for h in range(end):
                 newimg_th[h, w] = img_th[h, w + int(c_center - char_w/2)]
         #        newimg_th[h, w] = img_th[h, w + item_pts[-1][0]]
             newimg_th[height - 1, w] = 0
