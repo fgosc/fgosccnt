@@ -279,8 +279,14 @@ class ScreenShot:
             prev_item = dropitem
 
         self.itemlist = self.makeitemlist()
-        self.total_qp = self.get_qp(mode)
-        self.qp_gained = self.get_qp_gained(mode)
+        try:
+            self.total_qp = self.get_qp(mode)
+            self.qp_gained = self.get_qp_gained(mode)
+        except Exception as e:
+            self.total_qp = -1
+            self.qp_gained = -1
+            logger.warning("QP detection fails")
+            logger.exception(e)
         if self.qp_gained > 0 and len(self.itemlist) == 0:
             raise GainedQPandDropMissMatchError
         self.pagenum, self.pages, self.lines = self.correct_pageinfo()
