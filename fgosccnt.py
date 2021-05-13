@@ -2260,9 +2260,9 @@ def get_output(filenames, args):
                 if sc.pages - sc.pagenum == 0:
                     sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
                 if prev_itemlist == sc.itemlist:
-                    if (sc.total_qp != 999999999
+                    if (sc.total_qp != -1 and sc.total_qp != 999999999
                         and sc.total_qp == prev_total_qp) \
-                        or (sc.total_qp == 999999999
+                        or ((sc.total_qp == -1 or sc.total_qp == 999999999)
                             and td.total_seconds() < args.timeout):
                         logger.debug("args.timeout: %s", args.timeout)
                         logger.debug("filename: %s", filename)
