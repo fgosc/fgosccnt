@@ -1481,9 +1481,9 @@ class Item:
         上段と下段の白文字を見つける機能を一つに統合
         """
         pattern_tiny = r"^[\+x][12]\d{4}00$"
-        pattern_tiny_qp = r"^\+[12]\d{4}00$"
+        pattern_tiny_qp = r"^\+[12]\d{4,5}00$"
         pattern_small = r"^[\+x]\d{4}00$"
-        pattern_small_qp = r"^\+\d{4}00$"
+        pattern_small_qp = r"^\+\d{4,5}00$"
         pattern_normal = r"^[\+x][1-9]\d{0,5}$"
         pattern_normal_qp = r"^\+[1-9]\d{0,4}0$"
         if self.font_size != FONTSIZE_UNDEFINED:
