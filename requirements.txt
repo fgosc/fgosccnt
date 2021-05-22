@@ -1,3 +1,3 @@
-numpy==1.18.2
-opencv-contrib-python==4.2.0.32
+numpy==1.19.3
+opencv-contrib-python==4.5.2.52
 pytesseract==0.3.5
