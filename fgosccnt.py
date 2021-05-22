@@ -298,6 +298,13 @@ class ScreenShot:
         self.pagenum, self.pages, self.lines = self.correct_pageinfo()
         if not reward_only:
             self.check_page_mismatch()
+        # Determine scrollbar's position. AtlasAcademy processing pipeline uses this to group drop-pages
+        asr_y, actual_height = self.detect_scroll_bar()
+        if asr_y == -1 or actual_height == -1:
+            self.scroll_position = -1
+        else:
+            entire_height = 649  # from correct_pageinfo()
+            self.scroll_position = asr_y / entire_height
 
     def check_page_mismatch(self):
         count_miss = False
@@ -2357,14 +2364,16 @@ def get_output(filenames, args):
 def load_svms():
     svm = cv2.ml.SVM_load(str(train_item))
     svm_chest = cv2.ml.SVM_load(str(train_chest))
+    svm_dcnt = cv2.ml.SVM_load(str(train_dcnt))
     svm_card = cv2.ml.SVM_load(str(train_card))
-    return (svm, svm_chest, svm_card)
+    return (svm, svm_chest, svm_dcnt, svm_card)
 
 
 def parse_img(
         program_args,
         svm,
         svm_chest,
+        svm_dcnt,
         svm_card,
         file_path,
         prev_pages=0,
@@ -2388,7 +2397,7 @@ def parse_img(
 
     try:
         screenshot = ScreenShot(
-            program_args, img_rgb, svm, svm_chest, svm_card, file_extention)
+            program_args, img_rgb, svm, svm_chest, svm_dcnt, svm_card, file_extention)
 
         # If the previous image indicated more coming, check whether this is the fated one.
         if (prev_pages - prev_pagenum > 0 and screenshot.pagenum - prev_pagenum != 1) \
@@ -2470,16 +2479,20 @@ def move_file_to_out_dir(src_file_path, out_dir):
 
 def check_svms_trained():
     if train_item.exists() is False:
-        print("[エラー]item.xml が存在しません")
-        print("python makeitem.py を実行してください")
+        logger.critical("item.xml is not found")
+        logger.critical("Try to run 'python makeitem.py'")
         sys.exit(1)
     if train_chest.exists() is False:
-        print("[エラー]chest.xml が存在しません")
-        print("python makechest.py を実行してください")
+        logger.critical("chest.xml is not found")
+        logger.critical("Try to run 'python makechest.py'")
+        sys.exit(1)
+    if train_dcnt.exists() is False:
+        logger.critical("dcnt.xml is not found")
+        logger.critical("Try to run 'python makedcnt.py'")
         sys.exit(1)
     if train_card.exists() is False:
-        print("[エラー]card.xml が存在しません")
-        print("python makecard.py を実行してください")
+        logger.critical("card.xml is not found")
+        logger.critical("Try to run 'python makecard.py'")
         sys.exit(1)
 
 
@@ -2490,7 +2503,7 @@ def parse_into_json(input_file_paths, args):
     calc_dist_local()
     check_svms_trained()
 
-    (svm, svm_chest, svm_card) = load_svms()
+    (svm, svm_chest, svm_dcnt, svm_card) = load_svms()
 
     prev_pages = 0
     prev_pagenum = 0
@@ -2506,6 +2519,7 @@ def parse_into_json(input_file_paths, args):
             args,
             svm,
             svm_chest,
+            svm_dcnt,
             svm_card,
             file_path,
             prev_pages,
@@ -2518,7 +2532,7 @@ def parse_into_json(input_file_paths, args):
 
 
 def __parse_into_json_process(input_queue, args):
-    (svm, svm_chest, svm_card) = load_svms()
+    (svm, svm_chest, svm_dcnt, svm_card) = load_svms()
 
     global watcher_running
     while watcher_running or not input_queue.empty():
@@ -2531,6 +2545,7 @@ def __parse_into_json_process(input_queue, args):
             args,
             svm,
             svm_chest,
+            svm_dcnt,
             svm_card,
             input_file_path,
             prev_pages=-1)
