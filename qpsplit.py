@@ -12,12 +12,14 @@ training = Path(__file__).resolve().parent / Path("item.xml")
 train_item = Path(__file__).resolve().parent / Path("item.xml")  # アイテム下部
 train_chest = Path(__file__).resolve().parent / Path("chest.xml")  # ドロップ数
 train_card = Path(__file__).resolve().parent / Path("card.xml")  # ドロップ数
+train_dcnt = Path(__file__).resolve().parent / Path("dcnt.xml")
 
 
 def file_Assignment(args, files):
     svm = cv2.ml.SVM_load(str(train_item))
     svm_chest = cv2.ml.SVM_load(str(train_chest))
     svm_card = cv2.ml.SVM_load(str(train_card))
+    svm_dcnt = cv2.ml.SVM_load(str(train_dcnt))
 
     prev_pagenum = 0
     prev_chestnum = 0
@@ -32,7 +34,7 @@ def file_Assignment(args, files):
             try:
                 a = fgosccnt.ScreenShot(
                                         args, img_rgb,
-                                        svm, svm_chest, svm_card,
+                                        svm, svm_chest, svm_dcnt, svm_card,
                                         fileextention,
                                         reward_only=True
                                         )

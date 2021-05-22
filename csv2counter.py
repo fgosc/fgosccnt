@@ -40,10 +40,15 @@ ID_PIECE_MIN = 7001
 ID_MONUMENT_MAX = 7107
 ID_STAMDARD_ITEM_MIN = 6501
 ID_STAMDARD_ITEM_MAX = 6599
+ID_FREEQUEST_MIN = 93000001
+ID_FREEQUEST_MAX = 93099999
+ID_SYUERNQUEST_MIN = 94006801
+ID_SYURENQUEST_MAX = 94006828
 
 output = ""
 ce_exp_list = []
 ce_list = []
+jyohakyu_flag = False
 
 
 def delete_brackets(s):
@@ -87,20 +92,43 @@ def output_warning(lines):
 {}###############################################""".format(warning))
 
 
+def place2id(place, freequest):
+    """
+    フリクエと修練場のidが変換できればよい
+    """
+    tmp = place.split(" ")
+    if len(tmp) >= 2:
+        chapter = tmp[0]
+        name = tmp[1]
+    else:
+        return -1
+    for fq in freequest:
+        if chapter == fq["chapter"] and name == fq["name"]:
+            # 北米以外のフリクエ
+            return fq["id"]
+        elif chapter == fq["chapter"] and name == fq["place"]:
+            # 北米以外のフリクエ(同じ場所に二つクエストがある場合)
+            # 修練場もここで判定
+            return fq["id"]
+        elif chapter == fq["place"] and name == fq["name"]:
+            # 北米
+            return fq["id"]
+    return -1
+
+
 def output_header(lines):
     global ce_list
     global ce_exp_list
     global output
+    global jyohakyu_flag
     output_warning(lines)
     place = ""
-    if lines[0]["filename"] != "合計":
+    if lines[0]["filename"] != "合計" and len(lines) > 2:
         # fgosccnt がクエスト名判別に成功した
         eventquest_dir = basedir / Path("fgoscdata/data/json/")
         freequest = []
         eventfiles = eventquest_dir.glob('**/*.json')
         for eventfile in eventfiles:
-            if eventfile.stem in ["freequest", "syurenquest"]:
-                continue
             try:
                 with open(eventfile, encoding='UTF-8') as f:
                     event = json.load(f)
@@ -110,24 +138,33 @@ def output_header(lines):
 
         place = lines[0]["filename"]
         # 場所からドロップリストを決定
+        if " 序" in place or " 破" in place or " 急" in place:
+            jyohakyu_flag = True
         drop = []
-        for fq in freequest:
-            if "shortname" in fq.keys():
-                if place == fq["shortname"]:
-                    drop = fq["drop"]
-                    break
-        if drop == []:
-            logger.critical("dropの取得に失敗")
-            exit()
-        # CEリストの作成
-        for equip in drop:
-            if equip["type"] == "Craft Essence":
-                if equip["name"].startswith("概念礼装EXPカード："):
-                    ce_exp_list.append(equip)
-                else:
-                    ce_list.append(equip)
-        logger.debug("ce_list: %s", ce_list)
-        logger.debug("ce_exp_list: %s", ce_exp_list)
+        questid = place2id(place, freequest)
+        logger.debug("questid: %d", questid)
+
+        if not (ID_FREEQUEST_MIN <= questid <= ID_FREEQUEST_MAX) \
+           and not (ID_SYUERNQUEST_MIN <= questid <= ID_SYURENQUEST_MAX):
+           # 通常フリクエと修練場は除く
+            logger.debug("フリクエでも修練場でもないクエスト")
+            for fq in freequest:
+                if "shortname" in fq.keys():
+                    if place == fq["shortname"]:
+                        drop = fq["drop"]
+                        break
+            if drop == []:
+                logger.critical("dropの取得に失敗")
+                exit()
+            # CEリストの作成
+            for equip in drop:
+                if equip["type"] == "Craft Essence":
+                    if equip["name"].startswith("概念礼装EXPカード："):
+                        ce_exp_list.append(equip)
+                    else:
+                        ce_list.append(equip)
+            logger.debug("ce_list: %s", ce_list)
+            logger.debug("ce_exp_list: %s", ce_exp_list)
     else:
         place = "周回場所"
     if args.place:
@@ -174,6 +211,13 @@ def output_ce(lines):
                     for ce in ce_output.keys():
                         output = output + ce + str(ce_output[ce]) + "-"
                     break
+    else:
+        for i, item in enumerate(lines[0].keys()):
+            if i > 2:
+                if item.endswith("礼装"):
+                    output = output + item + lines[0][item] + "-"
+
+
 
 
 def output_ce_exp(lines):
@@ -231,8 +275,9 @@ def otuput_item(lines):
             # logger.debug("i: %s", i)
             # logger.debug("item: %s", item)
             # logger.debug("id: %s", id)
-            if id2type[id] == "Craft Essence":
-                continue
+            if not item.startswith("item"):
+                if id2type[id] == "Craft Essence":
+                    continue
             # 改行出力ルーチン
             if stditem_flag is False \
                and ID_STAMDARD_ITEM_MIN <= id <= ID_STAMDARD_ITEM_MAX:
@@ -269,8 +314,10 @@ def otuput_item(lines):
             elif qp_flag and not item.startswith('QP(+'):
                 output = output[:-1] + "\n"
                 qp_flag = False
-
-            output = output + item + lines[0][item] + "-"
+            if item[-1].isdigit():
+                output = output + item + "_" + lines[0][item] + "-"
+            else:
+                output = output + item + lines[0][item] + "-"
     output = output.replace('ポイント(+', args.point + '(+')
 
 
@@ -302,3 +349,5 @@ if __name__ == '__main__':
 
     print(output[:-1])
     print("#FGO周回カウンタ http://aoshirobo.net/fatego/rc/")
+    if jyohakyu_flag:
+        print("追加出現率 %")
