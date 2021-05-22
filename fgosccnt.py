@@ -2376,8 +2376,97 @@ def make_quest_output(quest):
                 output = quest["chapter"] + " " + quest["name"]
     return output
 
+UNKNOWN = -1
+OTHER = 0
+NOVICE = 1
+INTERMEDIATE = 2
+ADVANCED = 3
+EXPERT = 4
+
+def tv_quest_type(item_list):
+    quest_type = UNKNOWN
+
+    for item in item_list:
+        if item["id"] == ID_REWARD_QP:
+            if quest_type != UNKNOWN:
+                quest_type = OTHER
+                break
+
+            if item["dropnum"] == 1400:
+                quest_type = NOVICE
+            elif item["dropnum"] == 2900:
+                quest_type = INTERMEDIATE
+            elif item["dropnum"] == 4400:
+                quest_type = ADVANCED
+            elif item["dropnum"] == 6400:
+                quest_type = EXPERT
+            else:
+                quest_type = OTHER
+                break
+    return quest_type
+
+def deside_tresure_valut_quest(item_list):
+    quest_type = tv_quest_type(item_list)
+    if quest_type in [UNKNOWN, OTHER]:
+        quest_candidate = ""
+        return quest_candidate
+
+    item_set = set()
+    for item in item_list:
+        if item["id"] == ID_REWARD_QP:
+            continue
+        elif item["id"] != ID_QP:
+            quest_candidate = ""
+            break
+        else:
+            item_set.add(item["dropnum"])
+
+    if quest_type == NOVICE and item_set == {5000, 15000, 45000}:
+        quest_candidate = {
+                           "id": 94000104,
+                           "name": "宝物庫の扉を開け 初級",
+                           "place": "",
+                           "chapter": "",
+                           "qp": 1400,
+                           "shortname": "宝物庫 初級",
+                           }
+    elif quest_type == INTERMEDIATE and item_set == {5000, 15000, 45000, 135000}:
+        quest_candidate = {
+                           "id": 94000105,
+                           "name": "宝物庫の扉を開け 中級",
+                           "place": "",
+                           "chapter": "",
+                           "qp": 2900,
+                           "shortname": "宝物庫 中級",
+                           }
+    elif quest_type == ADVANCED and item_set == {15000, 45000, 135000, 405000}:
+        quest_candidate = {
+                           "id": 94000106,
+                           "name": "宝物庫の扉を開け 上級",
+                           "place": "",
+                           "chapter": "",
+                           "qp": 4400,
+                           "shortname": "宝物庫 上級",
+                           }
+    elif quest_type == EXPERT and item_set == {45000, 135000, 405000}:
+        quest_candidate = {
+                           "id": 94000712,
+                           "name": "宝物庫の扉を開け 超級",
+                           "place": "",
+                           "chapter": "",
+                           "qp": 6400,
+                           "shortname": "宝物庫 超級",
+                           }
+    else:
+        quest_candidate = ""
+
+    return quest_candidate
+
 
 def deside_quest(item_list):
+    quest_name = deside_tresure_valut_quest(item_list)
+    if quest_name != "":
+        return quest_name
 
     item_set = set()
     for item in item_list:
