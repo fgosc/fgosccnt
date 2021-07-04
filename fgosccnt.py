@@ -589,7 +589,7 @@ class ScreenShot:
         # it catches the line of the item.
         lines = cv2.HoughLinesP(canny_img, rho=1, theta=np.pi/2,
                                 threshold=80, minLineLength=int(height/5),
-                                maxLineGap=9)
+                                maxLineGap=10)
 
         left_x = upper_y = b_line_y = 0
         right_x = width
