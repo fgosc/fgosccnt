@@ -1562,13 +1562,15 @@ class Item:
         pattern_small_qp = r"^\+\d{4,5}00$"
         pattern_normal = r"^[\+x][1-9]\d{0,5}$"
         pattern_normal_qp = r"^\+[1-9]\d{0,4}0$"
+        logger.debug("base_line: %d", base_line)
         if mode=="jp" and base_line < 170:
             # JP Ver.2.37.0以降の新仕様
             # 1-6桁の読み込み
             font_size = FONTSIZE_NEWSTYLE
             cut_width = 21
-            comma_width = 6
+            comma_width = 5
             line = self.get_number2(cut_width, comma_width)
+            logger.debug("Read NORMAL: %s", line)
             if self.id == ID_QP or self.category == "Point":
                 pattern_normal = pattern_normal_qp
             m_normal = re.match(pattern_normal, line)
@@ -1578,7 +1580,7 @@ class Item:
                 return line
             # 6桁の読み込み
             cut_width = 19
-            comma_width = 6
+            comma_width = 5
             line = self.get_number2(cut_width, comma_width)
             logger.debug("Read SMALL: %s", line)
             if self.id == ID_QP or self.category == "Point":
@@ -1590,7 +1592,7 @@ class Item:
                 return line
             # 7桁読み込み
             cut_width = 18
-            comma_width = 6
+            comma_width = 5
             line = self.get_number2(cut_width, comma_width)
             logger.debug("Read TINY: %s", line)
             if self.id == ID_QP or self.category == "Point":
