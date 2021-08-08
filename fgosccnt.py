@@ -1591,8 +1591,8 @@ class Item:
                 self.font_size = font_size
                 return line
             # 7桁読み込み
-            cut_width = 18
-            comma_width = 5
+            cut_width = 19
+            comma_width = 4
             line = self.get_number2(cut_width, comma_width)
             logger.debug("Read TINY: %s", line)
             if self.id == ID_QP or self.category == "Point":
