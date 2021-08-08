@@ -1646,7 +1646,7 @@ class Item:
                     logger.debug("Font Size: %d", font_size)
                     self.font_size = font_size
                     return line
-            return ""
+        return ""
 
     def read_item(self, pts):
         """
