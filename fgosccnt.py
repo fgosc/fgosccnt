@@ -58,6 +58,7 @@ FONTSIZE_UNDEFINED = -1
 FONTSIZE_NORMAL = 0
 FONTSIZE_SMALL = 1
 FONTSIZE_TINY = 2
+FONTSIZE_NEWSTYLE = 99
 PRIORITY_CE = 9000
 PRIORITY_POINT = 3000
 PRIORITY_ITEM = 700
@@ -1479,9 +1480,81 @@ class Item:
 
         return line
 
-    def detect_white_char(self, base_line, margin_right):
+    def get_number2(self, cut_width, comma_width):
+        cut_height = 26
+        base_line = 147
+        margin_right = 15
+        top_y = base_line - cut_height
+        # まず、+, xの位置が何桁目か調査する
+        for i in range(8):  # 8桁以上は無い
+            if i == 0:
+                continue
+            elif (self.id == ID_REWARD_QP
+                  or self.category in ["Point"]) and i <= 2:
+                # 報酬QPとPointは3桁以上
+                continue
+            elif self.name == "QP" and i <= 3:
+                # QPは4桁以上
+                continue
+            pt = [self.width - margin_right - cut_width * (i + 1)
+                  - comma_width * int((i - 1)/3),
+                  top_y,
+                  self.width - margin_right - cut_width * i
+                  - comma_width * int((i - 1)/3),
+                  base_line]
+            if pt[0] < 0:
+                break
+            result = self.read_char(pt)
+            if i == 1 and ord(result) == 0:
+                # アイテム数 x1 とならず表記無し場合のエラー処理
+                return ""
+            if result in ['x', '+']:
+                self.margin_left = pt[0]
+                break
+        # 決まった位置まで出力する
+        line = ""
+        for j in range(i):
+            if (self.id == ID_REWARD_QP) and j < 1:
+                # 報酬QPの下一桁は0
+                line += '0'
+                continue
+            elif (self.name == "QP" or self.category in ["Point"]) and j < 2:
+                # QPとPointは下二桁は00
+                line += '0'
+                continue
+            pt = [self.width - margin_right - cut_width * (j + 1)
+                  - comma_width * int(j/3),
+                  top_y,
+                  self.width - margin_right - cut_width * j
+                  - comma_width * int(j/3),
+                  base_line]
+            if pt[0] < 0:
+                break
+            c = self.read_char(pt)
+            if ord(c) == 0:  # Null文字対策
+                c = '?'
+            line = line + c
+        j = j + 1
+        pt = [self.width - margin_right - cut_width * (j + 1)
+              - comma_width * int((j - 1)/3),
+              top_y,
+              self.width - margin_right - cut_width * j
+              - comma_width * int((j - 1)/3),
+              base_line]
+        if pt[0] > 0:
+            c = self.read_char(pt)
+            if ord(c) == 0:  # Null文字対策
+                c = '?'
+            line = line + c
+        line = line[::-1]
+
+        return line
+
+
+    def detect_white_char(self, base_line, margin_right, mode="jp"):
         """
         上段と下段の白文字を見つける機能を一つに統合
+        [JP]Ver.2.37.0からボーナスがある場合の表示の仕様変更有り
         """
         pattern_tiny = r"^[\+x][12]\d{4}00$"
         pattern_tiny_qp = r"^\+[12]\d{4,5}00$"
@@ -1489,19 +1562,13 @@ class Item:
         pattern_small_qp = r"^\+\d{4,5}00$"
         pattern_normal = r"^[\+x][1-9]\d{0,5}$"
         pattern_normal_qp = r"^\+[1-9]\d{0,4}0$"
-        if self.font_size != FONTSIZE_UNDEFINED:
-            line = self.get_number(base_line, margin_right, self.font_size)
-            logger.debug("line: %s", line)
-            if len(line) <= 1:
-                return ""
-            elif not line[1:].isdigit():
-                return ""
-            return line
-        else:
+        if mode=="jp" and base_line < 170:
+            # JP Ver.2.37.0以降の新仕様
             # 1-6桁の読み込み
-            font_size = FONTSIZE_NORMAL
-            line = self.get_number(base_line, margin_right, font_size)
-            logger.debug("Read NORMAL: %s", line)
+            font_size = FONTSIZE_NEWSTYLE
+            cut_width = 21
+            comma_width = 6
+            line = self.get_number2(cut_width, comma_width)
             if self.id == ID_QP or self.category == "Point":
                 pattern_normal = pattern_normal_qp
             m_normal = re.match(pattern_normal, line)
@@ -1510,8 +1577,9 @@ class Item:
                 self.font_size = font_size
                 return line
             # 6桁の読み込み
-            font_size = FONTSIZE_SMALL
-            line = self.get_number(base_line, margin_right, font_size)
+            cut_width = 19
+            comma_width = 6
+            line = self.get_number2(cut_width, comma_width)
             logger.debug("Read SMALL: %s", line)
             if self.id == ID_QP or self.category == "Point":
                 pattern_small = pattern_small_qp
@@ -1521,8 +1589,9 @@ class Item:
                 self.font_size = font_size
                 return line
             # 7桁読み込み
-            font_size = FONTSIZE_TINY
-            line = self.get_number(base_line, margin_right, font_size)
+            cut_width = 18
+            comma_width = 6
+            line = self.get_number2(cut_width, comma_width)
             logger.debug("Read TINY: %s", line)
             if self.id == ID_QP or self.category == "Point":
                 pattern_tiny = pattern_tiny_qp
@@ -1531,6 +1600,50 @@ class Item:
                 logger.debug("Font Size: %d", font_size)
                 self.font_size = font_size
                 return line
+        else:
+            # JP Ver.2.37.0以前の旧仕様
+            if self.font_size != FONTSIZE_UNDEFINED:
+                line = self.get_number(base_line, margin_right, self.font_size)
+                logger.debug("line: %s", line)
+                if len(line) <= 1:
+                    return ""
+                elif not line[1:].isdigit():
+                    return ""
+                return line
+            else:
+                # 1-6桁の読み込み
+                font_size = FONTSIZE_NORMAL
+                line = self.get_number(base_line, margin_right, font_size)
+                logger.debug("Read NORMAL: %s", line)
+                if self.id == ID_QP or self.category == "Point":
+                    pattern_normal = pattern_normal_qp
+                m_normal = re.match(pattern_normal, line)
+                if m_normal:
+                    logger.debug("Font Size: %d", font_size)
+                    self.font_size = font_size
+                    return line
+                # 6桁の読み込み
+                font_size = FONTSIZE_SMALL
+                line = self.get_number(base_line, margin_right, font_size)
+                logger.debug("Read SMALL: %s", line)
+                if self.id == ID_QP or self.category == "Point":
+                    pattern_small = pattern_small_qp
+                m_small = re.match(pattern_small, line)
+                if m_small:
+                    logger.debug("Font Size: %d", font_size)
+                    self.font_size = font_size
+                    return line
+                # 7桁読み込み
+                font_size = FONTSIZE_TINY
+                line = self.get_number(base_line, margin_right, font_size)
+                logger.debug("Read TINY: %s", line)
+                if self.id == ID_QP or self.category == "Point":
+                    pattern_tiny = pattern_tiny_qp
+                m_tiny = re.match(pattern_tiny, line)
+                if m_tiny:
+                    logger.debug("Font Size: %d", font_size)
+                    self.font_size = font_size
+                    return line
             return ""
 
     def read_item(self, pts):
@@ -1704,7 +1817,7 @@ class Item:
         else:
             margin_right = 15 + offset_x
         logger.debug("margin_right: %d", margin_right)
-        self.dropnum = self.detect_white_char(base_line, margin_right)
+        self.dropnum = self.detect_white_char(base_line, margin_right, mode)
         logger.debug("self.dropnum: %s", self.dropnum)
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
