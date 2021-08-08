@@ -1229,6 +1229,7 @@ class Item:
 
     def detect_bonus_char4jpg(self, mode):
         """
+        [JP]Ver.2.37.0以前の仕様
         戦利品数OCRで下段の黄文字の座標を抽出する
         PNGではない画像の認識用
 
@@ -1269,8 +1270,64 @@ class Item:
         if mode == 'na':
             margin_right = 18
         else:
-            margin_right = 24
+            margin_right = 26
         line, pts = self.get_number4jpg(base_line, margin_right, font_size)
+        logger.debug("Read BONUS TINY: %s", line)
+        m_tiny = re.match(pattern_tiny, line)
+        if m_tiny:
+            logger.debug("Font Size: %d", font_size)
+            return line, pts, font_size
+        else:
+            font_size = FONTSIZE_UNDEFINED
+            logger.debug("Font Size: %d", font_size)
+            line = ""
+            pts = []
+
+        return line, pts, font_size
+
+    def detect_bonus_char4jpg2(self, mode):
+        """
+        [JP]Ver.2.37.0以降の仕様
+        戦利品数OCRで下段の黄文字の座標を抽出する
+        PNGではない画像の認識用
+
+        """
+        # QP,ポイントはボーナス6桁のときに高さが変わる
+        # それ以外は3桁のときに変わるはず(未確認)
+        # ここのmargin_right はドロップ数の下一桁目までの距離
+        base_line = 181 if mode == "na" else 179
+        pattern_tiny = r"^\(\+\d{4,5}0\)$"
+        pattern_small = r"^\(\+\d{5}0\)$"
+        pattern_normal = r"^\(\+[1-9]\d*\)$"
+        font_size = FONTSIZE_NEWSTYLE
+        if mode == 'na':
+            margin_right = 20
+        else:
+            margin_right = 26
+        # 1-5桁の読み込み
+        cut_width = 21
+        comma_width = 5
+        line, pts = self.get_number4jpg2(base_line, margin_right, cut_width, comma_width)
+        logger.debug("Read BONUS NORMAL: %s", line)
+        m_normal = re.match(pattern_normal, line)
+        if m_normal:
+            logger.debug("Font Size: %d", font_size)
+            return line, pts, font_size
+        # 6桁の読み込み
+        cut_width = 19
+        comma_width = 5
+
+        line, pts = self.get_number4jpg2(base_line, margin_right, cut_width, comma_width)
+        logger.debug("Read BONUS SMALL: %s", line)
+        m_small = re.match(pattern_small, line)
+        if m_small:
+            logger.debug("Font Size: %d", font_size)
+            return line, pts, font_size
+        # 7桁読み込み
+        cut_width = 18
+        comma_width = 5
+
+        line, pts = self.get_number4jpg2(base_line, margin_right, cut_width, comma_width)
         logger.debug("Read BONUS TINY: %s", line)
         m_tiny = re.match(pattern_tiny, line)
         if m_tiny:
@@ -1350,6 +1407,8 @@ class Item:
         return cut_width, cut_height, comma_width
 
     def get_number4jpg(self, base_line, margin_right, font_size):
+        """[JP]Ver.2.37.0以前の仕様
+        """
         cut_width, cut_height, comma_width = self.define_fontsize(font_size)
         top_y = base_line - cut_height
         # まず、+, xの位置が何桁目か調査する
@@ -1412,7 +1471,70 @@ class Item:
 
         return line, new_pts
 
+    def get_number4jpg2(self, base_line, margin_right, cut_width, comma_width):
+        """[JP]Ver.2.37.0以降の仕様
+            
+        """
+        cut_height = 30
+        top_y = base_line - cut_height
+        # まず、+, xの位置が何桁目か調査する
+        pts = []
+        max_digits = 7
+
+        for i in range(max_digits):
+            if i == 0:
+                continue
+            pt = [self.width - margin_right - cut_width * (i + 1)
+                  - comma_width * int((i - 1)/3),
+                  top_y,
+                  self.width - margin_right - cut_width * i
+                  - comma_width * int((i - 1)/3),
+                  base_line]
+            result = self.read_char(pt)
+            if i == 1 and ord(result) == 0:
+                # アイテム数 x1 とならず表記無し場合のエラー処理
+                return "", pts
+            if result in ['x', '+']:
+                break
+        # 決まった位置まで出力する
+        line = ""
+        for j in range(i):
+            pt = [self.width - margin_right - cut_width * (j + 1)
+                  - comma_width * int(j/3),
+                  top_y,
+                  self.width - margin_right - cut_width * j
+                  - comma_width * int(j/3),
+                  base_line]
+            c = self.read_char(pt)
+            if ord(c) == 0:  # Null文字対策
+                line = line + '?'
+                break
+            line = line + c
+            pts.append(pt)
+        j = j + 1
+        pt = [self.width - margin_right - cut_width * (j + 1)
+              - comma_width * int((j - 1)/3),
+              top_y,
+              self.width - margin_right - cut_width * j
+              - comma_width * int((j - 1)/3),
+              base_line]
+        c = self.read_char(pt)
+        if ord(c) == 0:  # Null文字対策
+            c = '?'
+        line = line + c
+        line = "(" + line[::-1] + ")"
+        pts.append(pt)
+        pts.sort()
+        # PNGのマスク法との差を埋める補正
+        new_pts = [[pts[0][0]-10, pts[0][1],
+                    pts[0][0]-1, pts[0][3]]]  # "(" に対応
+        new_pts.append("")  # ")" に対応
+
+        return line, new_pts
+
     def get_number(self, base_line, margin_right, font_size):
+        """[JP]Ver.2.37.0以前の仕様
+        """
         cut_width, cut_height, comma_width = self.define_fontsize(font_size)
         top_y = base_line - cut_height
         # まず、+, xの位置が何桁目か調査する
@@ -1481,6 +1603,8 @@ class Item:
         return line
 
     def get_number2(self, cut_width, comma_width):
+        """[JP]Ver.2.37.0以降の仕様
+        """
         cut_height = 26
         base_line = 147
         margin_right = 15
@@ -1798,7 +1922,10 @@ class Item:
                 else:
                     self.font_size = FONTSIZE_SMALL
         else:
-            self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg(mode)
+            if mode == "jp":
+                self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg2(mode)
+            else:
+                self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg(mode)
         logger.debug("Bonus Font Size: %s", self.font_size)
 
         # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
