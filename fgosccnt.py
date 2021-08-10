@@ -548,7 +548,7 @@ class ScreenShot:
         直線検出で検出されなかったフチ幅を検出
         """
         edge_width = 150
-        threshold = 0.7
+        threshold = 0.65
 
         height, width = img_hsv.shape[:2]
         target_color = 0
