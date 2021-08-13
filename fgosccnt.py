@@ -548,6 +548,7 @@ class ScreenShot:
         直線検出で検出されなかったフチ幅を検出
         """
         edge_width = 150
+        threshold = 0.65
 
         height, width = img_hsv.shape[:2]
         target_color = 0
@@ -557,7 +558,7 @@ class ScreenShot:
             hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
             _, maxVal, _, maxLoc = cv2.minMaxLoc(hist)
-            if not (maxLoc[1] == target_color and maxVal > height * 0.9):
+            if not (maxLoc[1] == target_color and maxVal > height * threshold):
                 break
         lx = i
         for j in range(edge_width):
@@ -566,7 +567,7 @@ class ScreenShot:
             hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
             _, maxVal, _, maxLoc = cv2.minMaxLoc(hist)
-            if not (maxLoc[1] == target_color and maxVal > height * 0.9):
+            if not (maxLoc[1] == target_color and maxVal > height * threshold):
                 break
         rx = j
 
