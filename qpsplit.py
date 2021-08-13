@@ -48,6 +48,10 @@ def file_Assignment(args, files):
                                                 a.itemlist[0]["dropnum"]
                                                 ) + ")"
                               )
+                if args.samedir:
+                    Qp_dir = f.parent / Qp_dir
+                if args.destdir:
+                    Qp_dir = args.destdir / Qp_dir
                 if not Qp_dir.is_dir():
                     Qp_dir.mkdir()
                 dstfile = Qp_dir / Path(f).name
@@ -83,6 +87,10 @@ if __name__ == '__main__':
                         help='Language to be used for output: Default '
                              + fgosccnt.DEFAULT_ITEM_LANG)
     parser.add_argument('filenames', help='入力ファイル', nargs='*')    # 必須の引数を追加
+    parser.add_argument('-s', '--samedir', action='store_true',
+                        help='Output to the same directory as the input files')
+    parser.add_argument('-d', '--destdir', 
+                        help='Output to the specified destination directory')
     parser.add_argument('-l', '--loglevel',
                         choices=('debug', 'info'), default='info')
     args = parser.parse_args()    # 引数を解析
