@@ -255,7 +255,6 @@ class ScreenShot:
             # qpsplit.py で利用
             item_pts = item_pts[0:1]
         prev_item = None
-        # for i, pt in enumerate(item_pts[6:7]):
         for i, pt in enumerate(item_pts):
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
