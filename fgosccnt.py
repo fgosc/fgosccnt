@@ -1803,6 +1803,8 @@ class Item:
         if not lines.startswith("(+") and not lines.startswith("(x"):
             if lines[0] in ["+", 'x']:
                 lines = "(" + lines
+            elif lines.startswith("("):
+                lines = lines.replace("(", "(+")
             else:
                 lines = ""
         lines = lines.replace("()", "0")
