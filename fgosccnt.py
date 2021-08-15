@@ -12,8 +12,10 @@ from operator import itemgetter
 import math
 import datetime
 import logging
+from typing import Tuple, Union
 
 import cv2
+from numpy import ndarray
 import numpy as np
 import pytesseract
 from PIL import Image
@@ -171,6 +173,194 @@ def has_intersect(a, b):
         and max(a[1], b[1]) < min(a[3], b[3])
 
 
+class State():
+    def set_screen(self):
+        self.screen_type = "normal"
+
+    def set_char_position(self):
+        logger.debug("JP Standard Position")
+
+    def set_font_size(self):
+        logger.debug("JP Standard Font Size")
+
+    def set_max_qp(self):
+        self.max_qp = 999999999
+        logger.debug("999,999,999")
+
+
+class JpNov2020(State):
+    def set_screen(self):
+        self.screen_type = "wide"
+
+
+class JpAug2021(JpNov2020):
+    def set_font_size(self):
+        logger.debug("JP New Font Size")
+
+    def set_max_qp(self):
+        self.max_qp = 2000000000
+        logger.debug("2,000,000,000")
+
+
+class NaState(State):
+    def set_char_position(self):
+        logger.debug("NA Standard Position")
+
+
+class Context:
+    def __init__(self):
+        self.jp_aug_2021 = JpAug2021()
+        self.jp_nov_2020 = JpNov2020()
+        self.jp = State()
+        self.na = NaState()
+        self.state = self.jp_aug_2021
+        self.set_screen()
+        self.set_font_size()
+        self.set_char_position()
+        self.set_max_qp()
+
+    def change_state(self, mode):
+        if mode == "jp":
+            self.state = self.jp_aug_2021
+        elif mode == "na":
+            self.state = self.na
+        else:
+            raise ValueError("change_state method must be in {}".format(["jp", "na"]))
+        self.set_screen()
+        self.set_font_size()
+        self.set_char_position()
+        self.set_max_qp()
+
+    def set_screen(self):
+        self.state.set_screen()
+
+    def set_char_position(self):
+        self.state.set_char_position()
+
+    def set_font_size(self):
+        self.state.set_font_size()
+
+    def set_max_qp(self):
+        self.state.set_max_qp()
+
+
+def get_coodinates(img: ndarray,
+                   display: bool = False) -> Tuple[Tuple[int, int],
+                                                   Tuple[int, int]]:
+    threshold: int = 30
+
+    height, width = img.shape[:2]
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    if display:
+        cv2.imshow('image', img_gray)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    _, inv = cv2.threshold(img_gray, threshold, 255, cv2.THRESH_BINARY_INV)
+    if display:
+        cv2.imshow('image', inv)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    contours, _ = cv2.findContours(inv, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    contours2 = []
+    for cnt in contours:
+        _, _, w, h = cv2.boundingRect(cnt)
+        if 1.82 < w/h < 1.83:
+            contours2.append(cnt)
+    max_contour = max(contours2, key=lambda x: cv2.contourArea(x))
+    x, y, width, height = cv2.boundingRect(max_contour)
+    return ((x, y), (x + width, y + height))
+
+
+def standardize_size(frame_img: ndarray,
+                     display: bool = False) -> Tuple[ndarray, float]:
+    TRAINING_WIDTH: int = 1754
+
+    height, width = frame_img.shape[:2]
+    if display:
+        pass
+    logger.debug("height: %d", height)
+    logger.debug("width: %d", width)
+    _, width, _ = frame_img.shape
+    resize_scale: float = TRAINING_WIDTH / width
+    logger.debug("resize_scale: %f", resize_scale)
+
+    if resize_scale > 1:
+        frame_img = cv2.resize(frame_img, (0, 0),
+                               fx=resize_scale, fy=resize_scale,
+                               interpolation=cv2.INTER_CUBIC)
+    elif resize_scale < 1:
+        frame_img = cv2.resize(frame_img, (0, 0),
+                               fx=resize_scale, fy=resize_scale,
+                               interpolation=cv2.INTER_AREA)
+    if display:
+        cv2.imshow('image', frame_img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    return frame_img, resize_scale
+
+
+def area_decision(frame_img: ndarray,
+                  display: bool = False) -> str:
+    """
+    FGOアプリの地域を選択
+    'na', 'jp'に対応
+
+    'items_img.png' とのオブジェクトマッチングで判定
+    """
+    img = frame_img[0:100, 0:500]
+    img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    if display:
+        cv2.imshow('image', img_gray)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    template = imread(items_img, 0)
+    res = cv2.matchTemplate(
+                            img_gray,
+                            template,
+                            cv2.TM_CCOEFF_NORMED
+                            )
+    threshold = 0.9
+    loc = np.where(res >= threshold)
+    for pt in zip(*loc[::-1]):
+        return 'na'
+    return 'jp'
+
+
+def drop_count_area(img: ndarray,
+                    resize_scale,
+                    sc,
+                    display: bool = False) -> Tuple[Union[ndarray, None], ndarray]:
+    # widescreenかどうかで挙動を変える
+    if resize_scale > 1:
+        img = cv2.resize(img, (0, 0),
+                         fx=resize_scale, fy=resize_scale,
+                         interpolation=cv2.INTER_CUBIC)
+    elif resize_scale < 1:
+        img = cv2.resize(img, (0, 0),
+                         fx=resize_scale, fy=resize_scale,
+                         interpolation=cv2.INTER_AREA)
+    ((x1, y1), (_, _)) = get_coodinates(img)
+    # 相対座標(旧UI)
+    dcnt_old = None
+    if sc.state.screen_type == "normal":
+        dcnt_old = img[y1 - 81: y1 - 44, x1 + 1446: x1 + 1490]
+        if display:
+            cv2.imshow('image', dcnt_old)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+    # 相対座標(新UI)
+    height, width = img.shape[:2]
+    if width/height > 16/9.01:
+        dcnt_new = img[y1 - 20: y1 + 17, x1 + 1400: x1 + 1705]
+    else:
+        dcnt_new = img[y1 - 20: y1 + 17, x1 + 1463: x1 + 1530]
+    if display:
+        cv2.imshow('image', dcnt_new)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    return dcnt_old, dcnt_new
+
+
 class ScreenShot:
     """
     戦利品スクリーンショットを表すクラス
@@ -178,8 +368,6 @@ class ScreenShot:
 
     def __init__(self, args, img_rgb, svm, svm_chest, svm_dcnt, svm_card,
                  fileextention, reward_only=False):
-        self.ui_type = "new"
-        TRAINING_IMG_WIDTH = 1755
         threshold = 80
         try:
             self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
@@ -191,60 +379,41 @@ class ScreenShot:
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
                                             threshold, 255, cv2.THRESH_BINARY)
 
-        game_screen, dcnt_old, dcnt_new = self.extract_game_screen()
-        if logger.isEnabledFor(logging.DEBUG):
-            cv2.imwrite('game_screen.png', game_screen)
-
-        _, width_g, _ = game_screen.shape
-        wscale = (1.0 * width_g) / TRAINING_IMG_WIDTH
-        resizeScale = 1 / wscale
-
-        if resizeScale > 1:
-            self.img_rgb = cv2.resize(game_screen, (0, 0),
-                                      fx=resizeScale, fy=resizeScale,
-                                      interpolation=cv2.INTER_CUBIC)
-            if self.ui_type == "old":
-                dcnt_old_rs = cv2.resize(dcnt_old, (0, 0),
-                                         fx=resizeScale, fy=resizeScale,
-                                         interpolation=cv2.INTER_CUBIC)
-            dcnt_new_rs = cv2.resize(dcnt_new, (0, 0),
-                                     fx=resizeScale, fy=resizeScale,
-                                     interpolation=cv2.INTER_CUBIC)
-        else:
-            self.img_rgb = cv2.resize(game_screen, (0, 0),
-                                      fx=resizeScale, fy=resizeScale,
-                                      interpolation=cv2.INTER_AREA)
-            if self.ui_type == "old":
-                dcnt_old_rs = cv2.resize(dcnt_old, (0, 0),
-                                         fx=resizeScale, fy=resizeScale,
-                                         interpolation=cv2.INTER_AREA)
-            dcnt_new_rs = cv2.resize(dcnt_new, (0, 0),
-                                     fx=resizeScale, fy=resizeScale,
-                                     interpolation=cv2.INTER_AREA)
+        ((x1, y1), (x2, y2)) = get_coodinates(self.img_rgb_orig)
+        frame_img: ndarray = self.img_rgb_orig[y1: y2, x1: x2]
+        img_resize, resize_scale = standardize_size(frame_img)
+        self.img_rgb = img_resize
+        mode = area_decision(img_resize)
+        logger.debug("lang: %s", mode)
+        # UI modeを決める
+        sc = Context()
+        sc.change_state(mode)
+        self.max_qp = sc.state.max_qp
+        self.screen_type = sc.state.screen_type
+        dcnt_old, dcnt_new = drop_count_area(self.img_rgb_orig, resize_scale, sc)
 
         if logger.isEnabledFor(logging.DEBUG):
-            cv2.imwrite('game_screen_resize.png', self.img_rgb)
-            if self.ui_type == "old":
-                cv2.imwrite('dcnt_old.png', dcnt_old_rs)
-            cv2.imwrite('dcnt_new.png', dcnt_new_rs)
+            cv2.imwrite('frame_img.png', frame_img)
+
+        if logger.isEnabledFor(logging.DEBUG):
+            if self.screen_type == "normal":
+                cv2.imwrite('dcnt_old.png', dcnt_old)
+            cv2.imwrite('dcnt_new.png', dcnt_new)
 
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
         _, self.img_th = cv2.threshold(self.img_gray,
                                        threshold, 255, cv2.THRESH_BINARY)
-        mode = self.area_select()
-        logger.debug("Area Mode: %s", mode)
         self.svm = svm
         self.svm_chest = svm_chest
         self.svm_dcnt = svm_dcnt
 
         self.height, self.width = self.img_rgb.shape[:2]
-        if self.ui_type == "old":
-            self.chestnum = self.ocr_tresurechest(dcnt_old_rs)
+        if self.screen_type == "normal":
+            self.chestnum = self.ocr_tresurechest(dcnt_old)
             if self.chestnum == -1:
-                self.chestnum = self.ocr_dcnt(dcnt_new_rs)
+                self.chestnum = self.ocr_dcnt(dcnt_new)
         else:
-            self.chestnum = self.ocr_dcnt(dcnt_new_rs)
-        # logger.debug("Total Drop (OCR): %d", self.chestnum)
+            self.chestnum = self.ocr_dcnt(dcnt_new)
         logger.debug("Total Drop (OCR): %d", self.chestnum)
         item_pts = self.img2points()
         logger.debug("item_pts:%s", item_pts)
@@ -259,7 +428,6 @@ class ScreenShot:
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
             logger.debug("lx: %d", lx)
-            # pt[1] + 37 for information window (new UI)
             item_img_th = self.img_th[pt[1] + 37: pt[3] - 30,
                                       pt[0] + lx: pt[2] + lx]
             if self.is_empty_box(item_img_th):
@@ -446,7 +614,7 @@ class ScreenShot:
             )
             qp_total = self.ocr_text(im_th)
         if use_tesseract or qp_total == -1:
-            if self.ui_type == "old":
+            if self.screen_type == "normal":
                 pt = ((288, 948), (838, 1024))
             else:
                 pt = ((288, 838), (838, 914))
@@ -458,7 +626,7 @@ class ScreenShot:
             qp_total = self.get_qp_from_text(qp_total_text)
 
         logger.debug('qp_total from text: %s', qp_total)
-        if len(str(qp_total)) > 9:
+        if qp_total > self.max_qp:
             logger.warning(
                 "qp_total exceeds the system's maximum: %s", qp_total
             )
@@ -472,7 +640,7 @@ class ScreenShot:
         bounds = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
         if bounds is None:
             # fall back on hardcoded bound
-            if self.ui_type == "old":
+            if self.screen_type == "normal":
                 bounds = ((398, 858), (948, 934))
             else:
                 bounds = ((398, 748), (948, 824))
@@ -543,244 +711,6 @@ class ScreenShot:
 
         return lx, rx
 
-    def find_notch(self, img_hsv):
-        """
-        直線検出で検出されなかったフチ幅を検出
-        """
-        edge_width = 150
-        threshold = 0.65
-
-        height, width = img_hsv.shape[:2]
-        target_color = 0
-        for i in range(edge_width):
-            img_hsv_x = img_hsv[:, i:i + 1]
-            # ヒストグラムを計算
-            hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
-            # 最小値・最大値・最小値の位置・最大値の位置を取得
-            _, maxVal, _, maxLoc = cv2.minMaxLoc(hist)
-            if not (maxLoc[1] == target_color and maxVal > height * threshold):
-                break
-        lx = i
-        for j in range(edge_width):
-            img_hsv_x = img_hsv[:, width - j - 1: width - j]
-            # ヒストグラムを計算
-            hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
-            # 最小値・最大値・最小値の位置・最大値の位置を取得
-            _, maxVal, _, maxLoc = cv2.minMaxLoc(hist)
-            if not (maxLoc[1] == target_color and maxVal > height * threshold):
-                break
-        rx = j
-
-        return lx, rx
-
-    def extract_game_screen(self):
-        """
-        1. Make cutting image using edge and line detection
-        2. Correcting to be a gamescreen from cutting image
-        """
-        upper_lower_blue_border = False  # For New UI
-        # 1. Edge detection
-        height, width = self.img_gray_orig.shape[:2]
-        canny_img = cv2.Canny(self.img_gray_orig, 80, 80)
-
-        if logger.isEnabledFor(logging.DEBUG):
-            cv2.imwrite("canny_img.png", canny_img)
-
-        # 2. Line detection
-        # In the case where minLineLength is too short,
-        # it catches the line of the item.
-        lines = cv2.HoughLinesP(canny_img, rho=1, theta=np.pi/2,
-                                threshold=80, minLineLength=int(height/5),
-                                maxLineGap=10)
-
-        left_x = upper_y = b_line_y = 0
-        right_x = width
-        bottom_y = height
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            # Detect Left line
-            if x1 == x2 and x1 < width/2 and abs(y2 - y1) > height/2:
-                if left_x < x1:
-                    left_x = x1
-        # Define Center
-        lx, rx = self.find_notch(self.img_hsv_orig)
-        logger.debug("notch_lx = %d, notch_rx = %d", lx, rx)
-        center = int((width - lx - rx)/2) + lx
-        # 旧UIの破線y座標位置以上にする
-        # 一行目のアイテムの下部にできる直線さけ
-        # BlueStacksのスクショをメニューバーとともにスクショにとる人のため上部直線ではとらないことでマージンにする
-        # 一行目のアイテムの上部に直線ができるケースがあったら改めて考える
-        if width/height > 16/9.01:
-            b_line_y_border = 300 * height / 1152
-        else:
-            b_line_y_border = 300 * width / 2048 + int((height - width * 9/16)/2)
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            # Detect Broken line
-            if y1 == y2 and y1 < b_line_y_border \
-               and ((x1 < left_x + 200 and x2 > left_x) \
-               or (center + (center - left_x) - 200 < x2 < center + (center - left_x))):
-                if b_line_y < y1:
-                    b_line_y = y1
-            # Detect Upper line
-#            if y1 == y2 and y1 < height/2 and x1 < left_x + 15:
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            if y1 == y2 and x1 < left_x + 200 \
-               and x2 > left_x + 200 and y1 < b_line_y - 30:
-                if upper_y < y1:
-                    upper_y = y1
-        logger.debug("left_x: %d", left_x)
-        logger.debug("b_line_y: %d", b_line_y)
-        logger.debug("upper_y: %d", upper_y)
-
-
-        # Detect Right line
-        # Avoid catching the line of the scroll bar
-        if logger.isEnabledFor(logging.DEBUG):
-            line_img = self.img_rgb_orig.copy()
-
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            if logger.isEnabledFor(logging.DEBUG):
-                line_img = cv2.line(line_img, (x1, y1), (x2, y2),
-                                    (0, 0, 255), 1)
-                cv2.imwrite("line_img.png", line_img)
-            # if x1 == x2 and x1 > width*3/4 and (y1 < b_line_y or y2 < b_line_y):
-            if x1 == x2 and x1 >= center + (center - left_x) - 5 and (y1 < b_line_y or y2 < b_line_y):
-                if right_x > x1:
-                    right_x = x1
-        if right_x > width - 50:
-            logger.warning("right_x detection failed.")
-            # Redefine right_x from the pseudo_bottom_y
-            pseudo_bottom_y = height
-            for line in lines:
-                x1, y1, x2, y2 = line[0]
-                if y1 == y2 and y1 > height/2 and (x1 < width/2):
-                    if pseudo_bottom_y > y1:
-                        pseudo_bottom_y = y1
-            logger.debug("pseudo_bottom_y: %d", pseudo_bottom_y)
-            for line in lines:
-                x1, y1, x2, y2 = line[0]
-                if x1 == x2 and x1 > width*3/4 \
-                   and (y1 > pseudo_bottom_y or y2 > pseudo_bottom_y):
-                    if right_x > x1:
-                        right_x = x1
-        logger.debug("right_x: %d", right_x)
-
-        # Detect Bottom line
-        # Changed the underline of cut image to use the top of Next button.
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            if y1 == y2 and y1 > height/2 and (x1 < right_x and x2 > right_x):
-                if bottom_y > y1:
-                    bottom_y = y1
-        logger.debug("bottom_y: %d", bottom_y)
-        logger.debug("height: %d", height)
-        if width/height > 16/9.01:
-            # 上下青枠以外
-            logger.debug("no border or side blue border")
-            if (bottom_y - upper_y)/height >= 0.765:
-                if upper_y/(height - bottom_y) < 0.3:
-                    logger.debug("New UI")
-                    self.ui_type = "new"
-                    if width/height < 16/8.99:
-                        upper_lower_blue_border = True
-                else:
-                    logger.debug("Old UI")
-                    self.ui_type = "old"
-            else:
-                # iPhone X type blue border
-                logger.debug("Old UI")
-                self.ui_type = "old"
-        else:
-            # 上下青枠
-            logger.debug("top & bottom blue border")
-            game_height = width * 9 / 16
-            bh = (height - game_height)/2  # blue border height
-            upper_h = upper_y - bh
-            bottom_h = height - bottom_y - bh
-            if upper_h/bottom_h < 0.3:
-                logger.debug("New UI")
-                self.ui_type = "new"
-                upper_lower_blue_border = True
-            else:
-                logger.debug("Old UI")
-                self.ui_type = "old"
-        TEMPLATE_WIDTH = 1902 - 146
-        TEMPLATE_HEIGHT = 1158 - 234
-        scale = TEMPLATE_WIDTH / TEMPLATE_HEIGHT
-        lack_of_height = (right_x - left_x)/(bottom_y - upper_y + 10) > scale
-        if bottom_y == height or lack_of_height:
-            bottom_y = upper_y + int((right_x - left_x) / scale)
-            logger.warning("bottom line detection failed")
-            logger.debug("redefine bottom_y: %s", bottom_y)
-
-        if logger.isEnabledFor(logging.DEBUG):
-            tmpimg = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
-            cv2.imwrite("cutting_img.png", tmpimg)
-        # 内側の直線をとれなかったときのために補正する
-        thimg = self.img_th_orig[upper_y: bottom_y, left_x: right_x]
-        lx, rx = self.find_edge(thimg)
-        left_x = left_x + lx
-        right_x = right_x - rx
-
-        # Correcting to be a gamescreen
-        # Actual iPad (2048x1536) measurements
-        scale = bottom_y - upper_y
-        logger.debug("scale: %d", scale)
-        # upper_y = upper_y - int(79*scale/847)
-        bottom_y = bottom_y + int(124*scale/924)
-        logger.debug(bottom_y)
-        game_screen = self.img_rgb_orig[upper_y: bottom_y, left_x: right_x]
-        dcnt_old = None
-        if self.ui_type == "old":
-            left_dxo = left_x + int(1446*scale/924)
-            right_dxo = left_dxo + int(53*scale/924)
-            upper_dyo = upper_y - int(81*scale/924)
-            bottom_dyo = upper_dyo + int(37*scale/924)
-            dcnt_old = self.img_rgb_orig[upper_dyo: bottom_dyo,
-                                         left_dxo: right_dxo]
-        if upper_lower_blue_border:
-            left_dx = left_x + int(1463*scale/924)
-            right_dx = left_dx + int(67*scale/924)
-        else:
-            left_dx = left_x + int(1400*scale/924)
-            right_dx = left_dx + int(305*scale/924)
-        upper_dy = upper_y - int(20*scale/924)
-        bottom_dy = upper_dy + int(37*scale/924)
-        # bottom_dy = upper_dy + int(41*scale/847)
-
-        logger.debug("left_dx: %d", left_dx)
-        logger.debug("right_dx: %d", right_dx)
-        logger.debug("upper_dy: %d", upper_dy)
-        logger.debug("bottom_dy: %d", bottom_dy)
-        dcnt_new = self.img_rgb_orig[upper_dy: bottom_dy,
-                                     left_dx: right_dx]
-
-        return game_screen, dcnt_old, dcnt_new
-
-    def area_select(self):
-        """
-        FGOアプリの地域を選択
-        'na', 'jp'に対応
-
-        'items_img.png' とのオブジェクトマッチングで判定
-        """
-        img_gray = self.img_gray[0:100, 0:500]
-        template = imread(items_img, 0)
-        res = cv2.matchTemplate(
-                                img_gray,
-                                template,
-                                cv2.TM_CCOEFF_NORMED
-                                )
-        threshold = 0.9
-        loc = np.where(res >= threshold)
-        for pt in zip(*loc[::-1]):
-            return 'na'
-            break
-        return 'jp'
-
     def makeitemlist(self):
         """
         アイテムを出力
@@ -829,9 +759,9 @@ class ScreenShot:
             # Recognizing Failure
             return -1
         item_pts.sort()
-        if len(item_pts) > 9:
+        if len(item_pts) > len(str(self.max_qp)):
             # QP may be misrecognizing the 10th digit or more, so cut it
-            item_pts = item_pts[1:]
+            item_pts = item_pts[len(item_pts) - len(str(self.max_qp)):]
         logger.debug("ocr item_pts: %s", item_pts)
         logger.debug("ドロップ桁数(OCR): %d", len(item_pts))
 
@@ -1474,7 +1404,7 @@ class Item:
 
     def get_number4jpg2(self, base_line, margin_right, cut_width, comma_width):
         """[JP]Ver.2.37.0以降の仕様
-            
+
         """
         cut_height = 30
         top_y = base_line - cut_height
@@ -1675,7 +1605,6 @@ class Item:
 
         return line
 
-
     def detect_white_char(self, base_line, margin_right, mode="jp"):
         """
         上段と下段の白文字を見つける機能を一つに統合
@@ -1688,7 +1617,7 @@ class Item:
         pattern_normal = r"^[\+x][1-9]\d{0,5}$"
         pattern_normal_qp = r"^\+[1-9]\d{0,4}0$"
         logger.debug("base_line: %d", base_line)
-        if mode=="jp" and base_line < 170:
+        if mode == "jp" and base_line < 170:
             # JP Ver.2.37.0以降の新仕様
             # 1-6桁の読み込み
             font_size = FONTSIZE_NEWSTYLE
@@ -2508,9 +2437,9 @@ def get_output(filenames, args):
                 if sc.pages - sc.pagenum == 0:
                     sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
                 if prev_itemlist == sc.itemlist:
-                    if (sc.total_qp != -1 and sc.total_qp != 999999999
+                    if (sc.total_qp != -1 and sc.total_qp != 2000000000
                         and sc.total_qp == prev_total_qp) \
-                        or ((sc.total_qp == -1 or sc.total_qp == 999999999)
+                        or ((sc.total_qp == -1 or sc.total_qp == 2000000000)
                             and td.total_seconds() < args.timeout):
                         logger.debug("args.timeout: %s", args.timeout)
                         logger.debug("filename: %s", filename)
@@ -2624,12 +2553,14 @@ def make_quest_output(quest):
                 output = quest["chapter"] + " " + quest["name"]
     return output
 
+
 UNKNOWN = -1
 OTHER = 0
 NOVICE = 1
 INTERMEDIATE = 2
 ADVANCED = 3
 EXPERT = 4
+
 
 def tv_quest_type(item_list):
     quest_type = UNKNOWN
@@ -2652,6 +2583,7 @@ def tv_quest_type(item_list):
                 quest_type = OTHER
                 break
     return quest_type
+
 
 def deside_tresure_valut_quest(item_list):
     quest_type = tv_quest_type(item_list)
