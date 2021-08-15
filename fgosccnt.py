@@ -581,6 +581,21 @@ class ScreenShot:
         upper_lower_blue_border = False  # For New UI
         # 1. Edge detection
         height, width = self.img_gray_orig.shape[:2]
+        # 輪郭抽出
+        _, dst = cv2.threshold(self.img_gray_orig, 0, 255, cv2.THRESH_OTSU)
+        inv = cv2.bitwise_not(dst)
+        contours, _ = cv2.findContours(inv, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+        # contours2 = list(filter(lambda x: cv2.contourArea(x) > height/2 * width/2, contours))
+        # for i, cnt in enumerate(contours2):
+        #     # 輪郭に外接する長方形を取得する。
+        #     x, y, w, h = cv2.boundingRect(cnt)
+        #     print(f"contour: {i}, topleft: ({x}, {y}), width: {w}, height: {h}")
+        contours2 = max(contours, key=lambda x: cv2.contourArea(x))
+        x, y, w, h = cv2.boundingRect(contours2)
+        print(f"[max contour] topleft: ({x}, {y}), width: {w}, height: {h}")
+
+
+        
         canny_img = cv2.Canny(self.img_gray_orig, 80, 80)
 
         if logger.isEnabledFor(logging.DEBUG):
