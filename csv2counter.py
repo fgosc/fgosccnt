@@ -43,7 +43,7 @@ ID_STAMDARD_ITEM_MAX = 6599
 ID_FREEQUEST_MIN = 93000001
 ID_FREEQUEST_MAX = 93099999
 ID_SYUERNQUEST_MIN = 94006801
-ID_SYURENQUEST_MAX = 94006828
+ID_SYURENQUEST_MAX = 94061640
 
 output = ""
 ce_exp_list = []
@@ -141,7 +141,18 @@ def output_header(lines):
         if " 序" in place or " 破" in place or " 急" in place:
             jyohakyu_flag = True
         drop = []
-        questid = place2id(place, freequest)
+        if place == "宝物庫 初級":
+            questid = 94061636
+        elif  place == "宝物庫 中級":
+            questid = 94061637
+        elif  place == "宝物庫 上級":
+            questid = 94061638
+        elif  place == "宝物庫 超級":
+            questid = 94061639
+        elif  place == "宝物庫 極級":
+            questid = 94061640
+        else:
+            questid = place2id(place, freequest)
         logger.debug("questid: %d", questid)
 
         if not (ID_FREEQUEST_MIN <= questid <= ID_FREEQUEST_MAX) \
