@@ -2560,6 +2560,7 @@ NOVICE = 1
 INTERMEDIATE = 2
 ADVANCED = 3
 EXPERT = 4
+MASTER = 5
 
 
 def tv_quest_type(item_list):
@@ -2579,6 +2580,8 @@ def tv_quest_type(item_list):
                 quest_type = ADVANCED
             elif item["dropnum"] == 6400:
                 quest_type = EXPERT
+            elif item["dropnum"] == 7400:
+                quest_type = MASTER
             else:
                 quest_type = OTHER
                 break
@@ -2601,41 +2604,50 @@ def deside_tresure_valut_quest(item_list):
         else:
             item_set.add(item["dropnum"])
 
-    if quest_type == NOVICE and item_set == {5000, 15000, 45000}:
+    if quest_type == NOVICE and item_set == {10000, 15000, 30000, 45000}:
         quest_candidate = {
-                           "id": 94000104,
+                           "id": 94061636,
                            "name": "宝物庫の扉を開け 初級",
                            "place": "",
                            "chapter": "",
                            "qp": 1400,
                            "shortname": "宝物庫 初級",
                            }
-    elif quest_type == INTERMEDIATE and item_set == {5000, 15000, 45000, 135000}:
+    elif quest_type == INTERMEDIATE and item_set == {10000, 15000, 30000, 45000, 90000, 135000}:
         quest_candidate = {
-                           "id": 94000105,
+                           "id": 94061637,
                            "name": "宝物庫の扉を開け 中級",
                            "place": "",
                            "chapter": "",
                            "qp": 2900,
                            "shortname": "宝物庫 中級",
                            }
-    elif quest_type == ADVANCED and item_set == {15000, 45000, 135000, 405000}:
+    elif quest_type == ADVANCED and item_set == {30000, 45000, 90000, 135000, 270000, 405000}:
         quest_candidate = {
-                           "id": 94000106,
+                           "id": 94061638,
                            "name": "宝物庫の扉を開け 上級",
                            "place": "",
                            "chapter": "",
                            "qp": 4400,
                            "shortname": "宝物庫 上級",
                            }
-    elif quest_type == EXPERT and item_set == {45000, 135000, 405000}:
+    elif quest_type == EXPERT and item_set == {90000, 135000, 270000, 405000}:
         quest_candidate = {
-                           "id": 94000712,
+                           "id": 94061639,
                            "name": "宝物庫の扉を開け 超級",
                            "place": "",
                            "chapter": "",
-                           "qp": 6400,
+                           "qp": 7400,
                            "shortname": "宝物庫 超級",
+                           }
+    elif quest_type == MASTER and item_set == {270000, 405000, 1500000}:
+        quest_candidate = {
+                           "id": 94061640,
+                           "name": "宝物庫の扉を開け 極級",
+                           "place": "",
+                           "chapter": "",
+                           "qp": 7400,
+                           "shortname": "宝物庫 極級",
                            }
     else:
         quest_candidate = ""
