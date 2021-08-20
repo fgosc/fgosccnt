@@ -2671,7 +2671,6 @@ def deside_quest(item_list):
             continue
         else:
             item_set.add(item["name"])
-    logger.info(item_set)
     quest_candidate = ""
     for quest in reversed(freequest):
         dropset = {i["name"] for i in quest["drop"]
