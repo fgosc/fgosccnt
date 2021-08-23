@@ -2192,8 +2192,8 @@ class Item:
         """
         height, width = img_rgb.shape[:2]
 
-        img = img_rgb[int((145-16-60*0.8)/2/145*height)+3:
-                      int((145-16+60*0.8)/2/145*height)+3,
+        img = img_rgb[int((145-16-60*0.8)/2/145*height)+2:
+                      int((145-16+60*0.8)/2/145*height)+2,
                       int((132-52*0.8)/2/132*width):
                       int((132+52*0.8)/2/132*width)]
 
