@@ -393,7 +393,7 @@ class ScreenShot:
         dcnt_old, dcnt_new = drop_count_area(self.img_rgb_orig, resize_scale, sc)
 
         if logger.isEnabledFor(logging.DEBUG):
-            cv2.imwrite('frame_img.png', frame_img)
+            cv2.imwrite('frame_img.png', img_resize)
 
         if logger.isEnabledFor(logging.DEBUG):
             if self.screen_type == "normal":
@@ -414,6 +414,8 @@ class ScreenShot:
                 self.chestnum = self.ocr_dcnt(dcnt_new)
         else:
             self.chestnum = self.ocr_dcnt(dcnt_new)
+        self.asr_y, self.actual_height = self.detect_scroll_bar()
+
         logger.debug("Total Drop (OCR): %d", self.chestnum)
         item_pts = self.img2points()
         logger.debug("item_pts:%s", item_pts)
@@ -542,14 +544,13 @@ class ScreenShot:
     def correct_pageinfo(self):
         if self.valid_pageinfo() is False:
             logger.warning("pageinfo validation failed")
-            asr_y, actual_height = self.detect_scroll_bar()
-            if asr_y == -1 or actual_height == -1:
+            if self.asr_y == -1 or self.actual_height == -1:
                 return 1, 1, 0
             entire_height = 649
             esr_y = 17
-            pagenum = pageinfo.guess_pagenum(asr_y, esr_y, entire_height)
-            pages = pageinfo.guess_pages(actual_height, entire_height)
-            lines = pageinfo.guess_lines(actual_height, entire_height)
+            pagenum = pageinfo.guess_pagenum(self.asr_y, esr_y, entire_height)
+            pages = pageinfo.guess_pages(self.actual_height, entire_height)
+            lines = pageinfo.guess_lines(self.actual_height, entire_height)
             return pagenum, pages, lines
         else:
             return self.pagenum, self.pages, self.lines
@@ -950,8 +951,20 @@ class ScreenShot:
         img_1strow = self.img_th[0:self.height,
                                  std_pts[0][0] - margin_x:
                                  std_pts[0][2] + margin_x]
-        # kernel = np.ones((5,1),np.uint8)
-        # img_1strow = cv2.dilate(img_1strow,kernel,iterations = 1)
+
+        SCROLLBAR_WIDTH4ONEPAGE = 610
+        POSITION_TOP = 16
+        POSITION_BOTTOM = 42
+        SCROLL_OFFSET = 28
+
+        if (self.asr_y == POSITION_TOP and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE) or self.actual_height == -1:
+            leftcell_pts = [[14, 97, 202, 303]]
+            item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
+            return item_pts
+        elif self.asr_y == POSITION_BOTTOM and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE:
+            leftcell_pts = [[14, 97 - SCROLL_OFFSET, 202, 303 - SCROLL_OFFSET]]
+            item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
+            return item_pts
 
         # 輪郭を抽出
         contours = cv2.findContours(img_1strow, cv2.RETR_TREE,
