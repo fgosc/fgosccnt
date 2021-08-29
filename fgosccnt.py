@@ -2193,8 +2193,8 @@ class Item:
         左上のクラスマークぎりぎりのハッシュを取る
         記述した比率はiPhone6S画像の実測値
         """
-        img = img_rgb[int(5/135*self.height):int(30/135*self.height),
-                      int(5/135*self.width):int(30/135*self.width)]
+        img = img_rgb[int((5+9)/135*self.height):int((30+2)/135*self.height),
+                      int(5/135*self.width):int((30+6)/135*self.width)]
         return hasher.compute(img)
 
     def compute_gem_hash(self, img_rgb):
