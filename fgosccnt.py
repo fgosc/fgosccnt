@@ -264,8 +264,11 @@ def get_coodinates(img: ndarray,
     contours2 = []
     for cnt in contours:
         _, _, w, h = cv2.boundingRect(cnt)
-        if 1.82 < w/h < 1.83:
+        area = cv2.contourArea(cnt)
+        if 1.82 < w/h < 1.83 and area > height / 2 * width / 2:
             contours2.append(cnt)
+    if len(contours2) == 0:
+        raise ValueError("Game screen not found.")
     max_contour = max(contours2, key=lambda x: cv2.contourArea(x))
     x, y, width, height = cv2.boundingRect(max_contour)
     return ((x, y), (x + width, y + height))
