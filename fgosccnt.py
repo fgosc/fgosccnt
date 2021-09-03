@@ -2406,6 +2406,7 @@ def get_output(filenames, args):
     svm_card = cv2.ml.SVM_load(str(train_card))
 
     fileoutput = []  # 出力
+    output = {}
     prev_pages = 0
     prev_pagenum = 0
     prev_total_qp = QP_UNKNOWN
