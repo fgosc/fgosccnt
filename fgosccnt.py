@@ -2424,7 +2424,7 @@ def get_output(filenames, args):
             output = {'filename': str(filename) + ': not found'}
             all_list.append([])
         elif f.is_dir():  # for ZIP file from MacOS
-            pass
+            continue
         elif f.suffix.upper() not in ['.PNG', '.JPG', '.JPEG']:
             output = {'filename': str(filename) + ': Not Supported'}
             all_list.append([])
