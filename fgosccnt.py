@@ -329,41 +329,6 @@ def area_decision(frame_img: ndarray,
     return 'jp'
 
 
-def drop_count_area(img: ndarray,
-                    resize_scale,
-                    sc,
-                    display: bool = False) -> Tuple[Union[ndarray, None], ndarray]:
-    # widescreenかどうかで挙動を変える
-    if resize_scale > 1:
-        img = cv2.resize(img, (0, 0),
-                         fx=resize_scale, fy=resize_scale,
-                         interpolation=cv2.INTER_CUBIC)
-    elif resize_scale < 1:
-        img = cv2.resize(img, (0, 0),
-                         fx=resize_scale, fy=resize_scale,
-                         interpolation=cv2.INTER_AREA)
-    ((x1, y1), (_, _)) = get_coodinates(img)
-    # 相対座標(旧UI)
-    dcnt_old = None
-    if sc.state.screen_type == "normal":
-        dcnt_old = img[y1 - 81: y1 - 44, x1 + 1446: x1 + 1490]
-        if display:
-            cv2.imshow('image', dcnt_old)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-    # 相対座標(新UI)
-    height, width = img.shape[:2]
-    if width/height > 16/9.01:
-        dcnt_new = img[y1 - 20: y1 + 17, x1 + 1400: x1 + 1705]
-    else:
-        dcnt_new = img[y1 - 20: y1 + 17, x1 + 1463: x1 + 1530]
-    if display:
-        cv2.imshow('image', dcnt_new)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-    return dcnt_old, dcnt_new
-
-
 class ScreenShot:
     """
     戦利品スクリーンショットを表すクラス
@@ -382,8 +347,8 @@ class ScreenShot:
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
                                             threshold, 255, cv2.THRESH_BINARY)
 
-        ((x1, y1), (x2, y2)) = get_coodinates(self.img_rgb_orig)
-        frame_img: ndarray = self.img_rgb_orig[y1: y2, x1: x2]
+        ((self.x1, self.y1), (self.x2, self.y2)) = get_coodinates(self.img_rgb_orig)
+        frame_img: ndarray = self.img_rgb_orig[self.y1: self.y2, self.x1: self.x2]
         img_resize, resize_scale = standardize_size(frame_img)
         self.img_rgb = img_resize
         mode = area_decision(img_resize)
@@ -393,7 +358,7 @@ class ScreenShot:
         sc.change_state(mode)
         self.max_qp = sc.state.max_qp
         self.screen_type = sc.state.screen_type
-        dcnt_old, dcnt_new = drop_count_area(self.img_rgb_orig, resize_scale, sc)
+        dcnt_old, dcnt_new = self.drop_count_area(self.img_rgb_orig, resize_scale, sc)
 
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite('frame_img.png', img_resize)
@@ -490,6 +455,40 @@ class ScreenShot:
             logger.warning("drops_count is a mismatch:")
             logger.warning("drops_count = %d", self.chestnum)
             logger.warning("drops_found = %d", len(self.itemlist))
+
+    def drop_count_area(self, img: ndarray,
+                        resize_scale,
+                        sc,
+                        display: bool = False) -> Tuple[Union[ndarray, None], ndarray]:
+        # widescreenかどうかで挙動を変える
+        if resize_scale > 1:
+            img = cv2.resize(img, (0, 0),
+                             fx=resize_scale, fy=resize_scale,
+                             interpolation=cv2.INTER_CUBIC)
+        elif resize_scale < 1:
+            img = cv2.resize(img, (0, 0),
+                             fx=resize_scale, fy=resize_scale,
+                             interpolation=cv2.INTER_AREA)
+        # ((x1, y1), (_, _)) = get_coodinates(img)
+        # 相対座標(旧UI)
+        dcnt_old = None
+        if sc.state.screen_type == "normal":
+            dcnt_old = img[self.y1 - 81: self.y1 - 44, self.x1 + 1446: self.x1 + 1490]
+            if display:
+                cv2.imshow('image', dcnt_old)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+        # 相対座標(新UI)
+        height, width = img.shape[:2]
+        if width/height > 16/9.01:
+            dcnt_new = img[self.y1 - 20: self.y1 + 17, self.x1 + 1400: self.x1 + 1705]
+        else:
+            dcnt_new = img[self.y1 - 20: self.y1 + 17, self.x1 + 1463: self.x1 + 1530]
+        if display:
+            cv2.imshow('image', dcnt_new)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+        return dcnt_old, dcnt_new
 
     def detect_scroll_bar(self):
         '''
