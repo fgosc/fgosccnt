@@ -2832,12 +2832,15 @@ if __name__ == '__main__':
             ndir.mkdir(parents=True)
 
     if args.folder:
-        inputs = [x for x in Path(args.folder).iterdir()]
+        inputs = [x for x in Path(args.folder).glob("**/*")]
     else:
         inputs = args.filenames
 
     inputs = sort_files(inputs, args.ordering)
     fileoutput, all_new_list = get_output(inputs, args)
+    if len(all_new_list) == 0:
+        print("filename,ドロ数\n合計,0\nファイルが見つかりません,\n")
+        exit(0)
 
     # CSVヘッダーをつくる
     csv_heder, ce0_flag, questname = make_csv_header(args, all_new_list)
