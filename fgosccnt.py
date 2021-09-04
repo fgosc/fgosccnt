@@ -2832,7 +2832,7 @@ if __name__ == '__main__':
             ndir.mkdir(parents=True)
 
     if args.folder:
-        inputs = [x for x in Path(args.folder).glob("**/*")]
+        inputs = [x for x in Path(args.folder).glob(r"**/[!.]*")]
     else:
         inputs = args.filenames
 
