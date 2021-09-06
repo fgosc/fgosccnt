@@ -456,6 +456,25 @@ class ScreenShot:
             logger.warning("drops_count = %d", self.chestnum)
             logger.warning("drops_found = %d", len(self.itemlist))
 
+    def find_notch(self):
+        """
+        直線検出で検出されなかったフチ幅を検出
+        """
+        edge_width = 150
+
+        height, width = self.img_hsv_orig.shape[:2]
+        target_color = 0
+        for rx in range(edge_width):
+            img_hsv_x = self.img_hsv_orig[:, width - rx - 1: width - rx]
+            # ヒストグラムを計算
+            hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
+            # 最小値・最大値・最小値の位置・最大値の位置を取得
+            _, maxVal, _, maxLoc = cv2.minMaxLoc(hist)
+            if not (maxLoc[1] == target_color and maxVal > height * 0.4):
+                break
+
+        return rx
+
     def drop_count_area(self, img: ndarray,
                         resize_scale,
                         sc,
@@ -473,17 +492,27 @@ class ScreenShot:
         # 相対座標(旧UI)
         dcnt_old = None
         if sc.state.screen_type == "normal":
-            dcnt_old = img[self.y1 - 81: self.y1 - 44, self.x1 + 1446: self.x1 + 1490]
+            dcnt_old = img[int(self.y1*resize_scale) - 81: int(self.y1*resize_scale) - 44,
+                           int(self.x1*resize_scale) + 1446: int(self.x1*resize_scale) + 1490]
             if display:
                 cv2.imshow('image', dcnt_old)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
         # 相対座標(新UI)
+        rx = self.find_notch()
         height, width = img.shape[:2]
-        if width/height > 16/9.01:
-            dcnt_new = img[self.y1 - 20: self.y1 + 17, self.x1 + 1400: self.x1 + 1705]
+        # dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 17,
+        #                 width - 430: width - 370]
+        if width/height > 16/8.99:
+            dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 15,
+                            width - 490 - rx: width - 430 - int(rx*resize_scale)]
+        #     dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 17,
+        #                    int(self.x1*resize_scale) + 1400: int(self.x1*resize_scale) + 1705]
         else:
-            dcnt_new = img[self.y1 - 20: self.y1 + 17, self.x1 + 1463: self.x1 + 1530]
+            dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 15,
+                            width - 430 - rx: width - 370 - int(rx*resize_scale)]
+        #     dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 17,
+        #                    int(self.x1*resize_scale) + 1463: int(self.x1*resize_scale) + 1530]
         if display:
             cv2.imshow('image', dcnt_new)
             cv2.waitKey(0)
@@ -858,6 +887,9 @@ class ScreenShot:
             newimg_th[height - 1, w] = 0
             newimg_th[height - 2, w] = 0
             newimg_th[height - 3, w] = 0
+        # cv2.imshow('image',newimg_th)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
         res = self.pred_dcnt(newimg_th)
         return res
