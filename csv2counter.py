@@ -325,10 +325,14 @@ def otuput_item(lines):
             elif qp_flag and not item.startswith('QP(+'):
                 output = output[:-1] + "\n"
                 qp_flag = False
-            if item[-1].isdigit():
-                output = output + item + "_" + lines[0][item] + "-"
+            if lines[0][item] == "":
+                item_num = "0"
             else:
-                output = output + item + lines[0][item] + "-"
+                item_num = lines[0][item]
+            if item[-1].isdigit():
+                output = output + item + "_" + item_num + "-"
+            else:
+                output = output + item + item_num + "-"
     output = output.replace('ポイント(+', args.point + '(+')
 
 

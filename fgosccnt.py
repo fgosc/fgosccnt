@@ -2701,7 +2701,7 @@ def deside_quest(item_list):
 
     item_set = set()
     for item in item_list:
-        if item["id"] == 5:
+        if item["id"] == ID_REWARD_QP:
             item_set.add("QP(+" + str(item["dropnum"]) + ")")
         elif item["id"] == 1 \
             or item["category"] == "Craft Essence" \
@@ -2719,6 +2719,60 @@ def deside_quest(item_list):
             quest_candidate = quest
             break
     return quest_candidate
+
+
+def quest_name_recognition(item_list):
+    """アイテムが全て埋まっていない場合のクエスト名の判別
+
+    Args:
+        item_list ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    reward_qp = 0
+    item_set = set()
+    for item in item_list:
+        if item["id"] == ID_REWARD_QP:
+            item_set.add("QP(+" + str(item["dropnum"]) + ")")
+            reward_qp = item["dropnum"]
+        elif item["id"] == 1 \
+            or item["category"] == "Craft Essence" \
+            or (9700 <= math.floor(item["id"]/1000) <= 9707
+                and str(item["id"])[4] not in ["4", "5"]):
+            continue
+        else:
+            item_set.add(item["name"])
+    if reward_qp == 0:
+        return "", []
+    quest_candidate = []
+    # 報酬QPが同じクエストの一覧を作る
+    for quest in reversed(freequest):
+        if quest["qp"] == reward_qp:
+            quest_candidate.append(quest)
+    # クエスト一覧に含まれるかチェック
+    # 含まれるクエストが一つだったら出力
+    quest_candidate2 = []
+    missing_items = []
+    for quest in quest_candidate:
+        dropset = {i["name"] for i in quest["drop"]
+                   if i["type"] != "Craft Essence"}
+        dropset.add("QP(+" + str(quest["qp"]) + ")")
+        diff = item_set - dropset
+        if len(diff) == 0:
+            tmp_items = []
+            diff2 = dropset - item_set
+            quest_candidate2.append(quest)
+            for item in quest["drop"]:
+                if item["name"] in diff2:
+                    item["dropnum"] = 0
+                    item["category"] = "Item"
+                    tmp_items.append(item)
+            missing_items.append(tmp_items)
+    if len(quest_candidate2) == 1:
+        return quest_candidate2[0], missing_items[0]
+    else:
+        return "", []
 
 
 def make_csv_header(args, item_list):
@@ -2764,6 +2818,14 @@ def make_csv_header(args, item_list):
                            "dropPriority": 9005, "dropnum": 0})
     # 重複する要素を除く
     unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
+
+    # クエスト名判定
+    quest = deside_quest(unique_list)
+    if quest == "":
+        quest, items2 = quest_name_recognition(unique_list)
+        unique_list.extend(items2)
+    quest_output = make_quest_output(quest)
+
     # ソート
     new_list = sorted(sorted(sorted(unique_list, key=itemgetter('dropnum')),
                              key=itemgetter('id'), reverse=True),
@@ -2782,9 +2844,6 @@ def make_csv_header(args, item_list):
         else:
             tmp = out_name(args, nlist['id'])
         header.append(tmp)
-    # クエスト名判定
-    quest = deside_quest(new_list)
-    quest_output = make_quest_output(quest)
     return ['filename', drop_count] + header, ce0_flag, quest_output
 
 
