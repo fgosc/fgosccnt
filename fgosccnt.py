@@ -503,10 +503,10 @@ class ScreenShot:
         height, width = img.shape[:2]
         if width/height > 16/8.99:
             dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
-                            width - 495 - rx: width - 435 - int(rx*resize_scale)]
+                           width - 495 - rx: width - 430 - int(rx*resize_scale)]
         else:
             dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
-                            width - 430 - rx: width - 370 - int(rx*resize_scale)]
+                           width - 430 - rx: width - 365 - int(rx*resize_scale)]
         if display:
             cv2.imshow('image', dcnt_new)
             cv2.waitKey(0)
@@ -1571,12 +1571,12 @@ class Item:
 
         return line
 
-    def get_number2(self, cut_width, comma_width):
+    def get_number2(self, cut_width, comma_width, base_line=147, margin_right=15):
         """[JP]Ver.2.37.0以降の仕様
         """
         cut_height = 26
-        base_line = 147
-        margin_right = 15
+        # base_line = 147
+        # margin_right = 15
         top_y = base_line - cut_height
         # まず、+, xの位置が何桁目か調査する
         for i in range(8):  # 8桁以上は無い
@@ -1694,6 +1694,16 @@ class Item:
                 logger.debug("Font Size: %d", font_size)
                 self.font_size = font_size
                 return line
+        elif mode == "jp":
+            cut_width = 21
+            comma_width = 5
+            line = self.get_number2(cut_width, comma_width, base_line=base_line, margin_right=margin_right)
+            logger.debug("line: %s", line)
+            if len(line) <= 1:
+                return ""
+            elif not line[1:].isdigit():
+                return ""
+            return line
         else:
             # JP Ver.2.37.0以前の旧仕様
             if self.font_size != FONTSIZE_UNDEFINED:
@@ -1817,6 +1827,7 @@ class Item:
         bins = 9
         char = []
         tmpimg = self.img_gray[pt[1]:pt[3], pt[0]:pt[2]]
+
         tmpimg = cv2.resize(tmpimg, (win_size))
         hog = cv2.HOGDescriptor(win_size, block_size, block_stride,
                                 cell_size, bins)
