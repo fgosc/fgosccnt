@@ -2242,7 +2242,8 @@ def classify_background(img_rgb):
     """
     背景判別
     """
-    img = img_rgb[30:119, 7:25]
+    _, width = img_rgb.shape[:2]
+    img = img_rgb[30:119, width - 25:width - 7]
     target_hist = img_hist(img)
     bg_score = []
     score_z = calc_hist_score(target_hist, hist_zero)
