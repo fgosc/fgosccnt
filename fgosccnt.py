@@ -1694,7 +1694,7 @@ class Item:
                 logger.debug("Font Size: %d", font_size)
                 self.font_size = font_size
                 return line
-        elif mode == "jp":
+        elif mode == "jp" and self.id not in [ID_QP, ID_REWARD_QP] and self.category != "Point":
             cut_width = 21
             comma_width = 5
             line = self.get_number2(cut_width, comma_width, base_line=base_line, margin_right=margin_right)
