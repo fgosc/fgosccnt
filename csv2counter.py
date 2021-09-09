@@ -48,7 +48,6 @@ ID_SYURENQUEST_MAX = 94061640
 output = ""
 ce_exp_list = []
 ce_list = []
-jyohakyu_flag = False
 
 
 def delete_brackets(s):
@@ -120,7 +119,6 @@ def output_header(lines):
     global ce_list
     global ce_exp_list
     global output
-    global jyohakyu_flag
     output_warning(lines)
     place = ""
     if lines[0]["filename"] != "合計" and len(lines) > 2:
@@ -138,8 +136,6 @@ def output_header(lines):
 
         place = lines[0]["filename"]
         # 場所からドロップリストを決定
-        if " 序" in place or " 破" in place or " 急" in place:
-            jyohakyu_flag = True
         drop = []
         if place == "宝物庫 初級":
             questid = 94061636
@@ -364,5 +360,13 @@ if __name__ == '__main__':
 
     print(output[:-1])
     print("#FGO周回カウンタ http://aoshirobo.net/fatego/rc/")
-    if jyohakyu_flag:
-        print("追加出現率 %")
+    additional_list1 = ["最中", "団子", "煎餅"]  # 鎌倉イベ
+    additional_list2 = ["宝箱金", "宝箱銀", "宝箱銅"]  # 水着2021
+    for item in additional_list1:
+        if item in output:
+            print("\n追加出現率 %")
+            break
+    for item in additional_list2:
+        if item in output:
+            print("\n追加ドロップ率 %")
+            break
