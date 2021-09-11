@@ -44,6 +44,7 @@ ID_FREEQUEST_MIN = 93000001
 ID_FREEQUEST_MAX = 93099999
 ID_SYUERNQUEST_MIN = 94006801
 ID_SYURENQUEST_MAX = 94061640
+ROW_ITEM_START = 3
 
 output = ""
 ce_exp_list = []
@@ -180,7 +181,7 @@ def output_header(lines):
 
     # 周回数出力
     for i, item in enumerate(lines[0].keys()):
-        if i == 3:
+        if i == ROW_ITEM_START:
             output = lines[0][item] + "周\n"
             break
 
@@ -192,7 +193,7 @@ def output_ce(lines):
         ce_output = {item_shortname[k["id"]]: 0 for k in ce_list}
         logger.debug("ce_output: %s", ce_output)
         for i, item in enumerate(lines[0].keys()):
-            if i > 2:
+            if i > ROW_ITEM_START:
                 if delete_brackets(item) in shortname2id.keys():
                     id = shortname2id[delete_brackets(item)]
                 elif delete_brackets(item) in name2id.keys():
@@ -220,7 +221,7 @@ def output_ce(lines):
                     break
     else:
         for i, item in enumerate(lines[0].keys()):
-            if i > 2:
+            if i > ROW_ITEM_START:
                 if item.endswith("礼装"):
                     output = output + item + lines[0][item] + "-"
 
@@ -234,7 +235,7 @@ def output_ce_exp(lines):
         ce_exp_output = {item_shortname[k["id"]]: 0 for k in ce_exp_list}
         logger.debug("ce_exp_output: %s", ce_exp_output)
         for i, item in enumerate(lines[0].keys()):
-            if i > 2:
+            if i > ROW_ITEM_START:
                 if delete_brackets(item) in shortname2id.keys():
                     id = shortname2id[delete_brackets(item)]
                 elif delete_brackets(item) in name2id.keys():
@@ -269,7 +270,7 @@ def output_item(lines):
     qp_flag = False
     # 礼装以外のアイテム出力
     for i, item in enumerate(lines[0].keys()):
-        if i > 3:
+        if i > ROW_ITEM_START:
             if delete_brackets(item) in shortname2id.keys():
                 id = shortname2id[delete_brackets(item)]
             elif delete_brackets(item) in name2id.keys():
