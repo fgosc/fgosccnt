@@ -13,6 +13,7 @@ import math
 import datetime
 import logging
 from typing import Tuple, Union
+import io
 
 import cv2
 from numpy import ndarray
@@ -22,6 +23,8 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 
 import pageinfo
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf_8_sig')
 
 PROGNAME = "FGOスクショカウント"
 VERSION = "0.4.0"
