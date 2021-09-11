@@ -260,7 +260,7 @@ def output_ce_exp(lines):
                     break
 
 
-def otuput_item(lines):
+def output_item(lines):
     global output
     monyupi_flag = False
     skillstone_flag = False
@@ -269,7 +269,7 @@ def otuput_item(lines):
     qp_flag = False
     # 礼装以外のアイテム出力
     for i, item in enumerate(lines[0].keys()):
-        if i > 2:
+        if i > 3:
             if delete_brackets(item) in shortname2id.keys():
                 id = shortname2id[delete_brackets(item)]
             elif delete_brackets(item) in name2id.keys():
@@ -356,7 +356,7 @@ if __name__ == '__main__':
     output_header(lines)
     output_ce(lines)
     output_ce_exp(lines)
-    otuput_item(lines)
+    output_item(lines)
 
     print(output[:-1])
     print("#FGO周回カウンタ http://aoshirobo.net/fatego/rc/")

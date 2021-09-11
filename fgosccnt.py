@@ -2549,13 +2549,6 @@ def get_output(filenames, args):
                     drop_count = "item_count"
                     item_count = "item_count"
                 output = {'filename': str(filename), drop_count: sc.chestnum, item_count: sumdrop}
-                if sc.pagenum == 1:
-                    if sc.lines >= 7:
-                        output[item_count] = str(output[item_count]) + "++"
-                    elif sc.lines >= 4:
-                        output[item_count] = str(output[item_count]) + "+"
-                elif sc.pagenum == 2 and sc.lines >= 7:
-                    output[item_count] = str(output[item_count]) + "+"
 
             except Exception as e:
                 logger.error(filename)
@@ -2960,10 +2953,10 @@ if __name__ == '__main__':
             else:
                 questname = "SUM"
         a = {'filename': questname, drop_count: '', item_count: ''}
+        a.update(csv_sum)
         writer.writerow(a)
     for fo, cd in zip(fileoutput, csv_data):
         fo.update(cd)
-        logger.info(fo)
         writer.writerow(fo)
     if drop_count in fo.keys():  # issue: #55
         if len(fileoutput) > 1 and str(fo[drop_count]).endswith('+'):
