@@ -9,6 +9,7 @@ import re
 import logging
 
 import fgosccnt
+sys.stdin = open(sys.stdin.fileno(), 'r', encoding='utf_8_sig')
 
 logger = logging.getLogger(__name__)
 
@@ -336,7 +337,7 @@ def output_item(lines):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('infile', nargs='?', type=argparse.FileType(),
+    parser.add_argument('infile', nargs='?', type=argparse.FileType('r', encoding='utf_8_sig'),
                         default=sys.stdin)
     parser.add_argument('--place')
     parser.add_argument('--point', default='ポイント', help="'Point' item's name")
