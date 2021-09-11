@@ -180,7 +180,7 @@ def output_header(lines):
 
     # 周回数出力
     for i, item in enumerate(lines[0].keys()):
-        if i == 2:
+        if i == 3:
             output = lines[0][item] + "周\n"
             break
 
