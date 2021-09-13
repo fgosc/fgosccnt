@@ -77,13 +77,13 @@ def output_warning(lines):
     warning = ""
     for i, item in enumerate(lines):
         if item['filename'] == "missing":
-            warning = warning + "{}行目に missing なデータがあります\n".format(i+2)
+            warning = warning + "{}行目に missing (複数ページの撮影抜け)があります\n".format(i+2)
         elif item['filename'].endswith("not valid"):
-            warning = warning + "{}行目に not valid なデータがあります\n".format(i+2)
+            warning = warning + "{}行目に not valid (認識エラー)があります\n".format(i+2)
         elif item['filename'].endswith("not found"):
-            warning = warning + "{}行目に not found なデータがあります\n".format(i+2)
+            warning = warning + "{}行目に not found なスクショがあります\n".format(i+2)
         elif item['filename'].endswith("duplicate"):
-            warning = warning + "{}行目に重複したデータがあります\n".format(i+2)
+            warning = warning + "{}行目に直前と重複したスクショがあります\n".format(i+2)
 
     if warning != "":
         print("""###############################################
