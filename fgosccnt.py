@@ -504,7 +504,7 @@ class ScreenShot:
         # 相対座標(新UI)
         rx = self.find_notch()
         height, width = img.shape[:2]
-        if width/height > 16/8.99:
+        if width/height > 16/8.96:  # Issue #317
             dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
                            width - 495 - rx: width - 430 - int(rx*resize_scale)]
         else:
