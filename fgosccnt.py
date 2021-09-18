@@ -388,7 +388,7 @@ class ScreenShot:
         self.asr_y, self.actual_height = self.detect_scroll_bar()
 
         logger.debug("Total Drop (OCR): %d", self.chestnum)
-        item_pts = self.img2points()
+        item_pts = self.img2points(mode)
         logger.debug("item_pts:%s", item_pts)
 
         self.items = []
@@ -562,7 +562,7 @@ class ScreenShot:
         '''
         if self.pagenum == -1 or self.pages == -1 or self.lines == -1:
             return False
-        if self.pagenum == 1 or self.pages == 1 or self.lines == 0 and self.chestnum > 20:
+        if (self.pagenum == 1 and self.pages == 1 and self.lines == 0) and self.chestnum > 20:
             return False
         elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
             return False
@@ -968,7 +968,7 @@ class ScreenShot:
             item_pts.append(ptl)
         return item_pts
 
-    def img2points(self):
+    def img2points(self, mode):
         """
         戦利品左一列のY座標を求めて標準座標とのずれを補正して座標を出力する
         """
@@ -984,15 +984,24 @@ class ScreenShot:
 
         SCROLLBAR_WIDTH4ONEPAGE = 610
         POSITION_TOP = 16
-        POSITION_BOTTOM = 42
+        POSITION_BOTTOM_JP = 42  # JP
+        POSITION_BOTTOM_NA = 52  # NA
         SCROLL_OFFSET = 28
 
         if (self.asr_y == POSITION_TOP and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE) or self.actual_height == -1:
-            leftcell_pts = [[14, 97, 202, 303]]
+            # case: normal
+            if mode == "na":
+                leftcell_pts = [[25, 109, 214, 315]]
+            else:
+                leftcell_pts = [[14, 97, 202, 303]]
             item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
             return item_pts
-        elif self.asr_y == POSITION_BOTTOM and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE:
-            leftcell_pts = [[14, 97 - SCROLL_OFFSET, 202, 303 - SCROLL_OFFSET]]
+        elif POSITION_BOTTOM_JP <= self.asr_y <= POSITION_BOTTOM_NA and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE:
+            # case: scrolling down by mistake
+            if mode == "na":
+                leftcell_pts = [[25, 299, 214, 504]]
+            else:
+                leftcell_pts = [[14, 97 - SCROLL_OFFSET, 202, 303 - SCROLL_OFFSET]]
             item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
             return item_pts
 
