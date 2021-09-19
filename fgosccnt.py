@@ -33,9 +33,18 @@ DEFAULT_ITEM_LANG = "jpn"  # "jpn": japanese, "eng": English
 logger = logging.getLogger(__name__)
 
 
+class CustomAdapter(logging.LoggerAdapter):
+    """
+    この adapter を通した場合、自動的にログ出力文字列の先頭に [target] が挿入される。
+    target は adapter インスタンス生成時に確定させること。
+    """
+    def process(self, msg, kwargs):
+        return f"[{self.extra['target']}] {msg}", kwargs
+
+
 class Ordering(Enum):
     """
-        ファイルの処理順序を示す定数
+    ファイルの処理順序を示す定数
     """
     NOTSPECIFIED = 'notspecified'   # 指定なし
     FILENAME = 'filename'           # ファイル名
@@ -338,7 +347,8 @@ class ScreenShot:
     """
 
     def __init__(self, args, img_rgb, svm, svm_chest, svm_dcnt, svm_card,
-                 fileextention, reward_only=False):
+                 fileextention, exLogger, reward_only=False):
+        self.exLogger = exLogger
         threshold = 80
         try:
             self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
@@ -413,13 +423,12 @@ class ScreenShot:
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             dropitem = Item(args, i, prev_item, item_img_rgb, item_img_gray,
                             svm, svm_card, fileextention,
-                            self.current_dropPriority, mode)
+                            self.current_dropPriority, self.exLogger, mode)
             if dropitem.id == -1:
                 break
             self.current_dropPriority = item_dropPriority[dropitem.id]
             self.items.append(dropitem)
             prev_item = dropitem
-
         self.itemlist = self.makeitemlist()
         try:
             self.total_qp = self.get_qp(mode)
@@ -1081,7 +1090,7 @@ def generate_booty_pts(criteria_left, criteria_top, item_width, item_height,
 
 class Item:
     def __init__(self, args, pos, prev_item, img_rgb, img_gray, svm, svm_card,
-                 fileextention, current_dropPriority, mode='jp'):
+                 fileextention, current_dropPriority, exLogger, mode='jp'):
         self.position = pos
         self.prev_item = prev_item
         self.img_rgb = img_rgb
@@ -1090,6 +1099,7 @@ class Item:
         _, img_th = cv2.threshold(self.img_gray, 174, 255, cv2.THRESH_BINARY)
         self.img_th = cv2.bitwise_not(img_th)
         self.fileextention = fileextention
+        self.exLogger = exLogger
         self.dropnum_cache = []
         self.margin_left = 5
 
@@ -2466,6 +2476,8 @@ def get_output(filenames, args):
     all_list = []
 
     for filename in filenames:
+        exLogger = CustomAdapter(logger, {"target": filename})
+
         logger.debug("filename: %s", filename)
         f = Path(filename)
 
@@ -2484,7 +2496,7 @@ def get_output(filenames, args):
             try:
                 sc = ScreenShot(args, img_rgb,
                                 svm, svm_chest, svm_dcnt, svm_card,
-                                fileextention)
+                                fileextention, exLogger)
                 if sc.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
                     logger.warning(
                                    "Page count recognition is failing: %s",
