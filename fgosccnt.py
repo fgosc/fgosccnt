@@ -1999,44 +1999,56 @@ class Item:
         id を返すように変更
         """
         hash_item = self.hash_item  # 画像の距離
-        ids = {}
         if logger.isEnabledFor(logging.DEBUG):
             hex = ""
             for h in hash_item[0]:
                 hex = hex + "{:02x}".format(h)
             logger.debug("phash: %s", hex)
-        # 既存のアイテムとの距離を比較
-        for i in dist_item.keys():
-            itemid = dist_item[i]
-            item_bg = item_background[itemid]
-            d = hasher.compare(hash_item, hex2hash(i))
-            if d <= 13 and item_bg == self.background:
-                # ポイントと種の距離が8という例有り(IMG_0274)→16に
-                # バーガーと脂の距離が10という例有り(IMG_2354)→14に
-                ids[dist_item[i]] = d
-        if len(ids) > 0:
-            ids = sorted(ids.items(), key=lambda x: x[1])
-            id_tupple = next(iter(ids))
-            id = id_tupple[0]
-            if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
-                if currnet_dropPriority >= PRIORITY_SECRET_GEM_MIN:
-                    id = self.gem_img2id(img, dist_secret_gem)
+        def compare_distance(hash_item, background=True):
+            ids = {}
+            # 既存のアイテムとの距離を比較
+            for i in dist_item.keys():
+                itemid = dist_item[i]
+                item_bg = item_background[itemid]
+                d = hasher.compare(hash_item, hex2hash(i))
+                if background:
+                    if d <= 13 and item_bg == self.background:
+                        # ポイントと種の距離が8という例有り(IMG_0274)→16に
+                        # バーガーと脂の距離が10という例有り(IMG_2354)→14に
+                        ids[dist_item[i]] = d
                 else:
-                    return ""
-            elif ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
-                if currnet_dropPriority >= PRIORITY_MAGIC_GEM_MIN:
-                    id = self.gem_img2id(img, dist_magic_gem)
-                else:
-                    return ""
-            elif ID_GEM_MIN <= id <= ID_GEM_MAX:
-                if currnet_dropPriority >= PRIORITY_GEM_MIN:
-                    id = self.gem_img2id(img, dist_gem)
-                else:
-                    return ""
+                    if d <= 13:
+                        if dist_item[i] not in exclude_id:
+                            ids[dist_item[i]] = d
 
-            return id
+            if len(ids) > 0:
+                ids = sorted(ids.items(), key=lambda x: x[1])
+                id_tupple = next(iter(ids))
+                id = id_tupple[0]
+                if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
+                    if currnet_dropPriority >= PRIORITY_SECRET_GEM_MIN:
+                        id = self.gem_img2id(img, dist_secret_gem)
+                    else:
+                        return ""
+                elif ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
+                    if currnet_dropPriority >= PRIORITY_MAGIC_GEM_MIN:
+                        id = self.gem_img2id(img, dist_magic_gem)
+                    else:
+                        return ""
+                elif ID_GEM_MIN <= id <= ID_GEM_MAX:
+                    if currnet_dropPriority >= PRIORITY_GEM_MIN:
+                        id = self.gem_img2id(img, dist_gem)
+                    else:
+                        return ""
 
-        return ""
+                return id
+
+            return ""
+        id = compare_distance(hash_item, background=True)
+        if id == "":
+            id = compare_distance(hash_item, background=False)
+
+        return id
 
     def classify_ce_sub(self, img, hasher_prog, dist_dic, threshold):
         """
