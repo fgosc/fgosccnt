@@ -2018,8 +2018,7 @@ class Item:
                         ids[dist_item[i]] = d
                 else:
                     if d <= 13:
-                        if dist_item[i] not in exclude_id:
-                            ids[dist_item[i]] = d
+                        ids[dist_item[i]] = d
 
             if len(ids) > 0:
                 ids = sorted(ids.items(), key=lambda x: x[1])
