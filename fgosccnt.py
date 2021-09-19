@@ -436,7 +436,7 @@ class ScreenShot:
         except Exception as e:
             self.total_qp = -1
             self.qp_gained = -1
-            logger.warning("QP detection fails")
+            self.exLogger.warning("QP detection fails")
             logger.exception(e)
         if self.qp_gained > 0 and len(self.itemlist) == 0:
             raise GainedQPandDropMissMatchError
@@ -464,9 +464,9 @@ class ScreenShot:
                 if item_count != len(self.itemlist):
                     count_miss = True
         if count_miss:
-            logger.warning("drops_count is a mismatch:")
-            logger.warning("drops_count = %d", self.chestnum)
-            logger.warning("drops_found = %d", len(self.itemlist))
+            self.exLogger.warning("drops_count is a mismatch:")
+            self.exLogger.warning("drops_count = %d", self.chestnum)
+            self.exLogger.warning("drops_found = %d", len(self.itemlist))
 
     def find_notch(self):
         """
@@ -560,7 +560,7 @@ class ScreenShot:
             logger.debug("Can't find scroll bar")
             return -1, -1
         elif len(pts) > 1:
-            logger.warning("Too many objects.")
+            self.exLogger.warning("Too many objects.")
             return -1, -1
         else:
             return pt[1], pt[3] - pt[1]
@@ -582,7 +582,7 @@ class ScreenShot:
 
     def correct_pageinfo(self):
         if self.valid_pageinfo() is False:
-            logger.warning("pageinfo validation failed")
+            self.exLogger.warning("pageinfo validation failed")
             if self.asr_y == -1 or self.actual_height == -1:
                 return 1, 1, 0
             entire_height = 649
@@ -667,7 +667,7 @@ class ScreenShot:
 
         logger.debug('qp_total from text: %s', qp_total)
         if qp_total > self.max_qp:
-            logger.warning(
+            self.exLogger.warning(
                 "qp_total exceeds the system's maximum: %s", qp_total
             )
         if qp_total == 0:
