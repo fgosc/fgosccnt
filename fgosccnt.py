@@ -2389,7 +2389,8 @@ def calc_hist_score(hist1, hist2):
     return np.mean(scores)
 
 
-def img_hist(img):
+def img_hist(src_img):
+    img = cv2.cvtColor(src_img, cv2.COLOR_BGR2HSV)
     hist1 = cv2.calcHist([img], [0], None, [256], [0, 256])
     hist2 = cv2.calcHist([img], [1], None, [256], [0, 256])
     hist3 = cv2.calcHist([img], [2], None, [256], [0, 256])
