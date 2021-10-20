@@ -355,6 +355,9 @@ class ScreenShot:
         except pageinfo.TooManyAreasDetectedError:
             self.pagenum, self.pages, self.lines = (-1, -1, -1)
         self.img_rgb_orig = img_rgb
+        img_blue, img_green, img_red = cv2.split(img_rgb)
+        if (img_blue==img_green).all() & (img_green==img_red ).all():
+            raise ValueError("Input image is grayscale")
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         self.img_hsv_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
         _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
@@ -482,7 +485,7 @@ class ScreenShot:
             hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
             _, maxVal, _, maxLoc = cv2.minMaxLoc(hist)
-            if not (maxLoc[1] == target_color and maxVal > height * 0.4):
+            if not (maxLoc[1] == target_color and maxVal > height * 0.7):
                 break
 
         return rx
@@ -518,7 +521,7 @@ class ScreenShot:
                            width - 495 - rx: width - 430 - int(rx*resize_scale)]
         else:
             dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
-                           width - 430 - rx: width - 365 - int(rx*resize_scale)]
+                           width - 430: width - 365]
         if display:
             cv2.imshow('image', dcnt_new)
             cv2.waitKey(0)
