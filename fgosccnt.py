@@ -1000,23 +1000,6 @@ class ScreenShot:
         POSITION_BOTTOM_NA = 52  # NA
         SCROLL_OFFSET = 28
 
-        if (self.asr_y == POSITION_TOP and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE) or self.actual_height == -1:
-            # case: normal
-            if mode == "na":
-                leftcell_pts = [[25, 109, 214, 315]]
-            else:
-                leftcell_pts = [[14, 97, 202, 303]]
-            item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
-            return item_pts
-        elif POSITION_BOTTOM_JP <= self.asr_y <= POSITION_BOTTOM_NA and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE:
-            # case: scrolling down by mistake
-            if mode == "na":
-                leftcell_pts = [[25, 299, 214, 504]]
-            else:
-                leftcell_pts = [[14, 97 - SCROLL_OFFSET, 202, 303 - SCROLL_OFFSET]]
-            item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
-            return item_pts
-
         # 輪郭を抽出
         contours = cv2.findContours(img_1strow, cv2.RETR_TREE,
                                     cv2.CHAIN_APPROX_SIMPLE)[0]
@@ -1036,8 +1019,24 @@ class ScreenShot:
                         pts = [ret[0], ret[1],
                                ret[0] + ret[2], ret[1] + ret[3]]
                         leftcell_pts.append(pts)
-        item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
-        logger.debug("leftcell_pts: %s", leftcell_pts)
+        if len(leftcell_pts) != 0:
+            item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
+            logger.debug("leftcell_pts: %s", leftcell_pts)
+        else:
+            if (self.asr_y == POSITION_TOP and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE) or self.actual_height == -1:
+                # case: normal
+                if mode == "na":
+                    leftcell_pts = [[25, 109, 214, 315]]
+                else:
+                    leftcell_pts = [[14, 97, 202, 303]]
+                item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
+            elif POSITION_BOTTOM_JP <= self.asr_y <= POSITION_BOTTOM_NA and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE:
+                # case: scrolling down by mistake
+                if mode == "na":
+                    leftcell_pts = [[25, 299, 214, 504]]
+                else:
+                    leftcell_pts = [[14, 97 - SCROLL_OFFSET, 202, 303 - SCROLL_OFFSET]]
+                item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
 
         return item_pts
 
@@ -2007,6 +2006,7 @@ class Item:
             for h in hash_item[0]:
                 hex = hex + "{:02x}".format(h)
             logger.debug("phash: %s", hex)
+
         def compare_distance(hash_item, background=True):
             ids = {}
             # 既存のアイテムとの距離を比較
