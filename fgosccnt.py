@@ -590,9 +590,10 @@ class ScreenShot:
                 return 1, 1, 0
             entire_height = 649
             esr_y = 17
-            pagenum = pageinfo.guess_pagenum(self.asr_y, esr_y, entire_height)
-            pages = pageinfo.guess_pages(self.actual_height, entire_height)
-            lines = pageinfo.guess_lines(self.actual_height, entire_height)
+            cap_height = 14  # 正規化後の im.height を 1155 であると仮定して計算した値
+            pagenum = pageinfo.guess_pagenum(self.asr_y, esr_y, self.actual_height, entire_height, cap_height)
+            pages = pageinfo.guess_pages(self.actual_height, entire_height, cap_height)
+            lines = pageinfo.guess_lines(self.actual_height, entire_height, cap_height)
             return pagenum, pages, lines
         else:
             return self.pagenum, self.pages, self.lines
