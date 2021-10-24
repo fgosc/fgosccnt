@@ -70,6 +70,6 @@ params_check_page_mismatch = [
 ]
 
 
-@pytest.mark.parametrize("expected, items_total, chestnum, pagenum, pages, lines", params_check_page_mismatch)
-def test_check_page_mismatch(expected, items_total, chestnum, pagenum, pages, lines):
-    assert expected == fgosccnt.check_page_mismatch(items_total, chestnum, pagenum, pages, lines)
+@pytest.mark.parametrize("expected, page_items, chestnum, pagenum, pages, lines", params_check_page_mismatch)
+def test_check_page_mismatch(expected, page_items, chestnum, pagenum, pages, lines):
+    assert expected == fgosccnt.check_page_mismatch(page_items, chestnum, pagenum, pages, lines)
