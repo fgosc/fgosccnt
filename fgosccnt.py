@@ -511,7 +511,7 @@ class ScreenShot:
         dcnt_old = None
         if sc.state.screen_type == "normal":
             dcnt_old = img[int(self.y1*resize_scale) - 81: int(self.y1*resize_scale) - 44,
-                           int(self.x1*resize_scale) + 1446: int(self.x1*resize_scale) + 1490]
+                           int(self.x1*resize_scale) + 1446: int(self.x1*resize_scale) + 1505]
             if display:
                 cv2.imshow('image', dcnt_old)
                 cv2.waitKey(0)
@@ -521,10 +521,10 @@ class ScreenShot:
         height, width = img.shape[:2]
         if width/height > 16/8.96:  # Issue #317
             dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
-                           width - 495 - rx: width - 430 - int(rx*resize_scale)]
+                           width - 495 - rx: width - 415 - int(rx*resize_scale)]
         else:
             dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
-                           width - 430: width - 365]
+                           width - 430: width - 350]
         if display:
             cv2.imshow('image', dcnt_new)
             cv2.waitKey(0)
@@ -949,6 +949,10 @@ class ScreenShot:
             if item_pts[-1][0] - item_pts[-2][2] < char_w / (2 / 3):
                 res2 = self.img2num(img, img_th, item_pts[-2], char_w, end)
                 res = res2 * 10 + res
+                if len(item_pts) == 3:
+                    if item_pts[-2][0] - item_pts[-3][2] < char_w / (2 / 3):
+                        res3 = self.img2num(img, img_th, item_pts[-3], char_w, end)
+                        res = res3 * 100 + res2 * 10 + res
 
         return res
 
