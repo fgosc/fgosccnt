@@ -24,7 +24,6 @@ from PIL.ExifTags import TAGS
 
 import pageinfo
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf_8_sig')
 
 PROGNAME = "FGOスクショカウント"
 VERSION = "0.4.0"
@@ -341,6 +340,21 @@ def area_decision(frame_img: ndarray,
     return 'jp'
 
 
+def check_page_mismatch(page_items: int, chestnum: int, pagenum: int, pages: int, lines: int) -> bool:
+    if pages == 1:
+        if chestnum + 1 != page_items:
+            return False
+        return True
+
+    if not (pages - 1) * 21 <= chestnum <= pages * 21 - 1:
+        return False
+    if pagenum == pages:
+        item_count = chestnum - ((pages - 1) * 21 - 1) + (pages * 3 - lines) * 7
+        if item_count != page_items:
+            return False
+    return True
+
+
 class ScreenShot:
     """
     戦利品スクリーンショットを表すクラス
@@ -448,25 +462,14 @@ class ScreenShot:
             self.check_page_mismatch()
 
     def check_page_mismatch(self):
-        count_miss = False
-        if self.pages == 1:
-            if self.chestnum + 1 != len(self.itemlist):
-                count_miss = True
-        elif self.pages == 2:
-            if not 21 <= self.chestnum <= 41:
-                count_miss = True
-            if self.pagenum == 2:
-                item_count = self.chestnum - 20 + (6 - self.lines)*7
-                if item_count != len(self.itemlist):
-                    count_miss = True
-        elif self.pages == 3:
-            if not 42 <= self.chestnum <= 62:
-                count_miss = True
-            if self.pagenum == 3:
-                item_count = self.chestnum - 41 + (9 - self.lines)*7
-                if item_count != len(self.itemlist):
-                    count_miss = True
-        if count_miss:
+        valid = check_page_mismatch(
+            len(self.itemlist),
+            self.chestnum,
+            self.pagenum,
+            self.pages,
+            self.lines,
+        )
+        if not valid:
             self.exLogger.warning("drops_count is a mismatch:")
             self.exLogger.warning("drops_count = %d", self.chestnum)
             self.exLogger.warning("drops_found = %d", len(self.itemlist))
@@ -590,9 +593,10 @@ class ScreenShot:
                 return 1, 1, 0
             entire_height = 649
             esr_y = 17
-            pagenum = pageinfo.guess_pagenum(self.asr_y, esr_y, entire_height)
-            pages = pageinfo.guess_pages(self.actual_height, entire_height)
-            lines = pageinfo.guess_lines(self.actual_height, entire_height)
+            cap_height = 14  # 正規化後の im.height を 1155 であると仮定して計算した値
+            pagenum = pageinfo.guess_pagenum(self.asr_y, esr_y, self.actual_height, entire_height, cap_height)
+            pages = pageinfo.guess_pages(self.actual_height, entire_height, cap_height)
+            lines = pageinfo.guess_lines(self.actual_height, entire_height, cap_height)
             return pagenum, pages, lines
         else:
             return self.pagenum, self.pages, self.lines
@@ -2967,6 +2971,8 @@ if __name__ == '__main__':
         inputs = [x for x in Path(args.folder).glob(r"**/[!.]*")]
     else:
         inputs = args.filenames
+
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf_8_sig')
 
     inputs = sort_files(inputs, args.ordering)
     fileoutput, all_new_list = get_output(inputs, args)

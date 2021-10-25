@@ -27,6 +27,7 @@ import argparse
 import csv
 import enum
 import logging
+import math
 import os
 import sys
 
@@ -108,27 +109,34 @@ def detect_qp_region(im, mode=QPDetectionMode.JP.value, debug_draw_image=False, 
     for contour in filtered_contours:
         logger.debug('detected areas: %s', cv2.boundingRect(contour))
 
-    # 左右の無駄領域を除外するためのマージン。
-    #
-    # The position of the QP values in the NA version of the screenshot is
-    # slightly more to the right than in the JP version. This makes it
-    # difficult to apply the same cut position to both types of screenshots.
-    if mode == QPDetectionMode.NA.value:
-        # The values below are optimized for NA's new game screen layout.
-        # Old layout screenshots can also be applied, but may not cut well.
-        left_margin = 0.45
-        right_margin = 0.02
-    else:
-        # 感覚的な値ではあるが 左 42%, 右 4% を除外。
-        # 落とし穴として、2019年5月末 ～ 9月の間に所持 QP の出力位置が微妙に変わっている。
-        # ここではそのどちらのケースでも対応できるよう枠を広めに取っている。
-        # 現仕様に最適化して切り詰めすぎると困ったことになるため注意。
-        left_margin = 0.42
-        right_margin = 0.04
-
     if len(filtered_contours) == 1:
         qp_region = filtered_contours[0]
         x, y, w, h = cv2.boundingRect(qp_region)
+
+        wh_rate = w / h
+
+        # 左右の無駄領域を除外するためのマージン。
+        #
+        # The position of the QP values in the NA version of the screenshot is
+        # slightly more to the right than in the JP version. This makes it
+        # difficult to apply the same cut position to both types of screenshots.
+        if mode == QPDetectionMode.NA.value:
+            # The values below are optimized for NA's new game screen layout.
+            # Old layout screenshots can also be applied, but may not cut well.
+            left_margin = 0.45
+            right_margin = 0.02
+        else:
+            # イベントで所持 QP 枠が狭くなる場合、カットする領域を狭める必要がある。
+            if wh_rate < 9:
+                left_margin = 0.45
+                right_margin = 0.04
+            else:
+                # 感覚的な値ではあるが 左 42%, 右 4% を除外。
+                # 落とし穴として、2019年5月末 ～ 9月の間に所持 QP の出力位置が微妙に変わっている。
+                # ここではそのどちらのケースでも対応できるよう枠を広めに取っている。
+                # 現仕様に最適化して切り詰めすぎると困ったことになるため注意。
+                left_margin = 0.42
+                right_margin = 0.04
 
         topleft = (x + int(w*left_margin), y)
         bottomright = (topleft[0] + w - int(w*left_margin) - int(w*right_margin), y + h)
@@ -159,82 +167,115 @@ def detect_qp_region(im, mode=QPDetectionMode.JP.value, debug_draw_image=False, 
     return candidate
 
 
-def guess_pages(actual_height, entire_height):
+def guess_pages(actual_height, entire_height, cap_height):
     """
         スクロールバー領域の高さからドロップ枠が何ページあるか推定する
     """
-    if actual_height * 1.1 > entire_height:
+    inner_height = actual_height - cap_height * 2
+    ratio = inner_height / entire_height
+    logger.debug('guess_pages> inner_height: %s, entire_height: %s, ratio: %s', actual_height, entire_height, ratio)
+    if ratio > 0.8:
         return 1
-    if actual_height * 2.2 > entire_height:
+    elif ratio > 0.46:
         return 2
-    # 4 ページ以上 (ドロップ枠総数 > 63) になることはないと仮定。
-    return 3
+    elif ratio > 0.316:  # 9列のとき 0.361-0.364 くらい
+        return 3
+    elif ratio > 0.24:
+        return 4
+    elif ratio > 0.193:
+        return 5
+    # 高々 6 ページ (ドロップ枠総数 <= 125) と仮定。
+    return 6
 
 
-def guess_pagenum(actual_y, entire_y, entire_height):
+def guess_pagenum(actual_y, entire_y, actual_height, entire_height, cap_height):
     """
-        スクロールバー領域の y 座標の位置からドロップ画像のページ数を推定する
+        スクロールバーの y 座標の位置および高さからドロップ画像のページ数を推定する
     """
 
     # スクロールバーと上端との空き領域の縦幅 delta と
     # スクロール可能領域の縦幅 entire_height との比率で位置を推定する。
-    delta = actual_y - entire_y
+    delta = (actual_y + cap_height) - entire_y
+    inner_height = actual_height - cap_height * 2
+    height_ratio = inner_height / entire_height
     ratio = delta / entire_height
-    logger.debug('space above scrollbar: %s, entire_height: %s, ratio: %s', delta, entire_height, ratio)
-    if ratio < 0.1:
-        return 1
-    # 実測では 0.47-0.50 の間くらいになる。
-    # 7列3ページの3ページ目の値が 0.55 近辺なので、あまり余裕を持たせて大きくしすぎてもいけない。
-    # このあたりから 0.52 くらいが妥当な線ではないか。
-    if ratio < 0.52:
-        return 2
-    # 4 ページ以上になることはないと仮定。
-    return 3
+    logger.debug(
+        'guess_pagenum> space above scrollbar: %s, actual_y: %s, entire_y: %s, inner_height: %s, entire_height: %s, ratio: %s, height_ratio: %s, r/h = %s',
+        delta, actual_y, entire_y, inner_height, entire_height, ratio, height_ratio, ratio / height_ratio,
+    )
+    rh = ratio / height_ratio
+    # 単純な四捨五入だと最下段の処理でうまくいかない。
+    # 最下段は1行だけのこともあり、その場合はスクロールの量が少なくなるため。
+    # 切り上げのラインを低く設定するため独自に切り上げ処理を記述する。
+    # rh の小数部が 0.2 以上なら切り上げとする。
+    return int((rh * 5 + 4) / 5) + 1
 
 
-def guess_lines(actual_height, entire_height):
+def guess_lines(actual_height, entire_height, cap_height):
     """
         スクロールバー領域の高さからドロップ枠が何行あるか推定する
         スクロールバーを用いる関係上、原理的に 2 行以下は推定不可
     """
-    ratio = actual_height / entire_height
-    logger.debug('scrollbar ratio: %s', ratio)
-    if ratio > 0.90:    # 実測値 0.94
+    ratio = (actual_height - cap_height * 2) / entire_height
+    logger.debug('guess_lines> scrollbar ratio: %s', ratio)
+
+    if ratio > 0.90:
         return 3
-    elif ratio > 0.70:  # 実測値 0.72-0.73
+    elif ratio > 0.65:  # 実測値 0.688
         return 4
-    elif ratio > 0.57:  # 実測値 0.59-0.60
-        return 5
-    elif ratio > 0.48:  # 実測値 0.50-0.51
-        return 6
-    elif ratio > 0.42:  # 実測値 0.44
-        return 7
-    elif ratio > 0.38:  # 実測値 0.40-0.41
-        return 8
+    elif ratio > 0.53:   # 実測値 0.556
+        return 5    # -34
+    elif ratio > 0.44:   # 実測値 0.466
+        return 6    # -41
+    elif ratio > 0.39:  # 実測値 0.403-0.405
+        return 7    # -48
+    elif ratio > 0.34:  # 実測値 0.355-0.358
+        return 8    # -55
+    elif ratio > 0.31:  # 実測値 0.3192-0.3224
+        return 9    # -62
+    elif ratio > 0.285:  # 実測値 0.2909-0.2926
+        return 10   # -69
+    elif ratio > 0.262:  # 実測値 0.2669-0.2698
+        return 11   # -76
+    elif ratio > 0.245:
+        return 12   # -83
+    elif ratio > 0.228: 
+        return 13   # -90
+    elif ratio > 0.214:  # 実測値 0.2164-0.2203
+        return 14   # -97
+    elif ratio > 0.191:  # 実測値 0.1932-0.2132
+        return 15   # -104
     else:
-        # 10 行以上は考慮しない
-        return 9
+        # 15 行以上は考慮しない
+        return 16
 
 
-def filter_contour_scrollbar(contour, im):
+SCRB_LIKELY_SCROLLBAR = 1  # スクロールバーと推定
+SCRB_TOO_SMALL = 2  # 領域が小さすぎる
+SCRB_TOO_THICK = 3  # 領域の横幅が太すぎる
+
+
+def filter_contour_scrollbar(contour, im_height, im_width):
     """
         スクロールバー領域を拾い、それ以外を除外するフィルター
 
         適合する場合は contour オブジェクトを、適合しない場合は None を返す。
     """
-    im_h, im_w = im.shape[:2]
     # 画像全体に対する検出領域の面積比が一定以上であること。
     # 明らかに小さすぎる領域はここで捨てる。
-    if cv2.contourArea(contour) * 80 < im_w * im_h:
-        return None
+    if cv2.contourArea(contour) * 120 < im_height * im_width:
+        return SCRB_TOO_SMALL
+
     x, y, w, h = cv2.boundingRect(contour)
     logger.debug('scrollbar candidate: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
     # 縦長領域なので、幅に対して十分大きい高さになっていること。
-    if h < w * 5:
-        return None
+    if h < w * 3:
+        logger.debug("enough to high: height %s < width %s * 3", h, w)
+        return SCRB_TOO_THICK
+
     logger.debug('scrollbar region: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
     logger.debug('found')
-    return contour
+    return SCRB_LIKELY_SCROLLBAR
 
 
 def filter_contour_scrollable_area(contour, scrollbar_contour, im):
@@ -305,9 +346,19 @@ def filter_contour_scrollable_area(contour, scrollbar_contour, im):
 
 def _detect_scrollbar_region(im, binary_threshold):
     _, th1 = cv2.threshold(im, binary_threshold, 255, cv2.THRESH_BINARY)
-    contours, _ = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    filtered = [filter_contour_scrollbar(c, im) for c in contours]
-    return [c for c in filtered if c is not None]
+    contours, _ = cv2.findContours(th1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    im_height, im_width = im.shape[:2]
+
+    scrollbar = []
+    not_scrollbar = []
+
+    for c in contours:
+        result = filter_contour_scrollbar(c, im_height, im_width)
+        if result == SCRB_LIKELY_SCROLLBAR:
+            scrollbar.append(c)
+        elif result == SCRB_TOO_THICK:
+            not_scrollbar.append(c)
+    return scrollbar, not_scrollbar
 
 
 def _detect_scrollable_area(im, binary_threshold, scrollbar_contour):
@@ -332,7 +383,13 @@ def _likely_to_same_contour(contour0, contour1):
     return True
 
 
-def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, **kwargs):
+def _imwrite_debug(im, filename, suffix):
+    base, ext = os.path.splitext(filename)
+    name = f"{base}_{suffix}{ext}"
+    cv2.imwrite(name, im)
+
+
+def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, debug_image_name="", **kwargs):
     """
         スクロールバーおよびスクロール可能領域の検出
 
@@ -349,12 +406,17 @@ def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, **kwargs):
     # それを正とするのがよい。
     thresholds_for_entire = range(27, 15, -1)
 
-    actual_scrollbar_contours = _detect_scrollbar_region(im_gray, threshold_for_actual)
+    actual_scrollbar_contours, not_scrollbar_contours = _detect_scrollbar_region(im_gray, threshold_for_actual)
+    if im_orig_for_debug is not None and debug_image_name:
+        cv2.drawContours(im_orig_for_debug, not_scrollbar_contours, -1, (0.255, 64), 2)
+        _imwrite_debug(debug_image_name, im_orig_for_debug, "not_scrollbar")
+
     if len(actual_scrollbar_contours) == 0:
         return (None, None)
 
-    if im_orig_for_debug is not None and kwargs.get('draw_greenline'):
+    if im_orig_for_debug is not None:
         cv2.drawContours(im_orig_for_debug, actual_scrollbar_contours, -1, (0, 255, 0), 3)
+        _imwrite_debug(debug_image_name, im_orig_for_debug, "scrollbar")
 
     if len(actual_scrollbar_contours) > 1:
         n = len(actual_scrollbar_contours)
@@ -371,8 +433,9 @@ def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, **kwargs):
             continue
 
         if len(scrollable_area_contours) > 1:
-            if im_orig_for_debug is not None and kwargs.get('draw_blueline'):
+            if im_orig_for_debug is not None:
                 cv2.drawContours(im_orig_for_debug, scrollable_area_contours, -1, (255, 0, 0), 3)
+                _imwrite_debug(debug_image_name, im_orig_for_debug, "scrollable_areas")
 
             n = len(scrollable_area_contours)
             raise TooManyAreasDetectedError(f'{n} scrollable areas are detected')
@@ -386,16 +449,21 @@ def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, **kwargs):
             continue
         break
 
-    if im_orig_for_debug is not None \
-        and scrollable_area_contour is not None \
-            and kwargs.get('draw_blueline'):
+    if im_orig_for_debug is not None and scrollable_area_contour is not None:
         cv2.drawContours(im_orig_for_debug, [scrollable_area_contour], -1, (255, 0, 0), 3)
+        _imwrite_debug(debug_image_name, im_orig_for_debug, "scrollable_area")
 
     # thresholds_for_entire のすべての閾値でスクロール可能領域が検出できない
     # 場合は、そもそも元のスクロールバーが誤認識であった可能性が出てくる。
     # この場合 scrollable_area_contour は None になるが、その場合は呼び出し
     # 側でスクロールバー誤検出とみなすようにする。
     return actual_scrollbar_contour, scrollable_area_contour
+
+
+def _compute_scrollbar_cap_height(im_height):
+    cap_height = im_height * 0.0122
+    logger.debug("cap height: %s (%s)", int(cap_height), cap_height)
+    return int(cap_height)
 
 
 def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
@@ -408,7 +476,18 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
     # 縦4分割して4領域に分け、一番右の領域だけ使う。
     # スクロールバーの領域を調べたいならそれで十分。
     im_h, im_w = im.shape[:2]
-    cropped = im[0:im_h, int(im_w*3/4):im_w]
+    # 縦横比率が規定値を超える場合は上下カットが必要と判断する。
+    if im_h / im_w > 0.57:
+        cut_size = int(math.ceil(int(im_h - im_w * 0.56) / 2))
+        top = cut_size
+        bottom = im_h - cut_size
+    else:
+        cut_size = 0
+        top = 0
+        bottom = im_h
+
+    logger.debug('top, bottom = (%s, %s), cut_size = %s', top, bottom, cut_size)
+    cropped = im[top:bottom, int(im_w*3/4):im_w]
     cr_h, cr_w = cropped.shape[:2]
     logger.debug('cropped image size (for scrollbar): (width, height) = (%s, %s)', cr_w, cr_h)
     im_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
@@ -420,7 +499,7 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
 
     try:
         actual_scrollbar_region, scrollable_area_region = \
-            _try_to_detect_scrollbar(im_gray, im_orig_for_debug, **kwargs)
+            _try_to_detect_scrollbar(im_gray, im_orig_for_debug, debug_image_name=debug_image_name, **kwargs)
     finally:
         if debug_draw_image:
             logger.debug('writing debug image: %s', debug_image_name)
@@ -434,9 +513,10 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
     _, asr_y, _, asr_h = cv2.boundingRect(actual_scrollbar_region)
     _, esr_y, _, esr_h = cv2.boundingRect(scrollable_area_region)
 
-    pages = guess_pages(asr_h, esr_h)
-    pagenum = guess_pagenum(asr_y, esr_y, esr_h)
-    lines = guess_lines(asr_h, esr_h)
+    cap_height = _compute_scrollbar_cap_height(bottom - top)
+    pages = guess_pages(asr_h, esr_h, cap_height)
+    pagenum = guess_pagenum(asr_y, esr_y, asr_h, esr_h, cap_height)
+    lines = guess_lines(asr_h, esr_h, cap_height)
     return (pagenum, pages, lines)
 
 
@@ -449,11 +529,8 @@ def look_into_file_for_page(filename, im, args):
         logger.debug('debug image path: %s', debug_image)
     else:
         debug_image = None
-    kwargs = {
-        'draw_greenline': not args.debug_disable_greenline,
-        'draw_blueline': not args.debug_disable_blueline,
-    }
-    pagenum, pages, lines = guess_pageinfo(im, args.debug_sc, debug_image, **kwargs)
+
+    pagenum, pages, lines = guess_pageinfo(im, args.debug_sc, debug_image)
     logger.debug('pagenum: %s, pages: %s, lines: %s', pagenum, pages, lines)
     return (pagenum, pages, lines)
 
@@ -539,16 +616,6 @@ def parse_args():
 
     page_parser = subparsers.add_parser('page')
     add_common_arguments(page_parser)
-    page_parser.add_argument(
-        '--debug-disable-blueline',
-        action='store_true',
-        help='disable drawing blue line on sc image for debug',
-    )
-    page_parser.add_argument(
-        '--debug-disable-greenline',
-        action='store_true',
-        help='disable drawing green line on sc image for debug',
-    )
     page_parser.set_defaults(func=look_into_file_for_page)
 
     qp_parser = subparsers.add_parser('qp')
