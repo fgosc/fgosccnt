@@ -223,9 +223,9 @@ def guess_lines(actual_height, entire_height, cap_height):
         return 3
     elif ratio > 0.65:  # 実測値 0.688
         return 4
-    elif ratio > 0.53:   # 実測値 0.556
+    elif ratio > 0.53:  # 実測値 0.556
         return 5    # -34
-    elif ratio > 0.44:   # 実測値 0.466
+    elif ratio > 0.44:  # 実測値 0.466
         return 6    # -41
     elif ratio > 0.39:  # 実測値 0.403-0.405
         return 7    # -48
@@ -233,13 +233,13 @@ def guess_lines(actual_height, entire_height, cap_height):
         return 8    # -55
     elif ratio > 0.31:  # 実測値 0.3192-0.3224
         return 9    # -62
-    elif ratio > 0.285:  # 実測値 0.2909-0.2926
+    elif ratio > 0.284:  # 実測値 0.2909-0.2926
         return 10   # -69
-    elif ratio > 0.262:  # 実測値 0.2669-0.2698
+    elif ratio > 0.261:  # 実測値 0.2669-0.2698
         return 11   # -76
-    elif ratio > 0.245:
+    elif ratio > 0.244:  # 実測値 0.2471-0.2514
         return 12   # -83
-    elif ratio > 0.228: 
+    elif ratio > 0.225:  # 実測値 0.2302-0.2343
         return 13   # -90
     elif ratio > 0.214:  # 実測値 0.2164-0.2203
         return 14   # -97
@@ -383,7 +383,7 @@ def _likely_to_same_contour(contour0, contour1):
     return True
 
 
-def _imwrite_debug(im, filename, suffix):
+def _imwrite_debug(filename, im, suffix):
     base, ext = os.path.splitext(filename)
     name = f"{base}_{suffix}{ext}"
     cv2.imwrite(name, im)
@@ -404,7 +404,7 @@ def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, debug_image_name="
     # トライしていく。閾値が低くなるほど検出されやすいが、矩形がゆがみ
     # やすくなり、後の誤検出につながる。そのため、高い閾値で検出できれば
     # それを正とするのがよい。
-    thresholds_for_entire = range(27, 15, -1)
+    thresholds_for_entire = range(27, 13, -1)
 
     actual_scrollbar_contours, not_scrollbar_contours = _detect_scrollbar_region(im_gray, threshold_for_actual)
     if im_orig_for_debug is not None and debug_image_name:
