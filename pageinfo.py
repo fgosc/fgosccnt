@@ -30,12 +30,22 @@ import logging
 import math
 import os
 import sys
+from pathlib import Path
 
 import cv2
 
 logger = logging.getLogger(__name__)
+pageinfo_basedir = Path(__file__).parent
 
 NOSCROLL_PAGE_INFO = (1, 1, 0)
+
+SCRB_LIKELY_SCROLLBAR = 1  # スクロールバーと推定
+SCRB_TOO_SMALL = 2  # 領域が小さすぎる
+SCRB_TOO_THICK = 3  # 領域の横幅が太すぎる
+SCRB_TOO_FAR = 4    # 中央から遠すぎる
+
+GS_TYPE_1 = 1   # 旧画面
+GS_TYPE_2 = 2   # wide screen 対応画面。戦利品ウィンドウの位置が上にシフトした
 
 
 class QPDetectionMode(enum.Enum):
@@ -55,6 +65,10 @@ class PageInfoError(Exception):
 
 
 class TooManyAreasDetectedError(PageInfoError):
+    pass
+
+
+class UnsupportedGamescreenTypeError(PageInfoError):
     pass
 
 
@@ -250,12 +264,6 @@ def guess_lines(actual_height, entire_height, cap_height):
         return 16
 
 
-SCRB_LIKELY_SCROLLBAR = 1  # スクロールバーと推定
-SCRB_TOO_SMALL = 2  # 領域が小さすぎる
-SCRB_TOO_THICK = 3  # 領域の横幅が太すぎる
-SCRB_TOO_FAR = 4    # 中央から遠すぎる
-
-
 def _filter_contour_scrollbar(contour, im_height, im_width):
     """
         スクロールバー領域を拾い、それ以外を除外するフィルター
@@ -300,6 +308,24 @@ def _detect_scrollbar_region(im, binary_threshold):
     return scrollbar, not_scrollbar
 
 
+def get_gamescreen_type(im_cropped, button):
+    res = cv2.matchTemplate(im_cropped, button, cv2.TM_CCOEFF_NORMED)
+    _, _, _, coord = cv2.minMaxLoc(res)
+    logger.debug("next button: (top, left) = %s", coord)
+    y = coord[1]
+    button_bottom_pos = y + button.shape[0]
+    im_height = im_cropped.shape[0]
+    button_space_height = im_height - button_bottom_pos
+
+    bottom_space_ratio = button_space_height / im_height
+    logger.debug("buttom space ratio: %s", bottom_space_ratio)
+
+    # "次へ" ボタンの下の空間が大きければ wide screen 対応の画像
+    if bottom_space_ratio < 0.05:
+        return GS_TYPE_1
+    return GS_TYPE_2
+
+
 def _imwrite_debug(filename, im, suffix):
     base, ext = os.path.splitext(filename)
     name = f"{base}_{suffix}{ext}"
@@ -316,12 +342,6 @@ def _try_to_detect_scrollbar(im_gray, im_for_debug=None, debug_image_name="", **
     # 二値化の閾値を高めにするとスクロールバー本体の領域を検出できる。
     # 低めにするとスクロールバー可能領域を検出できる。
     threshold_for_actual = 65
-    # スクロール可能領域の判定は、単一の閾値ではどうやっても PNG/JPEG の
-    # 両方に対応するのが難しい。そこで、閾値にレンジを設けて高い方から順に
-    # トライしていく。閾値が低くなるほど検出されやすいが、矩形がゆがみ
-    # やすくなり、後の誤検出につながる。そのため、高い閾値で検出できれば
-    # それを正とするのがよい。
-    # thresholds_for_entire = range(27, 13, -1)
 
     actual_scrollbar_contours, not_scrollbar_contours = _detect_scrollbar_region(im_gray, threshold_for_actual)
     if im_for_debug is not None and debug_image_name:
@@ -329,7 +349,7 @@ def _try_to_detect_scrollbar(im_gray, im_for_debug=None, debug_image_name="", **
         _imwrite_debug(debug_image_name, im_for_debug, "not_scrollbar")
 
     if len(actual_scrollbar_contours) == 0:
-        return (None, None)
+        return None
 
     if im_for_debug is not None:
         cv2.drawContours(im_for_debug, actual_scrollbar_contours, -1, (0, 255, 0), 3)
@@ -342,11 +362,23 @@ def _try_to_detect_scrollbar(im_gray, im_for_debug=None, debug_image_name="", **
     return actual_scrollbar_contours[0]
 
 
-def _compute_scrollable_area_position_and_height(im_height):
+def _compute_scrollable_area_position_and_height(im_height, gamescreen_type):
     """
         画像の高さからスクロール可能領域のy座標位置と高さを計算して返す。
     """
-    return round(im_height * 0.122), round(im_height * 0.56)
+    if gamescreen_type == GS_TYPE_1:
+        vertical_position_rate = 0.174
+        height_rate = 0.557
+    elif gamescreen_type == GS_TYPE_2:
+        vertical_position_rate = 0.122
+        height_rate = 0.56
+    else:
+        raise UnsupportedGamescreenTypeError("unsupported gamescreen type: %s", gamescreen_type)
+
+    vertical_position = round(im_height * vertical_position_rate)
+    scrollable_area_height = round(im_height * height_rate)
+    logger.debug("scrollable area y position: %s, height: %s", vertical_position, scrollable_area_height)
+    return (vertical_position, scrollable_area_height)
 
 
 def _compute_scrollbar_cap_height(im_height):
@@ -379,7 +411,11 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
     cropped = im[top:bottom, int(im_w*3/4):im_w]
     cr_h, cr_w = cropped.shape[:2]
     logger.debug('cropped image size (for scrollbar): (width, height) = (%s, %s)', cr_w, cr_h)
-    im_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+    cropped_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+
+    next_button = cv2.imread(str(pageinfo_basedir / "data" / "pageinfo" / "next.png"))
+    next_button_gray = cv2.cvtColor(next_button, cv2.COLOR_BGR2GRAY)
+    gamescreen_type = get_gamescreen_type(cropped_gray, next_button_gray)
 
     if debug_draw_image:
         im_orig_for_debug = cropped
@@ -387,7 +423,7 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
         im_orig_for_debug = None
 
     try:
-        actual_scrollbar_region = _try_to_detect_scrollbar(im_gray, im_orig_for_debug, debug_image_name=debug_image_name, **kwargs)
+        actual_scrollbar_region = _try_to_detect_scrollbar(cropped_gray, im_orig_for_debug, debug_image_name=debug_image_name, **kwargs)
     finally:
         if debug_draw_image:
             logger.debug('writing debug image: %s', debug_image_name)
@@ -399,7 +435,7 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
 
     _, asr_y, _, asr_h = cv2.boundingRect(actual_scrollbar_region)
 
-    esr_y, esr_h = _compute_scrollable_area_position_and_height(cr_h)
+    esr_y, esr_h = _compute_scrollable_area_position_and_height(cr_h, gamescreen_type)
     cap_height = _compute_scrollbar_cap_height(bottom - top)
     pages = guess_pages(asr_h, esr_h, cap_height)
     pagenum = guess_pagenum(asr_y, esr_y, asr_h, esr_h, cap_height)
