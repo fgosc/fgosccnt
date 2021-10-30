@@ -253,6 +253,7 @@ def guess_lines(actual_height, entire_height, cap_height):
 SCRB_LIKELY_SCROLLBAR = 1  # スクロールバーと推定
 SCRB_TOO_SMALL = 2  # 領域が小さすぎる
 SCRB_TOO_THICK = 3  # 領域の横幅が太すぎる
+SCRB_TOO_FAR = 4    # 中央から遠すぎる
 
 
 def filter_contour_scrollbar(contour, im_height, im_width):
@@ -270,10 +271,14 @@ def filter_contour_scrollbar(contour, im_height, im_width):
     logger.debug('scrollbar candidate: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
     # 縦長領域なので、幅に対して十分大きい高さになっていること。
     if h < w * 3:
-        logger.debug("enough to high: height %s < width %s * 3", h, w)
+        logger.debug("NG: not enough to high: height %s < width %s * 3", h, w)
         return SCRB_TOO_THICK
 
-    logger.debug('scrollbar region: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
+    # 検出領域の x 座標が画面端よりも中央線に近いこと。
+    if abs(x - im_width / 2) > im_width / 4:
+        logger.debug("NG: far from center line: potition x = %s, width = %s, center = %s", x, im_width, im_width / 2)
+        return SCRB_TOO_FAR
+
     logger.debug('found')
     return SCRB_LIKELY_SCROLLBAR
 
@@ -332,13 +337,6 @@ def filter_contour_scrollable_area(contour, scrollbar_contour, im):
     if sw * 13 > ah:
         logger.debug('NG: approx height %s is less than scrollbar width %s * 13 = %s', ah, sw, sw * 13)
         return None
-    # TODO このアルゴリズムでは NA 版の昔の形式のスクリーンショットはうまく解釈できない。
-    # なぜなら、NA 版の昔の形式のスクリーンショットは幅がとても細いため、スクロールバーの
-    # 幅の16倍以下という条件をクリアできないから。
-    # 一時的にこの制限を外して検証してみるか？ 幅とx座標の位置を事前に検証済みなので
-    # 16倍以下の制限はなくてもいいかもしれない。
-    # if sw * 16 < ah:
-    #    return None
 
     logger.debug('found')
     return approx
