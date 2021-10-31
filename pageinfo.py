@@ -30,12 +30,22 @@ import logging
 import math
 import os
 import sys
+from pathlib import Path
 
 import cv2
 
 logger = logging.getLogger(__name__)
+pageinfo_basedir = Path(__file__).parent
 
 NOSCROLL_PAGE_INFO = (1, 1, 0)
+
+SCRB_LIKELY_SCROLLBAR = 1  # スクロールバーと推定
+SCRB_TOO_SMALL = 2  # 領域が小さすぎる
+SCRB_TOO_THICK = 3  # 領域の横幅が太すぎる
+SCRB_TOO_FAR = 4    # 中央から遠すぎる
+
+GS_TYPE_1 = 1   # 旧画面
+GS_TYPE_2 = 2   # wide screen 対応画面。戦利品ウィンドウの位置が上にシフトした
 
 
 class QPDetectionMode(enum.Enum):
@@ -55,6 +65,10 @@ class PageInfoError(Exception):
 
 
 class TooManyAreasDetectedError(PageInfoError):
+    pass
+
+
+class UnsupportedGamescreenTypeError(PageInfoError):
     pass
 
 
@@ -241,21 +255,16 @@ def guess_lines(actual_height, entire_height, cap_height):
         return 12   # -83
     elif ratio > 0.225:  # 実測値 0.2302-0.2343
         return 13   # -90
-    elif ratio > 0.214:  # 実測値 0.2164-0.2203
+    elif ratio > 0.215:  # 実測値 0.2164-0.2203
         return 14   # -97
-    elif ratio > 0.191:  # 実測値 0.1932-0.2132
+    elif ratio > 0.191:  # 実測値 0.1932-0.2142
         return 15   # -104
     else:
         # 15 行以上は考慮しない
         return 16
 
 
-SCRB_LIKELY_SCROLLBAR = 1  # スクロールバーと推定
-SCRB_TOO_SMALL = 2  # 領域が小さすぎる
-SCRB_TOO_THICK = 3  # 領域の横幅が太すぎる
-
-
-def filter_contour_scrollbar(contour, im_height, im_width):
+def _filter_contour_scrollbar(contour, im_height, im_width):
     """
         スクロールバー領域を拾い、それ以外を除外するフィルター
 
@@ -270,78 +279,16 @@ def filter_contour_scrollbar(contour, im_height, im_width):
     logger.debug('scrollbar candidate: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
     # 縦長領域なので、幅に対して十分大きい高さになっていること。
     if h < w * 3:
-        logger.debug("enough to high: height %s < width %s * 3", h, w)
+        logger.debug("NG: not enough to high: height %s < width %s * 3", h, w)
         return SCRB_TOO_THICK
 
-    logger.debug('scrollbar region: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
+    # 検出領域の x 座標が画面端よりも中央線に近いこと。
+    if abs(x - im_width / 2) > im_width / 4:
+        logger.debug("NG: far from center line: potition x = %s, width = %s, center = %s", x, im_width, im_width / 2)
+        return SCRB_TOO_FAR
+
     logger.debug('found')
     return SCRB_LIKELY_SCROLLBAR
-
-
-def filter_contour_scrollable_area(contour, scrollbar_contour, im):
-    """
-        スクロール可能領域を拾い、それ以外を除外するフィルター
-
-        適合する場合は contour オブジェクトを、適合しない場合は None を返す。
-        ただし contour オブジェクトは近似図形に補正されることがある。
-    """
-    im_w, im_h = im.shape[:2]
-    # 画像全体に対する検出領域の面積比が一定以上であること。
-    # 明らかに小さすぎる領域はここで捨てる。
-    if cv2.contourArea(contour) * 50 < im_w * im_h:
-        return None
-    x, y, w, h = cv2.boundingRect(contour)
-    logger.debug('scrollable area candidate: (x, y, width, height) = (%s, %s, %s, %s)', x, y, w, h)
-
-    sx, sy, sw, sh = cv2.boundingRect(scrollbar_contour)
-
-    # スクロールバーより高さが低いものはダメ
-    if h < sh:
-        logger.debug('NG: height %s is less than scrollbar %s', h, sh)
-        return None
-
-    # 長方形に近似する
-    epsilon = 0.05 * cv2.arcLength(contour, True)
-    approx = cv2.approxPolyDP(contour, epsilon, True)
-    ax, ay, aw, ah = cv2.boundingRect(approx)
-    logger.debug('approx rectangle: (x, y, width, height) = (%s, %s, %s, %s)', ax, ay, aw, ah)
-
-    # 近似図形の幅はスクロールバーの幅+5以下
-    if aw > sw + 5:
-        logger.debug('NG: approx width %s is greater than scrollbar %s + 5', aw, sw)
-        return None
-
-    # 近似図形の x 座標はスクロールバーの幅 + 10 に収まること
-    if ax < sx - 10:
-        logger.debug('NG: approx x %s is more left than scrollbar %s - 10 = %s', ax, sx, sx - 10)
-        return None
-    if ax > sx + sw + 10:
-        logger.debug('NG: approx x %s is more right than scrollbar %s + width %s + 10 = %s', ax, sx, sw, sx + sw + 10)
-        return None
-
-    # 近似図形の上端はスクロールバーよりも高い位置
-    if ay > sy:
-        logger.debug('NG: approx top position %s is under the scrollbar top %s', ay, sy)
-        return None
-    # 近似図形の下端はスクロールバーよりも低い位置
-    if ay + ah < sy + sh:
-        logger.debug('NG: approx bottom position %s is over the scrollbar bottom %s', ay + ah, sy + sh)
-        return None
-
-    # 近似図形の高さはスクロールバーの幅の13倍以上16倍以下
-    if sw * 13 > ah:
-        logger.debug('NG: approx height %s is less than scrollbar width %s * 13 = %s', ah, sw, sw * 13)
-        return None
-    # TODO このアルゴリズムでは NA 版の昔の形式のスクリーンショットはうまく解釈できない。
-    # なぜなら、NA 版の昔の形式のスクリーンショットは幅がとても細いため、スクロールバーの
-    # 幅の16倍以下という条件をクリアできないから。
-    # 一時的にこの制限を外して検証してみるか？ 幅とx座標の位置を事前に検証済みなので
-    # 16倍以下の制限はなくてもいいかもしれない。
-    # if sw * 16 < ah:
-    #    return None
-
-    logger.debug('found')
-    return approx
 
 
 def _detect_scrollbar_region(im, binary_threshold):
@@ -353,7 +300,7 @@ def _detect_scrollbar_region(im, binary_threshold):
     not_scrollbar = []
 
     for c in contours:
-        result = filter_contour_scrollbar(c, im_height, im_width)
+        result = _filter_contour_scrollbar(c, im_height, im_width)
         if result == SCRB_LIKELY_SCROLLBAR:
             scrollbar.append(c)
         elif result == SCRB_TOO_THICK:
@@ -361,26 +308,22 @@ def _detect_scrollbar_region(im, binary_threshold):
     return scrollbar, not_scrollbar
 
 
-def _detect_scrollable_area(im, binary_threshold, scrollbar_contour):
-    _, th1 = cv2.threshold(im, binary_threshold, 255, cv2.THRESH_BINARY)
-    contours, _ = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    filtered = [filter_contour_scrollable_area(c, scrollbar_contour, im) for c in contours]
-    return [c for c in filtered if c is not None]
+def get_gamescreen_type(im_cropped, button):
+    res = cv2.matchTemplate(im_cropped, button, cv2.TM_CCOEFF_NORMED)
+    _, _, _, coord = cv2.minMaxLoc(res)
+    logger.debug("next button: (top, left) = %s", coord)
+    y = coord[1]
+    button_bottom_pos = y + button.shape[0]
+    im_height = im_cropped.shape[0]
+    button_space_height = im_height - button_bottom_pos
 
+    bottom_space_ratio = button_space_height / im_height
+    logger.debug("buttom space ratio: %s", bottom_space_ratio)
 
-def _likely_to_same_contour(contour0, contour1):
-    x0, y0, w0, h0 = cv2.boundingRect(contour0)
-    x1, y1, w1, h1 = cv2.boundingRect(contour1)
-    threshold = 3
-    if abs(x1 - x0) > threshold:
-        return False
-    elif abs(y1 - y0) > threshold:
-        return False
-    elif abs(w1 - w0) > threshold:
-        return False
-    elif abs(h1 - h0) > threshold:
-        return False
-    return True
+    # "次へ" ボタンの下の空間が大きければ wide screen 対応の画像
+    if bottom_space_ratio < 0.05:
+        return GS_TYPE_1
+    return GS_TYPE_2
 
 
 def _imwrite_debug(filename, im, suffix):
@@ -389,7 +332,7 @@ def _imwrite_debug(filename, im, suffix):
     cv2.imwrite(name, im)
 
 
-def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, debug_image_name="", **kwargs):
+def _try_to_detect_scrollbar(im_gray, im_for_debug=None, debug_image_name="", **kwargs):
     """
         スクロールバーおよびスクロール可能領域の検出
 
@@ -399,65 +342,43 @@ def _try_to_detect_scrollbar(im_gray, im_orig_for_debug=None, debug_image_name="
     # 二値化の閾値を高めにするとスクロールバー本体の領域を検出できる。
     # 低めにするとスクロールバー可能領域を検出できる。
     threshold_for_actual = 65
-    # スクロール可能領域の判定は、単一の閾値ではどうやっても PNG/JPEG の
-    # 両方に対応するのが難しい。そこで、閾値にレンジを設けて高い方から順に
-    # トライしていく。閾値が低くなるほど検出されやすいが、矩形がゆがみ
-    # やすくなり、後の誤検出につながる。そのため、高い閾値で検出できれば
-    # それを正とするのがよい。
-    thresholds_for_entire = range(27, 13, -1)
 
     actual_scrollbar_contours, not_scrollbar_contours = _detect_scrollbar_region(im_gray, threshold_for_actual)
-    if im_orig_for_debug is not None and debug_image_name:
-        cv2.drawContours(im_orig_for_debug, not_scrollbar_contours, -1, (0.255, 64), 2)
-        _imwrite_debug(debug_image_name, im_orig_for_debug, "not_scrollbar")
+    if im_for_debug is not None and debug_image_name:
+        cv2.drawContours(im_for_debug, not_scrollbar_contours, -1, (0, 255, 64), 2)
+        _imwrite_debug(debug_image_name, im_for_debug, "not_scrollbar")
 
     if len(actual_scrollbar_contours) == 0:
-        return (None, None)
+        return None
 
-    if im_orig_for_debug is not None:
-        cv2.drawContours(im_orig_for_debug, actual_scrollbar_contours, -1, (0, 255, 0), 3)
-        _imwrite_debug(debug_image_name, im_orig_for_debug, "scrollbar")
+    if im_for_debug is not None:
+        cv2.drawContours(im_for_debug, actual_scrollbar_contours, -1, (0, 255, 0), 3)
+        _imwrite_debug(debug_image_name, im_for_debug, "scrollbar")
 
     if len(actual_scrollbar_contours) > 1:
         n = len(actual_scrollbar_contours)
         raise TooManyAreasDetectedError(f'{n} actual scrollbar areas are detected')
 
-    actual_scrollbar_contour = actual_scrollbar_contours[0]
+    return actual_scrollbar_contours[0]
 
-    scrollable_area_contour = None
-    for th in thresholds_for_entire:
-        scrollable_area_contours = _detect_scrollable_area(im_gray, th, actual_scrollbar_contour)
 
-        if len(scrollable_area_contours) == 0:
-            logger.debug(f'th {th}: scrollbar was found, but scrollable area is not found, retry')
-            continue
+def _compute_scrollable_area_position_and_height(im_height, gamescreen_type):
+    """
+        画像の高さからスクロール可能領域のy座標位置と高さを計算して返す。
+    """
+    if gamescreen_type == GS_TYPE_1:
+        vertical_position_rate = 0.174
+        height_rate = 0.557
+    elif gamescreen_type == GS_TYPE_2:
+        vertical_position_rate = 0.122
+        height_rate = 0.56
+    else:
+        raise UnsupportedGamescreenTypeError("unsupported gamescreen type: %s", gamescreen_type)
 
-        if len(scrollable_area_contours) > 1:
-            if im_orig_for_debug is not None:
-                cv2.drawContours(im_orig_for_debug, scrollable_area_contours, -1, (255, 0, 0), 3)
-                _imwrite_debug(debug_image_name, im_orig_for_debug, "scrollable_areas")
-
-            n = len(scrollable_area_contours)
-            raise TooManyAreasDetectedError(f'{n} scrollable areas are detected')
-
-        scrollable_area_contour = scrollable_area_contours[0]
-        same_contour = _likely_to_same_contour(actual_scrollbar_contour, scrollable_area_contour)
-        if same_contour:
-            # 同じ領域を検出してしまっている場合、誤検出とみなして
-            # 閾値を下げてリトライする
-            logger.debug(f'th {th}: seems to detect scrollbar as scrollable area, retry')
-            continue
-        break
-
-    if im_orig_for_debug is not None and scrollable_area_contour is not None:
-        cv2.drawContours(im_orig_for_debug, [scrollable_area_contour], -1, (255, 0, 0), 3)
-        _imwrite_debug(debug_image_name, im_orig_for_debug, "scrollable_area")
-
-    # thresholds_for_entire のすべての閾値でスクロール可能領域が検出できない
-    # 場合は、そもそも元のスクロールバーが誤認識であった可能性が出てくる。
-    # この場合 scrollable_area_contour は None になるが、その場合は呼び出し
-    # 側でスクロールバー誤検出とみなすようにする。
-    return actual_scrollbar_contour, scrollable_area_contour
+    vertical_position = round(im_height * vertical_position_rate)
+    scrollable_area_height = round(im_height * height_rate)
+    logger.debug("scrollable area y position: %s, height: %s", vertical_position, scrollable_area_height)
+    return (vertical_position, scrollable_area_height)
 
 
 def _compute_scrollbar_cap_height(im_height):
@@ -490,7 +411,11 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
     cropped = im[top:bottom, int(im_w*3/4):im_w]
     cr_h, cr_w = cropped.shape[:2]
     logger.debug('cropped image size (for scrollbar): (width, height) = (%s, %s)', cr_w, cr_h)
-    im_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+    cropped_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
+
+    next_button = cv2.imread(str(pageinfo_basedir / "data" / "pageinfo" / "next.png"))
+    next_button_gray = cv2.cvtColor(next_button, cv2.COLOR_BGR2GRAY)
+    gamescreen_type = get_gamescreen_type(cropped_gray, next_button_gray)
 
     if debug_draw_image:
         im_orig_for_debug = cropped
@@ -498,21 +423,19 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
         im_orig_for_debug = None
 
     try:
-        actual_scrollbar_region, scrollable_area_region = \
-            _try_to_detect_scrollbar(im_gray, im_orig_for_debug, debug_image_name=debug_image_name, **kwargs)
+        actual_scrollbar_region = _try_to_detect_scrollbar(cropped_gray, im_orig_for_debug, debug_image_name=debug_image_name, **kwargs)
     finally:
         if debug_draw_image:
             logger.debug('writing debug image: %s', debug_image_name)
             cv2.imwrite(debug_image_name, cropped)
 
-    if actual_scrollbar_region is None or scrollable_area_region is None:
-        # スクロールバーが検出できない or スクロールバー誤検出（と推定）
-        # どちらの場合もスクロールバーなしとして扱う。
+    # スクロールバーが検出できない
+    if actual_scrollbar_region is None:
         return NOSCROLL_PAGE_INFO
 
     _, asr_y, _, asr_h = cv2.boundingRect(actual_scrollbar_region)
-    _, esr_y, _, esr_h = cv2.boundingRect(scrollable_area_region)
 
+    esr_y, esr_h = _compute_scrollable_area_position_and_height(cr_h, gamescreen_type)
     cap_height = _compute_scrollbar_cap_height(bottom - top)
     pages = guess_pages(asr_h, esr_h, cap_height)
     pagenum = guess_pagenum(asr_y, esr_y, asr_h, esr_h, cap_height)
