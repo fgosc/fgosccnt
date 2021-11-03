@@ -2109,7 +2109,7 @@ class Item:
             itemid = dist_point[i]
             item_bg = item_background[itemid]
             d = hasher.compare(hash_item, hex2hash(i))
-            if d <= 15 and item_bg == self.background:
+            if d <= 16 and item_bg == self.background:
                 itemfiles[itemid] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
