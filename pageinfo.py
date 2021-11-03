@@ -222,7 +222,12 @@ def guess_pagenum(actual_y, entire_y, actual_height, entire_height, cap_height):
     # 最下段は1行だけのこともあり、その場合はスクロールの量が少なくなるため。
     # 切り上げのラインを低く設定するため独自に切り上げ処理を記述する。
     # rh の小数部が 0.2 以上なら切り上げとする。
-    return int((rh * 5 + 4) / 5) + 1
+    # ただし rh の整数部が大きい場合 (=ページ数が多い場合) は 0.2 でも
+    # 誤判定する可能性が出てくるため、切り上げラインを 0.1 にする。
+    if int(rh) < 3:
+        return int((rh * 5 + 4) / 5) + 1
+    else:
+        return int((rh * 10 + 9) / 10) + 1
 
 
 def guess_lines(actual_height, entire_height, cap_height):
