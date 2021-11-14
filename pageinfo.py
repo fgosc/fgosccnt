@@ -314,7 +314,13 @@ def _detect_scrollbar_region(im, binary_threshold):
 
 
 def get_gamescreen_type(im_cropped, button):
-    res = cv2.matchTemplate(im_cropped, button, cv2.TM_CCOEFF_NORMED)
+    try:
+        res = cv2.matchTemplate(im_cropped, button, cv2.TM_CCOEFF_NORMED)
+    except cv2.error:
+        # 次へボタンが検出できない場合は新画面であると仮定する。
+        # アプリの用途から考えて、旧画面の画像が投入される可能性はきわめてまれ。
+        return GS_TYPE_2
+
     _, _, _, coord = cv2.minMaxLoc(res)
     logger.debug("next button: (top, left) = %s", coord)
     y = coord[1]
@@ -325,7 +331,7 @@ def get_gamescreen_type(im_cropped, button):
     bottom_space_ratio = button_space_height / im_height
     logger.debug("buttom space ratio: %s", bottom_space_ratio)
 
-    # "次へ" ボタンの下の空間が大きければ wide screen 対応の画像
+    # "次へ" ボタンの下の空間が大きければ新画面
     if bottom_space_ratio < 0.05:
         return GS_TYPE_1
     return GS_TYPE_2
