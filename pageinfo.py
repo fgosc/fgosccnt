@@ -39,10 +39,11 @@ pageinfo_basedir = Path(__file__).parent
 
 NOSCROLL_PAGE_INFO = (1, 1, 0)
 
-SCRB_LIKELY_SCROLLBAR = 1  # スクロールバーと推定
+SCRB_LIKELY_SCROLLBAR = 1   # スクロールバーと推定
 SCRB_TOO_SMALL = 2  # 領域が小さすぎる
 SCRB_TOO_THICK = 3  # 領域の横幅が太すぎる
 SCRB_TOO_FAR = 4    # 中央から遠すぎる
+SCRB_TOO_MANY_VERTICES = 5  # 頂点が多すぎる
 
 GS_TYPE_1 = 1   # 旧画面
 GS_TYPE_2 = 2   # wide screen 対応画面。戦利品ウィンドウの位置が上にシフトした
@@ -291,6 +292,11 @@ def _filter_contour_scrollbar(contour, im_height, im_width):
     if abs(x - im_width / 2) > im_width / 4:
         logger.debug("NG: far from center line: potition x = %s, width = %s, center = %s", x, im_width, im_width / 2)
         return SCRB_TOO_FAR
+
+    # 頂点の数が多すぎないこと。
+    if len(contour) > 150:
+        logger.debug("NG: too many vertices: %s", len(contour))
+        return SCRB_TOO_MANY_VERTICES
 
     logger.debug('found')
     return SCRB_LIKELY_SCROLLBAR
