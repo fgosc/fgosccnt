@@ -32,7 +32,7 @@ import os
 import sys
 from pathlib import Path
 
-import cv2
+import cv2  # type: ignore
 
 logger = logging.getLogger(__name__)
 pageinfo_basedir = Path(__file__).parent
@@ -71,6 +71,39 @@ class TooManyAreasDetectedError(PageInfoError):
 
 class UnsupportedGamescreenTypeError(PageInfoError):
     pass
+
+
+def detect_side_black_margin(im_gray):
+    """
+        画像の左右にある黒領域を検出する。
+        それぞれの幅サイズを (右幅, 左幅) のタプルで返す。
+        余白がなければ (0, 0) を返す。
+    """
+    height, width = im_gray.shape[:2]
+    # 黒とみなす範囲: 0 に近いほど許容範囲が小さい
+    black_threshold = 5
+    # タップの軌跡などノイズが混入する可能性もあるので 5 % まではイレギュラーを許容する
+    black_ratio = 0.95
+
+    i = 0
+    while True:
+        black_pixels = sum([pixel < black_threshold for pixel in im_gray[:, i]])
+        if black_pixels / height < black_ratio:
+            break
+        i += 1
+
+    left_margin = i
+
+    j = 0
+    while True:
+        black_pixels = sum([pixel < black_threshold for pixel in im_gray[:, width - j - 1]])
+        if black_pixels / height < black_ratio:
+            break
+        j += 1
+
+    right_margin = j
+
+    return left_margin, right_margin
 
 
 def filter_contour_qp(contour, im):
@@ -411,12 +444,22 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
         スクロールバーがない場合は全体行数の推定は不可能。その場合は
         NOSCROLL_PAGE_INFO すなわち (1, 1, 0) を返す
     """
-    # 縦4分割して4領域に分け、一番右の領域だけ使う。
-    # スクロールバーの領域を調べたいならそれで十分。
     im_h, im_w = im.shape[:2]
+    logger.debug('image size: (width, height) = (%s, %s)', im_w, im_h)
+
+    im_gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    left_margin, right_margin = detect_side_black_margin(im_gray)
+    logger.debug('side margin: (left, right) = (%s, %s)', left_margin, right_margin)
+
+    # 左右に黒領域がある場合、まずこれを除去する。
+    left = left_margin
+    right = im_w - right_margin
+    net_width = right - left
+    logger.debug('net_width = %s', net_width)
+
     # 縦横比率が規定値を超える場合は上下カットが必要と判断する。
-    if im_h / im_w > 0.57:
-        cut_size = int(math.ceil(int(im_h - im_w * 0.56) / 2))
+    if im_h / net_width > 0.57:
+        cut_size = int(math.ceil(int(im_h - net_width * 0.56) / 2))
         top = cut_size
         bottom = im_h - cut_size
     else:
@@ -425,7 +468,9 @@ def guess_pageinfo(im, debug_draw_image=False, debug_image_name=None, **kwargs):
         bottom = im_h
 
     logger.debug('top, bottom = (%s, %s), cut_size = %s', top, bottom, cut_size)
-    cropped = im[top:bottom, int(im_w*3/4):im_w]
+    # 縦4分割して4領域に分け、一番右の領域だけ使う。
+    # スクロールバーの領域を調べたいならそれで十分。
+    cropped = im[top:bottom, int(net_width*3/4):net_width]
     cr_h, cr_w = cropped.shape[:2]
     logger.debug('cropped image size (for scrollbar): (width, height) = (%s, %s)', cr_w, cr_h)
     cropped_gray = cv2.cvtColor(cropped, cv2.COLOR_BGR2GRAY)
