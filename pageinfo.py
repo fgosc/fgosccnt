@@ -81,27 +81,28 @@ def detect_side_black_margin(im_gray):
     """
     height, width = im_gray.shape[:2]
     # 黒とみなす範囲: 0 に近いほど許容範囲が小さい
-    black_threshold = 5
+    black_threshold = 10
     # タップの軌跡などノイズが混入する可能性もあるので 5 % まではイレギュラーを許容する
     black_ratio = 0.95
 
-    i = 0
-    while True:
+    for i in range(width):
         black_pixels = sum([pixel < black_threshold for pixel in im_gray[:, i]])
         if black_pixels / height < black_ratio:
             break
-        i += 1
 
     left_margin = i
 
-    j = 0
-    while True:
+    for j in range(width):
         black_pixels = sum([pixel < black_threshold for pixel in im_gray[:, width - j - 1]])
         if black_pixels / height < black_ratio:
             break
-        j += 1
 
     right_margin = j
+
+    # 真っ黒画像の場合はマージンなしとする
+    if left_margin + right_margin >= width:
+        logger.warning("no margins: completely black image")
+        return 0, 0
 
     return left_margin, right_margin
 
