@@ -1682,8 +1682,8 @@ class Item:
         上段と下段の白文字を見つける機能を一つに統合
         [JP]Ver.2.37.0からボーナスがある場合の表示の仕様変更有り
         """
-        pattern_tiny = r"^[\+x][12]\d{4}00$"
-        pattern_tiny_qp = r"^\+[12]\d{4,5}00$"
+        pattern_tiny = r"^[\+x][1-9]\d{4}00$"
+        pattern_tiny_qp = r"^\+[1-9]\d{4,5}00$"
         pattern_small = r"^[\+x]\d{4}00$"
         pattern_small_qp = r"^\+\d{4,5}00$"
         pattern_normal = r"^[\+x][1-9]\d{0,5}$"
