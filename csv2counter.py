@@ -45,6 +45,8 @@ ID_FREEQUEST_MIN = 93000001
 ID_FREEQUEST_MAX = 93099999
 ID_SYUERNQUEST_MIN = 94006801
 ID_SYURENQUEST_MAX = 94061640
+ID_SYUERNQUEST_TMP_MIN = 94066101
+ID_SYURENQUEST_TMP_MAX = 94066199
 ROW_ITEM_START = 3
 
 output = ""
@@ -154,7 +156,8 @@ def output_header(lines):
         logger.debug("questid: %d", questid)
 
         if not (ID_FREEQUEST_MIN <= questid <= ID_FREEQUEST_MAX) \
-           and not (ID_SYUERNQUEST_MIN <= questid <= ID_SYURENQUEST_MAX):
+           and not (ID_SYUERNQUEST_MIN <= questid <= ID_SYURENQUEST_MAX) \
+           and not (ID_SYUERNQUEST_TMP_MIN <= questid <= ID_SYURENQUEST_TMP_MAX) :
            # 通常フリクエと修練場は除く
             logger.debug("フリクエでも修練場でもないクエスト")
             for fq in freequest:

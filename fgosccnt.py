@@ -97,6 +97,7 @@ ID_2ZORO_DICE = 94047708
 ID_3ZORO_DICE = 94047709
 ID_NORTH_AMERICA = 93000500
 ID_SYURENJYO = 94006800
+ID_SYURENJYO_TMP = 94066100
 ID_EVNET = 94000000
 TIMEOUT = 15
 QP_UNKNOWN = -1
@@ -2637,6 +2638,8 @@ def make_quest_output(quest):
         if math.floor(quest["id"]/100)*100 == ID_NORTH_AMERICA:
             output = quest["place"] + " " + quest["name"]
         elif math.floor(quest["id"]/100)*100 == ID_SYURENJYO:
+            output = quest["chapter"] + " " + quest["place"]
+        elif math.floor(quest["id"]/100)*100 == ID_SYURENJYO_TMP:
             output = quest["chapter"] + " " + quest["place"]
         elif math.floor(quest["id"]/100000)*100000 == ID_EVNET:
             output = quest["shortname"]
