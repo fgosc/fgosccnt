@@ -365,7 +365,8 @@ if __name__ == '__main__':
 
     print(output[:-1])
     print("#FGO周回カウンタ http://aoshirobo.net/fatego/rc/")
-    additional_list1 = ["最中", "団子", "煎餅"]  # 鎌倉イベ
+    additional_list1 = ["最中", "団子", "煎餅",  # 鎌倉イベ
+                        "クロック", "ラビット", "リーブス"]  # 事件簿
     additional_list2 = ["宝箱金", "宝箱銀", "宝箱銅"]  # 水着2021
     for item in additional_list1:
         if item in output:
