@@ -1997,7 +1997,7 @@ class Item:
         gems = {}
         for i in gem_dict.keys():
             d2 = hasher.compare(hash_gem, hex2hash(gem_dict[i]))
-            if d2 <= 20:
+            if d2 <= 21:
                 gems[i] = d2
         gems = sorted(gems.items(), key=lambda x: x[1])
         gem = next(iter(gems))
