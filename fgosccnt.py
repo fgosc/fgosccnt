@@ -479,10 +479,19 @@ class ScreenShot:
         """
         直線検出で検出されなかったフチ幅を検出
         """
-        edge_width = 150
+        edge_width = 200
 
         height, width = self.img_hsv_orig.shape[:2]
         target_color = 0
+        for lx in range(edge_width):
+            img_hsv_x = self.img_hsv_orig[:, lx: lx + 1]
+            # ヒストグラムを計算
+            hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
+            # 最小値・最大値・最小値の位置・最大値の位置を取得
+            _, maxVal, _, maxLoc = cv2.minMaxLoc(hist)
+            if not (maxLoc[1] == target_color and maxVal > height * 0.7):
+                break
+
         for rx in range(edge_width):
             img_hsv_x = self.img_hsv_orig[:, width - rx - 1: width - rx]
             # ヒストグラムを計算
@@ -492,7 +501,7 @@ class ScreenShot:
             if not (maxLoc[1] == target_color and maxVal > height * 0.7):
                 break
 
-        return rx
+        return lx, rx
 
     def drop_count_area(self, img: ndarray,
                         resize_scale,
@@ -518,14 +527,15 @@ class ScreenShot:
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
         # 相対座標(新UI)
-        rx = self.find_notch()
+        lx, rx = self.find_notch()
         height, width = img.shape[:2]
-        if width/height > 16/8.96:  # Issue #317
+        if (width - lx - rx)/height > 16/8.96:  # Issue #317
+            # Widescreen
             dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
                            width - 495 - rx: width - 415 - int(rx*resize_scale)]
         else:
             dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
-                           width - 430: width - 350]
+                           width - 430 - rx : width - 350 - rx]
         if display:
             cv2.imshow('image', dcnt_new)
             cv2.waitKey(0)
