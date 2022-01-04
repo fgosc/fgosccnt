@@ -2033,7 +2033,10 @@ class Item:
                 itemid = dist_item[i]
                 item_bg = item_background[itemid]
                 d = hasher.compare(hash_item, hex2hash(i))
-                if background:
+                if d <= 20 and dist_item[i] == 1:
+                    # QPの背景が誤認識することがあるので背景チェックを回避
+                    ids[dist_item[i]] = d
+                elif background:
                     if d <= 20 and item_bg == self.background:
                         # ポイントと種の距離が8という例有り(IMG_0274)→16に
                         # バーガーと脂の距離が10という例有り(IMG_2354)→14に
