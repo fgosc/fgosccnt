@@ -531,11 +531,11 @@ class ScreenShot:
         height, width = img.shape[:2]
         if (width - lx - rx)/height > 16/8.96:  # Issue #317
             # Widescreen
-            dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
+            dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 13,
                            width - 495 - rx: width - 415 - int(rx*resize_scale)]
         else:
-            dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 14,
-                           width - 430 - rx : width - 350 - rx]
+            dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 13,
+                           width - 430 - rx : width - 340 - rx]
         if display:
             cv2.imshow('image', dcnt_new)
             cv2.waitKey(0)
