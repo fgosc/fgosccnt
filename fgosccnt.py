@@ -914,7 +914,6 @@ class ScreenShot:
             newimg_th[height - 2, w] = 0
             newimg_th[height - 3, w] = 0
 
-        cv2.imwrite("char.png", newimg_th)
         res = self.pred_dcnt(newimg_th)
         return res
 
