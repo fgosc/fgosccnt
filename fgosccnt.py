@@ -1355,56 +1355,6 @@ class Item:
 
         return line, pts, font_size
 
-    def detect_bonus_char(self):
-        """
-        戦利品数OCRで下段の黄文字の座標を抽出する
-
-        HSVで黄色をマスクしてオブジェクト検出
-        ノイズは少なく精度はかなり良い
-        """
-
-        margin_top = int(self.height*0.72)
-        margin_bottom = int(self.height*0.11)
-        margin_left = 8
-        margin_right = 8
-
-        img_hsv_lower = self.img_hsv[margin_top: self.height - margin_bottom,
-                                     margin_left: self.width - margin_right]
-
-        h, w = img_hsv_lower.shape[:2]
-        # 手持ちスクショでうまくいっている範囲
-        # 黄文字がこの数値でマスクできるかが肝
-        # 未対応機種が発生したため[25,180,119] →[25,175,119]に変更
-        lower_yellow = np.array([25, 175, 119])
-        upper_yellow = np.array([37, 255, 255])
-
-        img_hsv_lower_mask = cv2.inRange(img_hsv_lower,
-                                         lower_yellow, upper_yellow)
-
-        contours = cv2.findContours(img_hsv_lower_mask, cv2.RETR_TREE,
-                                    cv2.CHAIN_APPROX_SIMPLE)[0]
-
-        bonus_pts = []
-        # 物体検出マスクがうまくいっているかが成功の全て
-        for cnt in contours:
-            ret = cv2.boundingRect(cnt)
-            area = cv2.contourArea(cnt)
-            pt = [ret[0] + margin_left, ret[1] + margin_top,
-                  ret[0] + ret[2] + margin_left, ret[1] + ret[3] + margin_top]
-
-            # ）が上下に割れることがあるので上の一つは消す
-            if ret[2] < int(w/2) and ret[1] < int(h*3/5) \
-               and ret[1] + ret[3] > h*0.65 and area > 3:
-                bonus_pts = self.conflictcheck(bonus_pts, pt)
-
-        bonus_pts.sort()
-        if len(bonus_pts) > 0:
-            if self.width - bonus_pts[-1][2] > int((22*self.width/188)):
-                # 黄文字は必ず右寄せなので最後の文字が画面端から離れている場合全部ゴミ
-                bonus_pts = []
-
-        return self.extension(bonus_pts)
-
     def define_fontsize(self, font_size):
         if font_size == FONTSIZE_NORMAL:
             cut_width = 20
@@ -1932,21 +1882,6 @@ class Item:
             self.bonus_pts = self.prev_item.bonus_pts
             self.bonus = self.prev_item.bonus
             self.font_size = self.prev_item.font_size
-        elif self.fileextention.lower() == '.png':
-            self.bonus_pts = self.detect_bonus_char()
-            self.bonus = self.read_item(self.bonus_pts)
-            # フォントサイズを決定
-            if len(self.bonus_pts) > 0:
-                y_height = self.bonus_pts[-1][3] - self.bonus_pts[-1][1]
-                logger.debug("y_height: %s", y_height)
-                if self.position >= 14:
-                    self.font_size = FONTSIZE_UNDEFINED
-                elif y_height < 25:
-                    self.font_size = FONTSIZE_TINY
-                elif y_height > 27:
-                    self.font_size = FONTSIZE_NORMAL
-                else:
-                    self.font_size = FONTSIZE_SMALL
         else:
             if mode == "jp":
                 self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg2(mode)
