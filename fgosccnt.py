@@ -2948,7 +2948,7 @@ if __name__ == '__main__':
     else:
         drop_count = 'drop_count'
         item_count = 'item_count'
-    if len(all_new_list) > 1:  # ファイル一つのときは合計値は出さない
+    if len(all_new_list) > 0:
         if questname == "":
             if args.lang == 'jpn':
                 questname = "合計"
