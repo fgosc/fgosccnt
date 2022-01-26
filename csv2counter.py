@@ -368,6 +368,7 @@ if __name__ == '__main__':
     additional_list1 = ["最中", "団子", "煎餅",  # 鎌倉イベ
                         "クロック", "ラビット", "リーブス"]  # 事件簿
     additional_list2 = ["宝箱金", "宝箱銀", "宝箱銅"]  # 水着2021
+    dropup_list = ["塵"]
     for item in additional_list1:
         if item in output:
             print("\n追加出現率 %")
@@ -375,4 +376,8 @@ if __name__ == '__main__':
     for item in additional_list2:
         if item in output:
             print("\n追加ドロップ率 %")
+            break
+    for item in dropup_list:
+        if item in output:
+            print(f"\n{item}泥UP %")
             break
