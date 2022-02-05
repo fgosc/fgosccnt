@@ -2796,7 +2796,7 @@ def make_csv_header(args, item_list):
         item_count = 'item_count'
         ce_str = 'CE'
     if item_list == [[]]:
-        return ['filename', drop_count], False, ""
+        return ['filename', drop_count, item_count], False, ""
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
