@@ -178,6 +178,9 @@ def output_header(lines):
             logger.debug("ce_list: %s", ce_list)
             logger.debug("ce_exp_list: %s", ce_exp_list)
     else:
+        if len(lines[1]) <= 3:
+            print("認識できるファイル(.JPG, .JPEG, or .PNG)がありません")
+            sys.exit(0)
         place = "周回場所"
     if args.place:
         place = args.place
