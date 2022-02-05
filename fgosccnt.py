@@ -2795,7 +2795,10 @@ def make_csv_header(args, item_list):
         drop_count = 'drop_count'
         item_count = 'item_count'
         ce_str = 'CE'
-    if item_list == [[]]:
+    sum_files = 0
+    for item in item_list:
+        sum_files += len(item)
+    if sum_files == 0:
         return ['filename', drop_count, item_count], False, ""
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
