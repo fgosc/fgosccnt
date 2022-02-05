@@ -2543,10 +2543,12 @@ def get_output(filenames, args):
                 if args.lang == "jpn":
                     drop_count = "ドロ数"
                     item_count = "アイテム数"
+                    gained_qp = "獲得QP合計"
                 else:
                     drop_count = "item_count"
                     item_count = "item_count"
-                output = {'filename': str(filename), drop_count: sc.chestnum, item_count: sumdrop}
+                    gained_qp = "gained_qp"
+                output = {'filename': str(filename), drop_count: sc.chestnum, item_count: sumdrop, gained_qp: sc.qp_gained}
 
             except Exception as e:
                 logger.error(filename)
@@ -2790,16 +2792,18 @@ def make_csv_header(args, item_list):
     if args.lang == 'jpn':
         drop_count = 'ドロ数'
         item_count = 'アイテム数'
+        gained_qp = '獲得QP合計'
         ce_str = '礼装'
     else:
         drop_count = 'drop_count'
         item_count = 'item_count'
+        gained_qp = 'gained_qp'
         ce_str = 'CE'
     sum_files = 0
     for item in item_list:
         sum_files += len(item)
     if sum_files == 0:
-        return ['filename', drop_count, item_count], False, ""
+        return ['filename', drop_count, item_count, gained_qp], False, ""
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
@@ -2856,7 +2860,7 @@ def make_csv_header(args, item_list):
         else:
             tmp = out_name(args, nlist['id'])
         header.append(tmp)
-    return ['filename', drop_count, item_count] + header, ce0_flag, quest_output
+    return ['filename', drop_count, item_count, gained_qp] + header, ce0_flag, quest_output
 
 
 def make_csv_data(args, sc_list, ce0_flag):
@@ -2948,16 +2952,18 @@ if __name__ == '__main__':
     if args.lang == 'jpn':
         drop_count = 'ドロ数'
         item_count = 'アイテム数'
+        gained_qp = '獲得QP合計'
     else:
         drop_count = 'drop_count'
         item_count = 'item_count'
+        gained_qp = 'gained_qp'
     if len(all_new_list) > 0:
         if questname == "":
             if args.lang == 'jpn':
                 questname = "合計"
             else:
                 questname = "SUM"
-        a = {'filename': questname, drop_count: '', item_count: ''}
+        a = {'filename': questname, drop_count: '', item_count: '', gained_qp: ''}
         a.update(csv_sum)
         writer.writerow(a)
     for fo, cd in zip(fileoutput, csv_data):
