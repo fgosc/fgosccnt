@@ -458,7 +458,9 @@ class ScreenShot:
             logger.exception(e)
         if self.qp_gained > 0 and len(self.itemlist) == 0:
             raise GainedQPandDropMissMatchError
+        logger.debug(f'pagenum(pageninfo) pagenum: {self.pagenum}, pages: {self.pages}, lines: {self.lines}')
         self.pagenum, self.pages, self.lines = self.correct_pageinfo()
+        logger.debug(f'pagenum(coreected) pagenum: {self.pagenum}, pages: {self.pages}, lines: {self.lines}')
         if not reward_only:
             self.check_page_mismatch()
 
@@ -602,7 +604,7 @@ class ScreenShot:
             self.exLogger.warning("pageinfo validation failed")
             if self.asr_y == -1 or self.actual_height == -1:
                 return 1, 1, 0
-            entire_height = 649
+            entire_height = 645
             esr_y = 17
             cap_height = 14  # 正規化後の im.height を 1155 であると仮定して計算した値
             pagenum = pageinfo.guess_pagenum(self.asr_y, esr_y, self.actual_height, entire_height, cap_height)
@@ -1850,7 +1852,7 @@ class Item:
         if prev_id == self.id \
                 and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
             # もしキャッシュ画像と一致したらOCRスキップ
-            logger.debug("dropnum_cache: %s", self.prev_item.dropnum_cache)
+            # logger.debug("dropnum_cache: %s", self.prev_item.dropnum_cache)
             for dropnum_cache in self.prev_item.dropnum_cache:
                 pts = dropnum_cache["pts"]
                 img_gray = self.img_gray[pts[0][1]-2:pts[1][1]+2,
