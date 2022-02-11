@@ -365,10 +365,6 @@ class ScreenShot:
                  fileextention, exLogger, reward_only=False):
         self.exLogger = exLogger
         threshold = 80
-        try:
-            self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb)
-        except pageinfo.TooManyAreasDetectedError:
-            self.pagenum, self.pages, self.lines = (-1, -1, -1)
         self.img_rgb_orig = img_rgb
         img_blue, img_green, img_red = cv2.split(img_rgb)
         if (img_blue==img_green).all() & (img_green==img_red ).all():
@@ -379,6 +375,14 @@ class ScreenShot:
                                             threshold, 255, cv2.THRESH_BINARY)
 
         ((self.x1, self.y1), (self.x2, self.y2)) = get_coodinates(self.img_rgb_orig)
+        # Remove the extra notch by centering
+        center = int((self.x2 - self.x1)/2 + self.x1)
+        half_width = min(center, img_rgb.shape[1] - center)
+        img_rgb_tmp = img_rgb[:, center - half_width:center + half_width]
+        try:
+            self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb_tmp)
+        except pageinfo.TooManyAreasDetectedError:
+            self.pagenum, self.pages, self.lines = (-1, -1, -1)
         frame_img: ndarray = self.img_rgb_orig[self.y1: self.y2, self.x1: self.x2]
         img_resize, resize_scale = standardize_size(frame_img)
         self.img_rgb = img_resize
