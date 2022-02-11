@@ -2197,10 +2197,12 @@ class Item:
         else:
             # ここで category が判別できないのは三行目かつ
             # スクロール位置の関係で下部表示が消えている場合
+            if hasattr(self.prev_item, 'category'):
+                if self.prev_item.category == "Point":
+                    id = self.classify_point(img)
+                    if id != "":
+                        return id
             id = self.classify_item(img, currnet_dropPriority)
-            if id != "":
-                return id
-            id = self.classify_point(img)
             if id != "":
                 return id
             id = self.classify_ce(img)
