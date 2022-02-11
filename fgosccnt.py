@@ -2074,6 +2074,33 @@ class Item:
 
         return ""
 
+    def classify_point_and_item(self, img):
+        """
+        imgとの距離を比較して近いアイテムを求める
+        """
+        hash_item = compute_hash(img)  # 画像の距離
+        itemfiles = {}
+        if logger.isEnabledFor(logging.DEBUG):
+            hex = ""
+            for h in hash_item[0]:
+                hex = hex + "{:02x}".format(h)
+            logger.debug("phash: %s", hex)
+        # 既存のアイテムとの距離を比較
+        dist_item_and_point = dict(**dist_point, **dist_item) 
+        for i in dist_item_and_point.keys():
+            itemid = dist_item_and_point[i]
+            item_bg = item_background[itemid]
+            d = hasher.compare(hash_item, hex2hash(i))
+            if d <= 20 and item_bg == self.background:
+                itemfiles[itemid] = d
+        if len(itemfiles) > 0:
+            itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
+            item = next(iter(itemfiles))
+
+            return item[0]
+
+        return ""
+
     def classify_exp(self, img):
         hash_item = self.compute_exp_rarity_hash(img)  # 画像の距離
         exps = {}
@@ -2197,12 +2224,7 @@ class Item:
         else:
             # ここで category が判別できないのは三行目かつ
             # スクロール位置の関係で下部表示が消えている場合
-            if hasattr(self.prev_item, 'category'):
-                if self.prev_item.category == "Point":
-                    id = self.classify_point(img)
-                    if id != "":
-                        return id
-            id = self.classify_item(img, currnet_dropPriority)
+            id = self.classify_point_and_item(img)
             if id != "":
                 return id
             id = self.classify_ce(img)
