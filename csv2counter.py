@@ -27,6 +27,9 @@ name2id = {
            for item in drop_item if "name" in item.keys()
            }
 id2type = {item["id"]: item["type"] for item in drop_item}
+# 未対応アイテムのための修正
+for i in range(20):
+    id2type[9500000 + i] = "Item"
 item_shortname = {item["id"]: item["shortname"] for item in drop_item
                   if "shortname" in item.keys()}
 fgosccnt.calc_dist_local()
