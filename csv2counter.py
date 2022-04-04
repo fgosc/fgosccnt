@@ -374,7 +374,7 @@ if __name__ == '__main__':
     additional_list1 = ["最中", "団子", "煎餅",  # 鎌倉イベ
                         "クロック", "ラビット", "リーブス"]  # 事件簿
     additional_list2 = ["宝箱金", "宝箱銀", "宝箱銅"]  # 水着2021
-    dropup_list = ["塵", "骨"]
+    dropup_list = ["塵", "牙", "骨"]
     for item in additional_list1 + additional_list2 + dropup_list:
         print()
         break
