@@ -64,6 +64,7 @@ train_card = basedir / Path("card.xml")  # card name
 drop_file = basedir / Path("fgoscdata/hash_drop.json")
 eventquest_dir = basedir / Path("fgoscdata/data/json/")
 items_img = basedir / Path("data/misc/items_img.png")
+bunyan_img = basedir / Path("data/misc/bunyan.png")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -82,6 +83,7 @@ PRIORITY_PIECE_MIN = 5194
 PRIORITY_REWARD_QP = 9012
 ID_START = 9500000
 ID_QP = 1
+ID_FP = 4
 ID_REWARD_QP = 5
 ID_GEM_MIN = 6001
 ID_GEM_MAX = 6007
@@ -348,6 +350,7 @@ def check_page_mismatch(page_items: int, chestnum: int, pagenum: int, pages: int
         return True
 
     if not (pages - 1) * 21 <= chestnum <= pages * 21 - 1:
+        logger.info("check1")
         return False
     if pagenum == pages:
         item_count = chestnum - ((pages - 1) * 21 - 1) + (pages * 3 - lines) * 7
@@ -429,11 +432,35 @@ class ScreenShot:
             # qpsplit.py で利用
             item_pts = item_pts[0:1]
         prev_item = None
+
+        # まんわか用イベント判定
+        template = cv2.imread(str(bunyan_img), 0)
+        item8th = self.img_gray[item_pts[8][1]:item_pts[8][3], item_pts[8][0]:item_pts[8][2]]
+        item15th = self.img_gray[item_pts[15][1]:item_pts[15][3], item_pts[15][0]:item_pts[15][2]]
+
+        res = cv2.matchTemplate(item15th, template, cv2.TM_CCOEFF_NORMED)
+        threshold = 0.70
+        loc = np.where(res >= threshold)
+        Bunyan15th = False
+        self.Bunyan8th = False
+        for pt in zip(*loc[::-1]):
+            Bunyan15th = True
+            break
+        if Bunyan15th is False:
+            res = cv2.matchTemplate(item8th, template, cv2.TM_CCOEFF_NORMED)
+            threshold = 0.70
+            loc = np.where(res >= threshold)
+            for pt in zip(*loc[::-1]):
+                self.Bunyan8th = True
+                break
+
         for i, pt in enumerate(item_pts):
+            if self.Bunyan8th and i == 14:
+                break
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
             logger.debug("lx: %d", lx)
-            item_img_th = self.img_th[pt[1] + 37: pt[3] - 30,
+            item_img_th = self.img_th[pt[1] + 37: pt[3] - 60,
                                       pt[0] + lx: pt[2] + lx]
             if self.is_empty_box(item_img_th):
                 break
@@ -449,8 +476,25 @@ class ScreenShot:
             if dropitem.id == -1:
                 break
             self.current_dropPriority = item_dropPriority[dropitem.id]
+            if self.Bunyan8th and i == 8:
+                dropitem.dropnum = 'x3'
+            elif Bunyan15th and i == 15:
+                dropitem.dropnum = 'x3'
             self.items.append(dropitem)
             prev_item = dropitem
+
+        if self.Bunyan8th:
+            lx, _ = self.find_edge(self.img_th[item_pts[14][1]: item_pts[14][3],
+                                            item_pts[14][0]: item_pts[14][2]], reverse=True)
+            item_img_rgb = self.img_rgb[item_pts[14][1]:  item_pts[14][3],
+                                        item_pts[14][0] + lx:  item_pts[14][2] + lx]
+            item_img_gray = self.img_gray[item_pts[14][1]: item_pts[14][3],
+                                        item_pts[14][0] + lx: item_pts[14][2] + lx]
+            dropitem = Item(args, i, prev_item, item_img_rgb, item_img_gray,
+                            svm, svm_card, fileextention,
+                            self.current_dropPriority, self.exLogger, mode)
+            self.items.append(dropitem)
+
         self.itemlist = self.makeitemlist()
         try:
             self.total_qp = self.get_qp(mode)
@@ -469,8 +513,12 @@ class ScreenShot:
             self.check_page_mismatch()
 
     def check_page_mismatch(self):
+        if self.Bunyan8th:
+            num_items = len(self.itemlist) -1
+        else:
+            num_items = len(self.itemlist)
         valid = check_page_mismatch(
-            len(self.itemlist),
+            num_items,
             self.chestnum,
             self.pagenum,
             self.pages,
@@ -598,7 +646,10 @@ class ScreenShot:
             return False
         elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
             return False
-        elif self.chestnum != -1 and self.pagenum != 1 \
+        elif self.Bunyan8th and self.chestnum != -1 and self.pagenum != 1 \
+                and self.lines != int(self.chestnum/7) + 2:
+            return False
+        elif self.Bunyan8th is False and self.chestnum != -1 and self.pagenum != 1 \
                 and self.lines != int(self.chestnum/7) + 1:
             return False
         return True
@@ -1803,7 +1854,7 @@ class Item:
         if lines.isdigit():
             if int(lines) == 0:
                 lines = "xErr"
-            elif self.name == "QP" or self.name == "クエストクリア報酬QP":
+            elif self.name == "QP" or self.name == "クエストクリア報酬QP" or self.name == "フレンドポイント":
                 lines = '+' + lines
             else:
                 if int(lines) >= 100:
@@ -2513,8 +2564,11 @@ def get_output(filenames, args):
                     td = datetime.timedelta(days=1)
                 else:
                     td = dt - prev_datetime
-                if sc.pages - sc.pagenum == 0:
-                    sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
+                if sc.Bunyan8th:
+                    sc.itemlist = sc.itemlist[7-(sc.lines+1) % 3*7:]
+                else:
+                    if sc.pages - sc.pagenum == 0:
+                        sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
                 if prev_itemlist == sc.itemlist:
                     if (sc.total_qp != -1 and sc.total_qp != 2000000000
                         and sc.total_qp == prev_total_qp) \
@@ -2742,6 +2796,8 @@ def deside_quest(item_list):
     for item in item_list:
         if item["id"] == ID_REWARD_QP:
             item_set.add("QP(+" + str(item["dropnum"]) + ")")
+        elif item["id"] == ID_FP:
+            continue
         elif item["id"] == 1 \
             or item["category"] == "Craft Essence" \
             or (9700 <= math.floor(item["id"]/1000) <= 9707
@@ -2775,6 +2831,8 @@ def quest_name_recognition(item_list):
         if item["id"] == ID_REWARD_QP:
             item_set.add("QP(+" + str(item["dropnum"]) + ")")
             reward_qp = item["dropnum"]
+        elif item["id"] == ID_FP:
+            continue
         elif item["id"] == 1 \
             or item["category"] == "Craft Essence" \
             or (9700 <= math.floor(item["id"]/1000) <= 9707
@@ -2879,7 +2937,7 @@ def make_csv_header(args, item_list):
     header = []
     for nlist in new_list:
         if nlist['category'] in ['Quest Reward', 'Point'] \
-           or nlist["name"] == "QP":
+           or nlist["name"] == "QP" or nlist["name"] == "フレンドポイント":
             tmp = out_name(args, nlist['id']) \
                   + "(+" + change_value(args, nlist["dropnum"]) + ")"
         elif nlist["dropnum"] > 1:
@@ -2902,7 +2960,7 @@ def make_csv_data(args, sc_list, ce0_flag):
         tmp = []
         for item in sc:
             if item['category'] in ['Quest Reward', 'Point'] \
-               or item["name"] == "QP":
+               or item["name"] == "QP" or item["name"] == "フレンドポイント":
                 tmp.append(out_name(args, item['id'])
                            + "(+" + change_value(args, item["dropnum"]) + ")")
             elif item["dropnum"] > 1:
