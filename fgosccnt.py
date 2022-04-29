@@ -440,7 +440,7 @@ class ScreenShot:
         item15th = self.img_gray[item_pts[15][1]:item_pts[15][3], item_pts[15][0]:item_pts[15][2]]
 
         res = cv2.matchTemplate(item15th, template, cv2.TM_CCOEFF_NORMED)
-        threshold = 0.70
+        threshold = 0.60
         loc = np.where(res >= threshold)
         Bunyan15th = False
         self.Bunyan8th = False
@@ -2105,7 +2105,7 @@ class Item:
         if itemid == "":
             logger.debug("use narrow image")
             itemid = self.classify_ce_sub(
-                        img, compute_hash_ce_narrow, dist_ce_narrow, 15
+                        img, compute_hash_ce_narrow, dist_ce_narrow, 20
                         )
         return itemid
 
