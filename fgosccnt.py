@@ -65,6 +65,7 @@ drop_file = basedir / Path("fgoscdata/hash_drop.json")
 eventquest_dir = basedir / Path("fgoscdata/data/json/")
 items_img = basedir / Path("data/misc/items_img.png")
 bunyan_img = basedir / Path("data/misc/bunyan.png")
+bunyan2_img = basedir / Path("data/misc/bunyan2.png")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -350,7 +351,6 @@ def check_page_mismatch(page_items: int, chestnum: int, pagenum: int, pages: int
         return True
 
     if not (pages - 1) * 21 <= chestnum <= pages * 21 - 1:
-        logger.info("check1")
         return False
     if pagenum == pages:
         item_count = chestnum - ((pages - 1) * 21 - 1) + (pages * 3 - lines) * 7
@@ -435,6 +435,7 @@ class ScreenShot:
 
         # まんわか用イベント判定
         template = cv2.imread(str(bunyan_img), 0)
+        template2 = cv2.imread(str(bunyan2_img), 0)
         item8th = self.img_gray[item_pts[8][1]:item_pts[8][3], item_pts[8][0]:item_pts[8][2]]
         item15th = self.img_gray[item_pts[15][1]:item_pts[15][3], item_pts[15][0]:item_pts[15][2]]
 
@@ -447,12 +448,21 @@ class ScreenShot:
             Bunyan15th = True
             break
         if Bunyan15th is False:
-            res = cv2.matchTemplate(item8th, template, cv2.TM_CCOEFF_NORMED)
-            threshold = 0.70
+            # 1回目
+            res = cv2.matchTemplate(item8th, template2, cv2.TM_CCOEFF_NORMED)
+            threshold = 0.68
             loc = np.where(res >= threshold)
             for pt in zip(*loc[::-1]):
                 self.Bunyan8th = True
                 break
+            # 2回目
+            if self.Bunyan8th is False:
+                res = cv2.matchTemplate(item8th, template, cv2.TM_CCOEFF_NORMED)
+                threshold = 0.70
+                loc = np.where(res >= threshold)
+                for pt in zip(*loc[::-1]):
+                    self.Bunyan8th = True
+                    break
 
         for i, pt in enumerate(item_pts):
             if self.Bunyan8th and i == 14:
@@ -2565,7 +2575,10 @@ def get_output(filenames, args):
                 else:
                     td = dt - prev_datetime
                 if sc.Bunyan8th:
-                    sc.itemlist = sc.itemlist[7-(sc.lines+1) % 3*7:]
+                    if sc.lines % 3 == 1:
+                        sc.itemlist = sc.itemlist[-1:]
+                    else:
+                        sc.itemlist = sc.itemlist[7-(sc.lines+1) % 3*7:]
                 else:
                     if sc.pages - sc.pagenum == 0:
                         sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
