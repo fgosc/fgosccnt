@@ -64,8 +64,7 @@ train_card = basedir / Path("card.xml")  # card name
 drop_file = basedir / Path("fgoscdata/hash_drop.json")
 eventquest_dir = basedir / Path("fgoscdata/data/json/")
 items_img = basedir / Path("data/misc/items_img.png")
-bunyan_img = basedir / Path("data/misc/bunyan.png")
-bunyan2_img = basedir / Path("data/misc/bunyan2.png")
+bunyan1_img = basedir / Path("data/misc/bunyan1.png")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -434,38 +433,19 @@ class ScreenShot:
         prev_item = None
 
         # まんわか用イベント判定
-        template = cv2.imread(str(bunyan_img), 0)
-        template2 = cv2.imread(str(bunyan2_img), 0)
-        item8th = self.img_gray[item_pts[8][1]:item_pts[8][3], item_pts[8][0]:item_pts[8][2]]
+        template1 = cv2.imread(str(bunyan1_img), 0)
         item15th = self.img_gray[item_pts[15][1]:item_pts[15][3], item_pts[15][0]:item_pts[15][2]]
 
-        res = cv2.matchTemplate(item15th, template, cv2.TM_CCOEFF_NORMED)
-        threshold = 0.60
+        res = cv2.matchTemplate(item15th, template1, cv2.TM_CCOEFF_NORMED)
+        threshold = 0.80
         loc = np.where(res >= threshold)
-        Bunyan15th = False
-        self.Bunyan8th = False
+        self.Bunyan = False
         for pt in zip(*loc[::-1]):
-            Bunyan15th = True
+            self.Bunyan = True
             break
-        if Bunyan15th is False:
-            # 1回目
-            res = cv2.matchTemplate(item8th, template2, cv2.TM_CCOEFF_NORMED)
-            threshold = 0.68
-            loc = np.where(res >= threshold)
-            for pt in zip(*loc[::-1]):
-                self.Bunyan8th = True
-                break
-            # 2回目
-            if self.Bunyan8th is False:
-                res = cv2.matchTemplate(item8th, template, cv2.TM_CCOEFF_NORMED)
-                threshold = 0.70
-                loc = np.where(res >= threshold)
-                for pt in zip(*loc[::-1]):
-                    self.Bunyan8th = True
-                    break
 
         for i, pt in enumerate(item_pts):
-            if self.Bunyan8th and i == 14:
+            if self.Bunyan and i == 14:
                 break
             lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
                                                pt[0]: pt[2]], reverse=True)
@@ -486,14 +466,13 @@ class ScreenShot:
             if dropitem.id == -1:
                 break
             self.current_dropPriority = item_dropPriority[dropitem.id]
-            if self.Bunyan8th and i == 8:
-                dropitem.dropnum = 'x3'
-            elif Bunyan15th and i == 15:
+            if dropitem.id in [94069601, 94069602, 94069603]:
+                # まんわかイベントのバニヤンに隠されているドロップが問題を生じるので補正
                 dropitem.dropnum = 'x3'
             self.items.append(dropitem)
             prev_item = dropitem
 
-        if self.Bunyan8th:
+        if self.Bunyan:
             lx, _ = self.find_edge(self.img_th[item_pts[14][1]: item_pts[14][3],
                                             item_pts[14][0]: item_pts[14][2]], reverse=True)
             item_img_rgb = self.img_rgb[item_pts[14][1]:  item_pts[14][3],
@@ -523,7 +502,7 @@ class ScreenShot:
             self.check_page_mismatch()
 
     def check_page_mismatch(self):
-        if self.Bunyan8th:
+        if self.Bunyan:
             num_items = len(self.itemlist) -1
         else:
             num_items = len(self.itemlist)
@@ -656,10 +635,10 @@ class ScreenShot:
             return False
         elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
             return False
-        elif self.Bunyan8th and self.chestnum != -1 and self.pagenum != 1 \
+        elif self.Bunyan and self.chestnum != -1 and self.pagenum != 1 \
                 and self.lines != int(self.chestnum/7) + 2:
             return False
-        elif self.Bunyan8th is False and self.chestnum != -1 and self.pagenum != 1 \
+        elif self.Bunyan is False and self.chestnum != -1 and self.pagenum != 1 \
                 and self.lines != int(self.chestnum/7) + 1:
             return False
         return True
@@ -2574,7 +2553,7 @@ def get_output(filenames, args):
                     td = datetime.timedelta(days=1)
                 else:
                     td = dt - prev_datetime
-                if sc.Bunyan8th:
+                if sc.Bunyan:
                     if sc.lines % 3 == 1:
                         sc.itemlist = sc.itemlist[-1:]
                     else:
