@@ -2080,7 +2080,7 @@ class Item:
         return ""
 
     def classify_ce(self, img):
-        itemid = self.classify_ce_sub(img, compute_hash_ce, dist_ce, 12)
+        itemid = self.classify_ce_sub(img, compute_hash_ce, dist_ce, 20)
         if itemid == "":
             logger.debug("use narrow image")
             itemid = self.classify_ce_sub(
