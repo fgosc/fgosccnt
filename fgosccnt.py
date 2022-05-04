@@ -2554,7 +2554,9 @@ def get_output(filenames, args):
                 else:
                     td = dt - prev_datetime
                 if sc.Bunyan:
-                    if sc.lines % 3 == 1:
+                    if sc.pages == 1:
+                        pass
+                    elif sc.lines % 3 == 1:
                         sc.itemlist = sc.itemlist[-1:]
                     else:
                         sc.itemlist = sc.itemlist[7-(sc.lines+1) % 3*7:]
