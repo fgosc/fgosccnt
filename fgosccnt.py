@@ -1287,7 +1287,7 @@ class Item:
         new_pts.reverse()
         return new_pts
 
-    def detect_bonus_char4jpg(self, mode):
+    def detect_bonus_char4jpg(self, mode="jp"):
         """
         [JP]Ver.2.37.0以前の仕様
         戦利品数OCRで下段の黄文字の座標を抽出する
@@ -1307,7 +1307,7 @@ class Item:
             margin_right = 20
         else:
             margin_right = 26
-        line, pts = self.get_number4jpg(base_line, margin_right, font_size)
+        line, pts = self.get_number4jpg(base_line, margin_right, font_size, mode)
         logger.debug("Read BONUS NORMAL: %s", line)
         m_normal = re.match(pattern_normal, line)
         if m_normal:
@@ -1319,7 +1319,7 @@ class Item:
         else:
             margin_right = 25
         font_size = FONTSIZE_SMALL
-        line, pts = self.get_number4jpg(base_line, margin_right, font_size)
+        line, pts = self.get_number4jpg(base_line, margin_right, font_size, mode)
         logger.debug("Read BONUS SMALL: %s", line)
         m_small = re.match(pattern_small, line)
         if m_small:
@@ -1331,7 +1331,7 @@ class Item:
             margin_right = 18
         else:
             margin_right = 26
-        line, pts = self.get_number4jpg(base_line, margin_right, font_size)
+        line, pts = self.get_number4jpg(base_line, margin_right, font_size, mode)
         logger.debug("Read BONUS TINY: %s", line)
         m_tiny = re.match(pattern_tiny, line)
         if m_tiny:
@@ -1401,25 +1401,39 @@ class Item:
 
         return line, pts, font_size
 
-    def define_fontsize(self, font_size):
-        if font_size == FONTSIZE_NORMAL:
-            cut_width = 20
-            cut_height = 28
-            comma_width = 9
-        elif font_size == FONTSIZE_SMALL:
-            cut_width = 18
-            cut_height = 25
-            comma_width = 8
+    def define_fontsize(self, font_size, mode="jp"):
+        if mode == "jp":
+            if font_size == FONTSIZE_NORMAL:
+                cut_width = 20
+                cut_height = 28
+                comma_width = 9
+            elif font_size == FONTSIZE_SMALL:
+                cut_width = 18
+                cut_height = 25
+                comma_width = 8
+            else:
+                cut_width = 16
+                cut_height = 22
+                comma_width = 6
         else:
-            cut_width = 16
-            cut_height = 22
-            comma_width = 6
+            if font_size == FONTSIZE_NORMAL:
+                cut_width = 18
+                cut_height = 25
+                comma_width = 8
+            elif font_size == FONTSIZE_SMALL:
+                cut_width = 18
+                cut_height = 25
+                comma_width = 8
+            else:
+                cut_width = 16
+                cut_height = 22
+                comma_width = 6
         return cut_width, cut_height, comma_width
 
-    def get_number4jpg(self, base_line, margin_right, font_size):
+    def get_number4jpg(self, base_line, margin_right, font_size, mode="jp"):
         """[JP]Ver.2.37.0以前の仕様
         """
-        cut_width, cut_height, comma_width = self.define_fontsize(font_size)
+        cut_width, cut_height, comma_width = self.define_fontsize(font_size, mode)
         top_y = base_line - cut_height
         # まず、+, xの位置が何桁目か調査する
         pts = []
@@ -1542,10 +1556,10 @@ class Item:
 
         return line, new_pts
 
-    def get_number(self, base_line, margin_right, font_size):
+    def get_number(self, base_line, margin_right, font_size, mode):
         """[JP]Ver.2.37.0以前の仕様
         """
-        cut_width, cut_height, comma_width = self.define_fontsize(font_size)
+        cut_width, cut_height, comma_width = self.define_fontsize(font_size, mode)
         top_y = base_line - cut_height
         # まず、+, xの位置が何桁目か調査する
         for i in range(8):  # 8桁以上は無い
@@ -1748,7 +1762,7 @@ class Item:
         else:
             # JP Ver.2.37.0以前の旧仕様
             if self.font_size != FONTSIZE_UNDEFINED:
-                line = self.get_number(base_line, margin_right, self.font_size)
+                line = self.get_number(base_line, margin_right, self.font_size, mode)
                 logger.debug("line: %s", line)
                 if len(line) <= 1:
                     return ""
@@ -1758,7 +1772,7 @@ class Item:
             else:
                 # 1-6桁の読み込み
                 font_size = FONTSIZE_NORMAL
-                line = self.get_number(base_line, margin_right, font_size)
+                line = self.get_number(base_line, margin_right, font_size, mode)
                 logger.debug("Read NORMAL: %s", line)
                 if self.id == ID_QP or self.category == "Point":
                     pattern_normal = pattern_normal_qp
@@ -1769,7 +1783,7 @@ class Item:
                     return line
                 # 6桁の読み込み
                 font_size = FONTSIZE_SMALL
-                line = self.get_number(base_line, margin_right, font_size)
+                line = self.get_number(base_line, margin_right, font_size, mode)
                 logger.debug("Read SMALL: %s", line)
                 if self.id == ID_QP or self.category == "Point":
                     pattern_small = pattern_small_qp
@@ -1780,7 +1794,7 @@ class Item:
                     return line
                 # 7桁読み込み
                 font_size = FONTSIZE_TINY
-                line = self.get_number(base_line, margin_right, font_size)
+                line = self.get_number(base_line, margin_right, font_size, mode)
                 logger.debug("Read TINY: %s", line)
                 if self.id == ID_QP or self.category == "Point":
                     pattern_tiny = pattern_tiny_qp
@@ -1967,7 +1981,7 @@ class Item:
             if dropnum_found is False:
                 # キャッシュのために画像を取得する
                 _, width = self.img_gray.shape
-                _, cut_height, _ = self.define_fontsize(self.font_size)
+                _, cut_height, _ = self.define_fontsize(self.font_size, mode)
                 logger.debug("base_line: %d", base_line)
                 logger.debug("cut_height: %d", cut_height)
                 logger.debug("margin_right: %d", margin_right)
@@ -1995,7 +2009,6 @@ class Item:
         return gem[0]
 
     def classify_item(self, img, currnet_dropPriority):
-
         """)
         imgとの距離を比較して近いアイテムを求める
         id を返すように変更
@@ -2014,7 +2027,7 @@ class Item:
                 itemid = dist_item[i]
                 item_bg = item_background[itemid]
                 d = hasher.compare(hash_item, hex2hash(i))
-                if d <= 20 and dist_item[i] == 1:
+                if (d <= 20 and dist_item[i] == 1) or (d <= 30 and self.background == "zero"):
                     # QPの背景が誤認識することがあるので背景チェックを回避
                     ids[dist_item[i]] = d
                 elif background:
@@ -2131,7 +2144,9 @@ class Item:
             itemid = dist_item_and_point[i]
             item_bg = item_background[itemid]
             d = hasher.compare(hash_item, hex2hash(i))
-            if d <= 20 and item_bg == self.background:
+            if d <= 30 and itemid == 1 and self.background == "zero":
+                itemfiles[itemid] = d
+            elif d <= 20 and item_bg == self.background:
                 itemfiles[itemid] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
