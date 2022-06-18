@@ -1418,7 +1418,7 @@ class Item:
         else:
             if font_size == FONTSIZE_NORMAL:
                 cut_width = 18
-                cut_height = 25
+                cut_height = 27
                 comma_width = 8
             elif font_size == FONTSIZE_SMALL:
                 cut_width = 18
@@ -1950,11 +1950,11 @@ class Item:
         logger.debug("Bonus Font Size: %s", self.font_size)
 
         # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
-        offsset_y = 2 if mode == 'na' else 0
+        offset_y = 0
         if (self.category in ["Quest Reward", "Point"] or self.name == "QP") \
            and len(self.bonus) >= 5:  # ボーナスは"(+*0)"なので
             # 1桁目の上部からの距離を設定
-            base_line = self.bonus_pts[-2][1] - 3 + offsset_y
+            base_line = self.bonus_pts[-2][1] - 3 + offset_y
         else:
             base_line = int(180/206*self.height)
 
