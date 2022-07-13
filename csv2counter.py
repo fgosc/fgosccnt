@@ -389,4 +389,3 @@ if __name__ == '__main__':
     for item in dropup_list:
         if item in output:
             print(f"{item}泥UP %")
-            break
