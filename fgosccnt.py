@@ -2282,9 +2282,6 @@ class Item:
             id = self.classify_point_and_item(img)
             if id != "":
                 return id
-            id = self.classify_ce(img)
-            if id != "":
-                return id
             id = self.classify_exp(img)
             if id != "":
                 return id
