@@ -29,6 +29,7 @@ def main(args):
                 except:
                     item_id = [k for k, v in item_name.items() if v == name][0]                    
             else:
+                print(name, flush=True)
                 item_id = [k for k, v in item_name.items() if v == name][0]
             # hash
             img = imread(file)
