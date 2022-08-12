@@ -80,6 +80,10 @@ def delete_brackets(s):
 
 def output_warning(lines):
     warning = ""
+    # 報酬QP数でエラーチェック
+    reward_qp = sum(x.startswith("報酬QP(") for x in lines[0].keys())
+    if reward_qp > 1:
+        warning += f"少なくとも{reward_qp}つのクエストの結果が混在しています\n"
     for i, item in enumerate(lines):
         if item['filename'] == "missing":
             warning = warning + "{}行目に missing (複数ページの撮影抜け)があります\n".format(i+2)
