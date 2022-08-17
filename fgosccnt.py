@@ -1590,11 +1590,7 @@ class Item:
         # 決まった位置まで出力する
         line = ""
         for j in range(i):
-            if (self.id == ID_REWARD_QP) and j < 1:
-                # 報酬QPの下一桁は0
-                line += '0'
-                continue
-            elif (self.name == "QP" or self.category in ["Point"]) and j < 2:
+            if (self.name == "QP" or self.category in ["Point"]) and j < 2:
                 # QPとPointは下二桁は00
                 line += '0'
                 continue
@@ -1662,11 +1658,8 @@ class Item:
         # 決まった位置まで出力する
         line = ""
         for j in range(i):
-            if (self.id == ID_REWARD_QP) and j < 1:
-                # 報酬QPの下一桁は0
-                line += '0'
-                continue
-            elif (self.name == "QP" or self.category in ["Point"]) and j < 2:
+            if (self.name == "QP" or self.category in ["Point"]) and j < 2:
+                logger.info("mohe")
                 # QPとPointは下二桁は00
                 line += '0'
                 continue
