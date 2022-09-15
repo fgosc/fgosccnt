@@ -101,9 +101,11 @@ ID_NORTH_AMERICA = 93000500
 ID_SYURENJYO = 94006800
 ID_SYURENJYO_TMP = 94066100
 ID_EVNET = 94000000
+ID_GREEN_TEA = 94074504
+ID_YELLOW_TEA = 94074505
+ID_RED_TEA = 94074506
 TIMEOUT = 15
 QP_UNKNOWN = -1
-
 
 class FgosccntError(Exception):
     pass
@@ -1204,7 +1206,8 @@ class Item:
                 and prev_item.background == self.background \
                 and not (ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX or
                          ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
-                         ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX):
+                         ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX or
+                         ID_GREEN_TEA <= prev_item.id <= ID_RED_TEA):
                 d = hasher.compare(self.hash_item, prev_item.hash_item)
                 if d <= 4:
                     self.category = prev_item.category
@@ -1659,7 +1662,6 @@ class Item:
         line = ""
         for j in range(i):
             if (self.name == "QP" or self.category in ["Point"]) and j < 2:
-                logger.info("mohe")
                 # QPとPointは下二桁は00
                 line += '0'
                 continue
@@ -1901,7 +1903,7 @@ class Item:
         if prev_id == self.id:
             self.dropnum_cache = self.prev_item.dropnum_cache
         if prev_id == self.id \
-                and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
+                and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX) and not (ID_GREEN_TEA <= self.id <= ID_RED_TEA):
             # もしキャッシュ画像と一致したらOCRスキップ
             # logger.debug("dropnum_cache: %s", self.prev_item.dropnum_cache)
             for dropnum_cache in self.prev_item.dropnum_cache:
@@ -2001,6 +2003,38 @@ class Item:
         gem = next(iter(gems))
         return gem[0]
 
+    def classify_red_or_yellow_tea(self, img):
+        def calc_hist(img):
+            # ヒストグラムを計算する。
+            hist = cv2.calcHist([img], channels=[0], mask=None, histSize=[256], ranges=[0, 256])
+            # ヒストグラムを正規化する。
+            hist = cv2.normalize(hist, hist, 0, 255, cv2.NORM_MINMAX)
+            # (n_bins, 1) -> (n_bins,)
+            hist = hist.squeeze(axis=-1)
+
+            return hist
+
+        def calc_hue_hist(img):
+            # HSV 形式に変換する。
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            # 成分ごとに分離する。
+            h, s, v = cv2.split(hsv)
+            # Hue 成分のヒストグラムを計算する。
+            hist = calc_hist(h)
+
+            return hist
+
+        red_tea_file = Path(__file__).resolve().parent / 'data/misc/red_tea.png'
+        img1 = imread(red_tea_file)
+        hist1 = calc_hue_hist(img1)
+        height, width = img.shape[:2]
+        hist2 = calc_hue_hist(img[80:height-63, 60:width-72])
+        score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
+        if score > 0.5:
+            return ID_RED_TEA
+
+        return ID_YELLOW_TEA
+
     def classify_item(self, img, currnet_dropPriority):
         """)
         imgとの距離を比較して近いアイテムを求める
@@ -2051,6 +2085,19 @@ class Item:
                         id = self.gem_img2id(img, dist_gem)
                     else:
                         return ""
+                elif id == ID_YELLOW_TEA:
+                    id = self.classify_red_or_yellow_tea(img)
+                    # logger.info("黄茶葉")
+
+                    # red_tea_file = Path(__file__).resolve().parent / 'data/misc/red_tea.png'
+                    # img1 = imread(red_tea_file)
+                    # hist1 = calc_red_hist(img1)
+                    # height, width = img.shape[:2]
+                    # hist2 = calc_red_hist(img[80:height-63, 60:width-72])
+                    # score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
+                    # logger.info(score)
+                    # if score > 0.5:
+                    #     return ID_RED_TEA
 
                 return id
 
@@ -2144,6 +2191,9 @@ class Item:
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
             item = next(iter(itemfiles))
+
+            if item[0] == ID_YELLOW_TEA:
+                return self.classify_red_or_yellow_tea(img)
 
             return item[0]
 
