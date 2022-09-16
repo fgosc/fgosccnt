@@ -2003,7 +2003,7 @@ class Item:
         gem = next(iter(gems))
         return gem[0]
 
-    def classify_red_or_yellow_tea(self, img):
+    def classify_tea(self, img):
         def calc_hist(img):
             # ヒストグラムを計算する。
             hist = cv2.calcHist([img], channels=[0], mask=None, histSize=[256], ranges=[0, 256])
@@ -2025,15 +2025,21 @@ class Item:
             return hist
 
         red_tea_file = Path(__file__).resolve().parent / 'data/misc/red_tea.png'
-        img1 = imread(red_tea_file)
-        hist1 = calc_hue_hist(img1)
+        yellow_tea_file = Path(__file__).resolve().parent / 'data/misc/yellow_tea.png'
+        img_red = imread(red_tea_file)
+        img_yellow = imread(yellow_tea_file)
+        hist_red = calc_hue_hist(img_red[81:124, 56:132])
         height, width = img.shape[:2]
-        hist2 = calc_hue_hist(img[80:height-63, 60:width-72])
-        score = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-        if score > 0.5:
+        hist_target = calc_hue_hist(img[81:124, 56:132])
+        score_red = cv2.compareHist(hist_red, hist_target, cv2.HISTCMP_CORREL)
+        if score_red > 0.5:
             return ID_RED_TEA
+        hist_yellow = calc_hue_hist(img_yellow[81:124, 56:132])
+        score_yellow = cv2.compareHist(hist_yellow, hist_target, cv2.HISTCMP_CORREL)
+        if score_yellow > 0.5:
+            return ID_YELLOW_TEA
 
-        return ID_YELLOW_TEA
+        return ID_GREEN_TEA
 
     def classify_item(self, img, currnet_dropPriority):
         """)
@@ -2085,8 +2091,8 @@ class Item:
                         id = self.gem_img2id(img, dist_gem)
                     else:
                         return ""
-                elif id == ID_YELLOW_TEA:
-                    id = self.classify_red_or_yellow_tea(img)
+                elif id == ID_YELLOW_TEA or id == ID_GREEN_TEA:
+                    id = self.classify_tea(img)
                     # logger.info("黄茶葉")
 
                     # red_tea_file = Path(__file__).resolve().parent / 'data/misc/red_tea.png'
@@ -2192,8 +2198,8 @@ class Item:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
             item = next(iter(itemfiles))
 
-            if item[0] == ID_YELLOW_TEA:
-                return self.classify_red_or_yellow_tea(img)
+            if item[0] == ID_YELLOW_TEA or item[0] == ID_GREEN_TEA:
+                return self.classify_tea(img)
 
             return item[0]
 
