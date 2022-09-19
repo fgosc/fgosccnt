@@ -2091,7 +2091,7 @@ class Item:
                         id = self.gem_img2id(img, dist_gem)
                     else:
                         return ""
-                elif id == ID_YELLOW_TEA or id == ID_GREEN_TEA:
+                elif id == ID_YELLOW_TEA or id == ID_GREEN_TEA or id == ID_RED_TEA:
                     id = self.classify_tea(img)
                     # logger.info("黄茶葉")
 
@@ -2198,7 +2198,7 @@ class Item:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
             item = next(iter(itemfiles))
 
-            if item[0] == ID_YELLOW_TEA or item[0] == ID_GREEN_TEA:
+            if item[0] == ID_YELLOW_TEA or item[0] == ID_GREEN_TEA or item[0] == ID_RED_TEA:
                 return self.classify_tea(img)
 
             return item[0]
