@@ -1019,10 +1019,16 @@ class ScreenShot:
         """
         オフセットを反映
         """
+        scroll_limit_uppler = 110
+        scroll_limit_lower = 285
+
         if len(pts) == 0:
             return std_pts
         # Y列でソート
         pts.sort(key=lambda x: x[1])
+        if scroll_limit_uppler < pts[0][1] < scroll_limit_lower:
+            raise ValueError("Incorrect scroll position.")
+
         if len(pts) > 1:  # fix #107
             if (pts[1][3] - pts[1][1]) - (pts[0][3] - pts[0][1]) > 0:
                 pts = pts[1:]
@@ -1051,6 +1057,7 @@ class ScreenShot:
         """
         戦利品左一列のY座標を求めて標準座標とのずれを補正して座標を出力する
         """
+        height_limit_first_item = 87
         std_pts = self.booty_pts()
 
         row_size = 7  # アイテム表示最大列
@@ -1080,7 +1087,7 @@ class ScreenShot:
                 approx = cv2.approxPolyDP(cnt, epsilon, True)
                 if 4 <= len(approx) <= 6:  # 六角形のみ認識
                     ret = cv2.boundingRect(cnt)
-                    if ret[1] > self.height * 0.15 - 101 \
+                    if ret[1] > height_limit_first_item \
                        and ret[1] + ret[3] < self.height * 0.76 - 101:
                         # 小数の数値はだいたいの実測
                         pts = [ret[0], ret[1],
