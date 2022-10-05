@@ -148,6 +148,7 @@ dist_exp_rarity_sold = {item["phash_rarity_sold"]: item["id"] for item
                         in drop_item if item["type"] == "Exp. UP"
                         and "phash_rarity_sold" in item.keys()}
 dist_exp_rarity.update(dist_exp_rarity_sold)
+dist_exp_rarity["1fe03fe0517fa0bf"] = 9701200  # fix #368
 dist_exp_class = {item["phash_class"]: item["id"] for item in drop_item
                   if item["type"] == "Exp. UP"
                   and "phash_class" in item.keys()}

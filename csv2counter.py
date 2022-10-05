@@ -277,11 +277,13 @@ def output_ce_exp(lines):
 
 def output_item(lines):
     global output
+    global output_items
     monyupi_flag = False
     skillstone_flag = False
     stditem_flag = False
     point_flag = False
     qp_flag = False
+    output_items = []
     # 礼装以外のアイテム出力
     for i, item in enumerate(lines[0].keys()):
         if i > ROW_ITEM_START:
@@ -344,6 +346,7 @@ def output_item(lines):
                 output = output + item + "_" + item_num + "-"
             else:
                 output = output + item + item_num + "-"
+                output_items.append(item)
     output = output.replace('ポイント(+', args.point + '(+')
 
 
@@ -394,17 +397,15 @@ if __name__ == '__main__':
     # 鎖 8102
     # 骨 8101
     # 証 8100
-    for item in additional_list1 + additional_list2 + dropup_list:
-        print()
-        break
+    print()
     for item in additional_list1:
-        if item in output:
+        if item in output_items:
             print("追加出現率 %")
             break
     for item in additional_list2:
-        if item in output:
+        if item in output_items:
             print("追加ドロップ率 %")
             break
     for item in dropup_list:
-        if item in output:
+        if item in output_items:
             print(f"{item}泥UP %")
