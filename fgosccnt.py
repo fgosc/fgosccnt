@@ -386,12 +386,9 @@ class ScreenShot:
         img_rgb_tmp = img_rgb[:, center - half_width:center + half_width]
         try:
             self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb_tmp)
-            if self.pages == 1 and self.lines > 3:
+            if self.lines / self.pages > 3:
                 logger.warning("The maximum number of lines has been exceeded")
-                self.lines = 3
-            elif self.pages == 2 and self.lines > 6:
-                logger.warning("The maximum number of lines has been exceeded")
-                self.lines = 6
+                self.lines = self.pages * 3
         except pageinfo.TooManyAreasDetectedError:
             self.pagenum, self.pages, self.lines = (-1, -1, -1)
         frame_img: ndarray = self.img_rgb_orig[self.y1: self.y2, self.x1: self.x2]
