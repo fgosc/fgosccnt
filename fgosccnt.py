@@ -224,12 +224,22 @@ class NaState(State):
         logger.debug("NA Standard Position")
 
 
+class NaOct2022(NaState):
+    def set_screen(self):
+        self.screen_type = "wide"
+
+    def set_max_qp(self):
+        self.max_qp = 2000000000
+        logger.debug("2,000,000,000")
+
+
 class Context:
     def __init__(self):
         self.jp_aug_2021 = JpAug2021()
         self.jp_nov_2020 = JpNov2020()
         self.jp = State()
         self.na = NaState()
+        self.na_oct2022 = NaOct2022()
         self.state = self.jp_aug_2021
         self.set_screen()
         self.set_font_size()
@@ -240,7 +250,7 @@ class Context:
         if mode == "jp":
             self.state = self.jp_aug_2021
         elif mode == "na":
-            self.state = self.na
+            self.state = self.na_oct2022
         else:
             raise ValueError("change_state method must be in {}".format(["jp", "na"]))
         self.set_screen()
