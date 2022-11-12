@@ -46,6 +46,7 @@ SCRB_TOO_FAR_FROM_CENTER = 4    # 中央から遠すぎる
 SCRB_TOO_MANY_VERTICES = 5  # 頂点が多すぎる
 SCRB_TOO_FAR_FROM_LEFT_EDGE = 6  # 左端から遠すぎる
 SCRB_TOO_CLOSE_TO_LEFT_EDGE = 7  # 左端に近すぎる
+SCRB_TOO_THIN = 8   # 領域の横幅が細すぎる
 
 GS_TYPE_1 = 1   # 旧画面
 GS_TYPE_2 = 2   # wide screen 対応画面。戦利品ウィンドウの位置が上にシフトした
@@ -343,6 +344,18 @@ def _filter_contour_scrollbar(contour, im_height, im_width):
         logger.debug("NG: not enough to high: height %s < width %s * 3", h, w)
         return SCRB_TOO_THICK
 
+    # 画面全体 (上下カット済み) の高さに対してスクロールバーの幅が一定の比率に収まること。
+    width_ratio = w / im_height
+    # NOTE: NA 版の細いスクロールバーを許容しようとすると閾値 0.035 では厳しい。
+    # NA/JP の情報をこの位置まで引き継ぐことができれば閾値をコントロールできるが...
+    if width_ratio < 0.020:
+        logger.debug("NG: too thin: width = %s, im_height = %s, ratio = %s", w, im_height, width_ratio)
+        return SCRB_TOO_THIN
+
+    if width_ratio > 0.045:
+        logger.debug("NG: too thick: width = %s, im_height = %s, ratio = %s", w, im_height, width_ratio)
+        return SCRB_TOO_THICK
+
     # 検出領域の x 座標が画面端よりも中央線に近いこと。
     # wide screen の場合は逆に端に寄ってしまう。wide screen かどうかを先に調べて、その場合は離れているかどうかをテストする。
     width_range = im_width / 4
@@ -376,8 +389,12 @@ def _filter_contour_scrollbar(contour, im_height, im_width):
 
     # 頂点の数が多すぎないこと。
     if len(contour) > 150:
-        logger.debug("NG: too many vertices: %s", len(contour))
-        return SCRB_TOO_MANY_VERTICES
+        # 背景の影響でジャギーなラインになってしまうケースがあるため、シンプルな形状に近似する
+        epsilon = 0.01 * cv2.arcLength(contour, True)
+        approx = cv2.approxPolyDP(contour, epsilon, True)
+        if len(approx) > 50:
+            logger.debug("NG: too many vertices: %s", len(approx))
+            return SCRB_TOO_MANY_VERTICES
 
     logger.debug('found')
     return SCRB_LIKELY_SCROLLBAR
