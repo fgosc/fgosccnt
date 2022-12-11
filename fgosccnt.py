@@ -333,7 +333,7 @@ def area_decision(frame_img: ndarray,
                   display: bool = False) -> str:
     """
     FGOアプリの地域を選択
-    'na', 'jp'に対応
+    "na", 'jp'に対応
 
     'items_img.png' とのオブジェクトマッチングで判定
     """
@@ -352,7 +352,7 @@ def area_decision(frame_img: ndarray,
     threshold = 0.9
     loc = np.where(res >= threshold)
     for pt in zip(*loc[::-1]):
-        return 'na'
+        return "na"
     return 'jp'
 
 
@@ -1321,16 +1321,18 @@ class Item:
         # QP,ポイントはボーナス6桁のときに高さが変わる
         # それ以外は3桁のときに変わるはず(未確認)
         # ここのmargin_right はドロップ数の下一桁目までの距離
-        base_line = 181 if mode == "na" else 179
+        # base_line = 181 if mode == "na" else 179
+        base_line = 179
         pattern_tiny = r"^\(\+\d{4,5}0\)$"
         pattern_small = r"^\(\+\d{5}0\)$"
         pattern_normal = r"^\(\+[1-9]\d*\)$"
         # 1-5桁の読み込み
         font_size = FONTSIZE_NORMAL
-        if mode == 'na':
-            margin_right = 20
-        else:
-            margin_right = 26
+        # if mode == "na":
+        #     margin_right = 20
+        # else:
+        #     margin_right = 26
+        margin_right = 26
         line, pts = self.get_number4jpg(base_line, margin_right, font_size, mode)
         logger.debug("Read BONUS NORMAL: %s", line)
         m_normal = re.match(pattern_normal, line)
@@ -1338,10 +1340,11 @@ class Item:
             logger.debug("Font Size: %d", font_size)
             return line, pts, font_size
         # 6桁の読み込み
-        if mode == 'na':
-            margin_right = 19
-        else:
-            margin_right = 25
+        # if mode == "na":
+        #     margin_right = 19
+        # else:
+        #     margin_right = 25
+        margin_right = 25
         font_size = FONTSIZE_SMALL
         line, pts = self.get_number4jpg(base_line, margin_right, font_size, mode)
         logger.debug("Read BONUS SMALL: %s", line)
@@ -1351,10 +1354,11 @@ class Item:
             return line, pts, font_size
         # 7桁読み込み
         font_size = FONTSIZE_TINY
-        if mode == 'na':
-            margin_right = 18
-        else:
-            margin_right = 26
+        # if mode == "na":
+        #     margin_right = 18
+        # else:
+        #     margin_right = 26
+        margin_right = 26
         line, pts = self.get_number4jpg(base_line, margin_right, font_size, mode)
         logger.debug("Read BONUS TINY: %s", line)
         m_tiny = re.match(pattern_tiny, line)
@@ -1379,15 +1383,17 @@ class Item:
         # QP,ポイントはボーナス6桁のときに高さが変わる
         # それ以外は3桁のときに変わるはず(未確認)
         # ここのmargin_right はドロップ数の下一桁目までの距離
-        base_line = 181 if mode == "na" else 179
+        # base_line = 181 if mode == "na" else 179
+        base_line = 179
         pattern_tiny = r"^\(\+\d{4,5}0\)$"
         pattern_small = r"^\(\+\d{5}0\)$"
         pattern_normal = r"^\(\+[1-9]\d*\)$"
         font_size = FONTSIZE_NEWSTYLE
-        if mode == 'na':
-            margin_right = 20
-        else:
-            margin_right = 26
+        # if mode == "na":
+        #     margin_right = 20
+        # else:
+        #     margin_right = 26
+        margin_right = 26
         # 1-5桁の読み込み
         cut_width = 21
         comma_width = 5
@@ -1426,32 +1432,44 @@ class Item:
         return line, pts, font_size
 
     def define_fontsize(self, font_size, mode="jp"):
-        if mode == "jp":
-            if font_size == FONTSIZE_NORMAL:
-                cut_width = 20
-                cut_height = 28
-                comma_width = 9
-            elif font_size == FONTSIZE_SMALL:
-                cut_width = 18
-                cut_height = 25
-                comma_width = 8
-            else:
-                cut_width = 16
-                cut_height = 22
-                comma_width = 6
+        # if mode == "jp":
+        #     if font_size == FONTSIZE_NORMAL:
+        #         cut_width = 20
+        #         cut_height = 28
+        #         comma_width = 9
+        #     elif font_size == FONTSIZE_SMALL:
+        #         cut_width = 18
+        #         cut_height = 25
+        #         comma_width = 8
+        #     else:
+        #         cut_width = 16
+        #         cut_height = 22
+        #         comma_width = 6
+        # else:
+        #     if font_size == FONTSIZE_NORMAL:
+        #         cut_width = 18
+        #         cut_height = 27
+        #         comma_width = 8
+        #     elif font_size == FONTSIZE_SMALL:
+        #         cut_width = 18
+        #         cut_height = 25
+        #         comma_width = 8
+        #     else:
+        #         cut_width = 16
+        #         cut_height = 22
+        #         comma_width = 6
+        if font_size == FONTSIZE_NORMAL:
+            cut_width = 20
+            cut_height = 28
+            comma_width = 9
+        elif font_size == FONTSIZE_SMALL:
+            cut_width = 18
+            cut_height = 25
+            comma_width = 8
         else:
-            if font_size == FONTSIZE_NORMAL:
-                cut_width = 18
-                cut_height = 27
-                comma_width = 8
-            elif font_size == FONTSIZE_SMALL:
-                cut_width = 18
-                cut_height = 25
-                comma_width = 8
-            else:
-                cut_width = 16
-                cut_height = 22
-                comma_width = 6
+            cut_width = 16
+            cut_height = 22
+            comma_width = 6
         return cut_width, cut_height, comma_width
 
     def get_number4jpg(self, base_line, margin_right, font_size, mode="jp"):
@@ -1726,7 +1744,8 @@ class Item:
         pattern_normal = r"^[\+x][1-9]\d{0,5}$"
         pattern_normal_qp = r"^\+[1-9]\d{0,4}0$"
         logger.debug("base_line: %d", base_line)
-        if mode == "jp" and base_line < 170:
+#        if mode == "jp" and base_line < 170:
+        if base_line < 170:
             # JP Ver.2.37.0以降の新仕様
             # 1-6桁の読み込み
             font_size = FONTSIZE_NEWSTYLE
@@ -1765,7 +1784,8 @@ class Item:
                 logger.debug("Font Size: %d", font_size)
                 self.font_size = font_size
                 return line
-        elif mode == "jp" and self.id not in [ID_QP, ID_REWARD_QP] and self.category != "Point":
+        # elif mode == "jp" and self.id not in [ID_QP, ID_REWARD_QP] and self.category != "Point":
+        elif self.id not in [ID_QP, ID_REWARD_QP] and self.category != "Point":
             cut_width = 21
             comma_width = 5
             line = self.get_number2(cut_width, comma_width, base_line=base_line, margin_right=margin_right)
@@ -1959,10 +1979,11 @@ class Item:
             self.bonus = self.prev_item.bonus
             self.font_size = self.prev_item.font_size
         else:
-            if mode == "jp":
-                self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg2(mode)
-            else:
-                self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg(mode)
+            self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg2(mode)
+            # if mode == "jp":
+            #     self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg2(mode)
+            # else:
+            #     self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg(mode)
         logger.debug("Bonus Font Size: %s", self.font_size)
 
         # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
@@ -1975,7 +1996,8 @@ class Item:
             base_line = int(180/206*self.height)
 
         # 実際の(ボーナス無し)ドロップ数の右端の位置を決定
-        offset_x = -7 if mode == "na" else 0
+        # offset_x = -7 if mode == "na" else 0
+        offset_x = 0
         if self.category in ["Quest Reward", "Point"] or self.name == "QP":
             margin_right = 15 + offset_x
         elif len(self.bonus_pts) > 0:
