@@ -2447,7 +2447,7 @@ def compute_hash(img_rgb):
     記述した比率はiPhone6S画像の実測値
     """
     height, width = img_rgb.shape[:2]
-    img = img_rgb[int(22/135*height):
+    img = img_rgb[int(23/135*height):
                   int(77/135*height),
                   int(23/135*width):
                   int(112/135*width)]
