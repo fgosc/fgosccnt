@@ -594,7 +594,7 @@ class ScreenShot:
                            width - 495 - rx: width - 415 - int(rx*resize_scale)]
         else:
             dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 13,
-                           width - 430 - rx : width - 340 - rx]
+                           width - 430 : width - 340]
         if display:
             cv2.imshow('image', dcnt_new)
             cv2.waitKey(0)
