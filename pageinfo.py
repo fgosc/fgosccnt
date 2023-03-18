@@ -85,8 +85,11 @@ def detect_side_black_margin(im_gray):
     height, width = im_gray.shape[:2]
     # 黒とみなす範囲: 0 に近いほど許容範囲が小さい
     black_threshold = 10
-    # タップの軌跡などノイズが混入する可能性もあるので 12 % まではイレギュラーを許容する
-    black_ratio = 0.88
+    # タップの軌跡なノイズが混入する可能性もあるので 9 % まではイレギュラーを許容する
+    # NOTE: もともと 0.88 を設定していたが、イベントクエスト "パイレーツ急便" で NormalScreen
+    # の場合に右端が黒背景のためにカットされてしまい、スクロールバー検出のアルゴリズムに影響する
+    # 問題が生じた。許容範囲をより厳しくすることでこの問題に対処する。
+    black_ratio = 0.91
 
     for i in range(width):
         black_pixels = sum([pixel < black_threshold for pixel in im_gray[:, i]])
