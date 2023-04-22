@@ -42,53 +42,30 @@ class QuestReport:
         ]
         additional_drop_items = ["宝箱金", "宝箱銀", "宝箱銅"]
         enhanced_drop_items = [
-            "逆鱗",
-            "心臓",
-            "涙石",
-            "勲章",
-            "貝殻",
-            "蛇玉",
-            "羽根",
-            "蹄鉄",
-            "ホムベビ",
-            "頁",
-            "歯車",
-            "八連",
-            "ランタン",
-            "種",
-            "毒針",
-            "塵",
-            "牙",
-            "火薬",
-            "鉄杭",
-            "髄液",
-            "鎖",
-            "骨",
-            "証",
+            "逆鱗",  # 8501
+            "心臓",  # 8500
+            "涙石",  # 8402
+            "勲章",  # 8309
+            "貝殻",  # 8308
+            "蛇玉",  # 8307
+            "羽根",  # 8306
+            "蹄鉄",  # 8305
+            "ホムベビ",  # 8304
+            "頁",  # 8303
+            "歯車",  # 8302
+            "八連",  # 8301
+            "ランタン",  # 8300
+            "種",  # 8203
+            "毒針",  # 8202
+            "塵",  # 8201
+            "牙",  # 8200
+            "火薬",  # 8105
+            "鉄杭",  # 8104
+            "髄液",  # 8103
+            "鎖",  # 8102
+            "骨",  # 8101
+            "証",  # 8100
         ]
-        # 逆鱗 8501
-        # 心臓 8500
-        # 涙石 8402
-        # 勲章 8309
-        # 貝殻 8308
-        # 蛇玉 8307
-        # 羽根 8306
-        # 蹄鉄 8305
-        # ホムベビ 8304
-        # 頁 8303
-        # 歯車 8302
-        # 八連 8301
-        # ランタン 8300
-        # 種 8203
-        # 毒針  8202
-        # 塵 8201
-        # 牙 8200
-        # 火薬 8105
-        # 鉄杭 8104
-        # 髄液 8103
-        # 鎖 8102
-        # 骨 8101
-        # 証 8100
 
         for line in self.lines:
             boosted_appearance_rate = (
@@ -104,7 +81,9 @@ class QuestReport:
 
         for line in self.lines:
             enhanced_drop_rate = (
-                f"{line.material}泥UP %\n" if line.material in enhanced_drop_items else ""
+                f"{line.material}泥UP %\n"
+                if line.material in enhanced_drop_items
+                else ""
             )
             self.note += enhanced_drop_rate
 
@@ -218,7 +197,9 @@ def dict_to_material_lines(material_dict: Dict[str, str]) -> List[MaterialLine]:
     material_lines = [
         MaterialLine(material=material, initial=int(initial))
         for material, initial in material_dict.items()
-        if material not in excluded_keys and not material.startswith("報酬QP")
+        if material not in excluded_keys
+        and not material.startswith("報酬QP")
+        and initial != ""
     ]
 
     return material_lines
