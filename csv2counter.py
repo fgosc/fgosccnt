@@ -225,6 +225,7 @@ def dict_to_material_lines(material_dict: Dict[str, str]) -> List[MaterialLine]:
 
 
 def main(args):
+    sys.stdin = open(sys.stdin.fileno(), "r", encoding="utf_8_sig")
     with args.infile as f:
         reader = csv.DictReader(f)
         lines = [row for row in reader]
@@ -236,7 +237,6 @@ def main(args):
         print(report.to_json_string())
         sys.exit(0)
 
-    sys.stdin = open(sys.stdin.fileno(), "r", encoding="utf_8_sig")
     warning = make_warning(lines)
     formatted_output = report.to_fgo_syukai_counter_format()
     if warning:
