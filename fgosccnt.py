@@ -3078,6 +3078,13 @@ def make_csv_data(args, sc_list, ce0_flag):
     return csv_sum, csv_data
 
 
+def list_to_dict(lst):
+    result = {}
+    for item in lst:
+        result[item] = 0
+    return result
+
+
 if __name__ == '__main__':
     # オプションの解析
     parser = argparse.ArgumentParser(
@@ -3129,10 +3136,11 @@ if __name__ == '__main__':
         exit(0)
 
     # CSVヘッダーをつくる
-    csv_heder, ce0_flag, questname = make_csv_header(args, all_new_list)
+    csv_header, ce0_flag, questname = make_csv_header(args, all_new_list)
     csv_sum, csv_data = make_csv_data(args, all_new_list, ce0_flag)
+    a = list_to_dict(csv_header)
 
-    writer = csv.DictWriter(sys.stdout, fieldnames=csv_heder,
+    writer = csv.DictWriter(sys.stdout, fieldnames=csv_header,
                             lineterminator='\n')
     writer.writeheader()
     if args.lang == 'jpn':
@@ -3149,7 +3157,7 @@ if __name__ == '__main__':
                 questname = "合計"
             else:
                 questname = "SUM"
-        a = {'filename': questname, drop_count: '', item_count: '', gained_qp: ''}
+        a.update({'filename': questname, drop_count: '', item_count: '', gained_qp: ''})
         a.update(csv_sum)
         writer.writerow(a)
     for fo, cd in zip(fileoutput, csv_data):
