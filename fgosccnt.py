@@ -104,6 +104,7 @@ ID_EVNET = 94000000
 ID_GREEN_TEA = 94074504
 ID_YELLOW_TEA = 94074505
 ID_RED_TEA = 94074506
+ID_WEST_AMERICA_AREA = 93040104
 TIMEOUT = 15
 QP_UNKNOWN = -1
 
@@ -2773,7 +2774,7 @@ def make_quest_output(quest):
             output = quest["chapter"] + " " + quest["place"]
         elif math.floor(quest["id"]/100)*100 == ID_SYURENJYO_TMP:
             output = quest["chapter"] + " " + quest["place"]
-        elif math.floor(quest["id"]/100000)*100000 == ID_EVNET:
+        elif math.floor(quest["id"]/100000)*100000 == ID_EVNET or quest["id"] == ID_WEST_AMERICA_AREA:
             output = quest["shortname"]
         else:
             # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
@@ -2791,6 +2792,7 @@ INTERMEDIATE = 2
 ADVANCED = 3
 EXPERT = 4
 MASTER = 5
+ORDEAL_CALL = 6
 
 
 def tv_quest_type(item_list):
@@ -2812,6 +2814,8 @@ def tv_quest_type(item_list):
                 quest_type = EXPERT
             elif item["dropnum"] == 7400:
                 quest_type = MASTER
+            elif item["dropnum"] == 270720:
+                quest_type = ORDEAL_CALL
             else:
                 quest_type = OTHER
                 break
@@ -2878,6 +2882,15 @@ def deside_tresure_valut_quest(item_list):
                            "chapter": "",
                            "qp": 7400,
                            "shortname": "宝物庫 極級",
+                           }
+    elif quest_type == ORDEAL_CALL and item_set == {270000, 405000, 1500000}:
+        quest_candidate = {
+                           "id": ID_WEST_AMERICA_AREA,
+                           "name": "荒野の歓楽",
+                           "place": "西アメリカエリア",
+                           "chapter": "オーディール・コール",
+                           "qp": 270720,
+                           "shortname": "オーディール・コール 西アメリカエリア",
                            }
     else:
         quest_candidate = ""
