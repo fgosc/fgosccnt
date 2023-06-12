@@ -6,7 +6,7 @@ import argparse
 import json
 import logging
 from dataclasses import dataclass, field, asdict
-from typing import List, Dict
+from typing import Any, List, Dict
 
 
 logger = logging.getLogger(__name__)
@@ -111,48 +111,54 @@ class QuestReport:
             formatted_output += "\n" + self.note
         return formatted_output
 
-    def to_json_string(self) -> str:
-        """JSONで出力する
+    def to_dict(self) -> Dict[str, Any]:
+        """dictで出力する
 
         Returns:
-            str: JSON出力
+            Dict[str, Any]: dict形式の出力
         """
         report_data = asdict(self)
         report_data["lines"] = [asdict(line) for line in self.lines]
-        return json.dumps(report_data, indent=2, ensure_ascii=False)
+        return report_data
 
 
-def make_warning(lines: List[Dict[str, str]]) -> str:
-    """結果の不具合に対する警告を作成する
-
-    Args:
-        lines (List[str]): csvの入力の各行
-
-    Returns:
-        str: 警告
-    """
-    warning = ""
+def _detect_warnings(lines: List[Dict[str, str]]) -> List[str]:
+    messages = []
     # 報酬QP数でエラーチェック
     reward_qp = sum(x.startswith("報酬QP(") for x in lines[0].keys())
     if reward_qp > 1:
-        warning += f"少なくとも{reward_qp}つのクエストの結果が混在しています\n"
+        messages.append(f"少なくとも{reward_qp}つのクエストの結果が混在しています")
+
     for i, item in enumerate(lines):
         if item["filename"] == "missing":
-            warning = warning + "{}行目に missing (複数ページの撮影抜け)があります\n".format(i + 2)
+            messages.append(f"{i + 2}行目に missing (複数ページの撮影抜け)があります")
         elif item["filename"].endswith("not valid"):
-            warning = warning + "{}行目に not valid (認識エラー)があります\n".format(i + 2)
+            messages.append(f"{i + 2}行目に not valid (認識エラー)があります")
         elif item["filename"].endswith("not found"):
-            warning = warning + "{}行目に not found なスクショがあります\n".format(i + 2)
+            messages.append(f"{i + 2}行目に not found なスクショがあります")
         elif item["filename"].endswith("duplicate"):
-            warning = warning + "{}行目に直前と重複したスクショがあります\n".format(i + 2)
+            messages.append(f"{i + 2}行目に直前と重複したスクショがあります")
 
-    if warning != "":
-        warning = f"""###############################################
+    return messages
+
+
+def make_warning_message(warning_messages: List[str]) -> str:
+    """出力用の警告メッセージを作成する
+
+    Args:
+        lines (List[str]): 警告メッセージのリスト
+
+    Returns:
+        str: 警告メッセージ
+    """
+    warning = "\n".join(warning_messages)
+    return f"""
+###############################################
 # WARNING: この処理には以下のエラーがあります #
 # 確認せず結果をそのまま使用しないでください #
 ###############################################
-{warning}###############################################"""
-    return warning
+{warning}
+###############################################""".lstrip()
 
 
 def parse_lap_report(lines: List[Dict[str, str]]) -> QuestReport:
@@ -214,13 +220,21 @@ def main(args):
     report = parse_lap_report(lines)
     report.set_lines(dict_to_material_lines(lines[0]))
 
-    if args.json:
-        print(report.to_json_string())
-        sys.exit(0)
+    warning_messages = _detect_warnings(lines)
 
-    warning = make_warning(lines)
+    if args.json:
+        d = report.to_dict()
+        if warning_messages:
+            d["has_warnings"] = True
+            d["warning_messages"] = warning_messages
+        else:
+            d["has_warnings"] = False
+        print(json.dumps(d, indent=2, ensure_ascii=False))
+        return
+
     formatted_output = report.to_fgo_syukai_counter_format()
-    if warning:
+    if warning_messages:
+        warning = make_warning_message(warning_messages)
         print(warning)
     print(formatted_output)
 
