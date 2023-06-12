@@ -106,7 +106,7 @@ class QuestReport:
         for line in self.lines:
             formatted_output += f"{line.material}{line.initial}\n"
 
-        formatted_output += "#FGO周回カウンタ http://aoshirobo.net/fatego/rc/\n"
+        formatted_output += "#FGO周回カウンタ https://fgodrop.max747.org/\n"
         if len(self.note) > 0:
             formatted_output += "\n" + self.note
         return formatted_output
