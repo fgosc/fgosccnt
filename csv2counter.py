@@ -42,6 +42,7 @@ class QuestReport:
         ]
         additional_drop_items = ["宝箱金", "宝箱銀", "宝箱銅"]
         enhanced_drop_items = [
+            "根",  # 8502
             "逆鱗",  # 8501
             "心臓",  # 8500
             "涙石",  # 8402
