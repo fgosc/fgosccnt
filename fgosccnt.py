@@ -637,10 +637,14 @@ class ScreenShot:
             logger.debug("Can't find scroll bar")
             return -1, -1
         elif len(pts) > 1:
-            self.exLogger.warning("Too many objects.")
-            return -1, -1
-        else:
-            return pt[1], pt[3] - pt[1]
+            max_cnt = max(contours, key=lambda x: cv2.contourArea(x))
+            ret = cv2.boundingRect(max_cnt)
+            pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
+            if ret[3] <= 10:
+                logger.debug("Can't find scroll bar")
+                return -1, -1
+        return pt[1], pt[3] - pt[1]
+
 
     def valid_pageinfo(self):
         '''
