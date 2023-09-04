@@ -2240,7 +2240,7 @@ class Item:
             d = hasher.compare(hash_item, hex2hash(i))
             if d <= 30 and itemid == 1 and self.background == "zero":
                 itemfiles[itemid] = d
-            elif d <= 20 and item_bg == self.background:
+            elif d <= 19 and item_bg == self.background:  # d <= 20だと誤認識 #380
                 itemfiles[itemid] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
