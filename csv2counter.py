@@ -12,7 +12,7 @@ from typing import Any, List, Dict
 logger = logging.getLogger(__name__)
 
 ROW_ITEM_START = 4
-
+MAX_WARNING_COUNT = 5  # 警告の最大文字数
 
 @dataclass
 class MaterialLine:
@@ -227,7 +227,9 @@ def main(args):
         d = report.to_dict()
         if warning_messages:
             d["has_warnings"] = True
-            d["warning_messages"] = warning_messages
+            d["warning_messages"] = warning_messages[:MAX_WARNING_COUNT]
+            if len(warning_messages) > MAX_WARNING_COUNT:
+                d["warning_messages"] += ["(後略)"]
         else:
             d["has_warnings"] = False
         print(json.dumps(d, indent=2, ensure_ascii=False))
