@@ -2221,7 +2221,7 @@ class Item:
 
         return ""
 
-    def classify_point_and_item(self, img):
+    def classify_point_and_item(self, img, currnet_dropPriority):
         """
         imgとの距離を比較して近いアイテムを求める
         """
@@ -2240,8 +2240,9 @@ class Item:
             d = hasher.compare(hash_item, hex2hash(i))
             if d <= 30 and itemid == 1 and self.background == "zero":
                 itemfiles[itemid] = d
-            elif d <= 19 and item_bg == self.background:  # d <= 20だと誤認識 #380
-                itemfiles[itemid] = d
+            elif d <= 20 and item_bg == self.background:
+                if item_dropPriority[itemid] <= currnet_dropPriority:  # fix #380
+                    itemfiles[itemid] = d
         if len(itemfiles) > 0:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
             item = next(iter(itemfiles))
@@ -2376,7 +2377,7 @@ class Item:
         else:
             # ここで category が判別できないのは三行目かつ
             # スクロール位置の関係で下部表示が消えている場合
-            id = self.classify_point_and_item(img)
+            id = self.classify_point_and_item(img, currnet_dropPriority)
             if id != "":
                 return id
             id = self.classify_exp(img)
