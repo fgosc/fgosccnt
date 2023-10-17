@@ -2892,10 +2892,10 @@ def deside_tresure_valut_quest(item_list):
         quest_candidate = {
                            "id": ID_WEST_AMERICA_AREA,
                            "name": "荒野の歓楽",
-                           "place": "西アメリカエリア",
+                           "place": "アメリカ西部エリア",
                            "chapter": "オーディール・コール",
                            "qp": 270720,
-                           "shortname": "オーディール・コール 西アメリカエリア",
+                           "shortname": "オーディール・コール アメリカ西部エリア",
                            }
     else:
         quest_candidate = ""
