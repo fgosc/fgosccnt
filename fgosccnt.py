@@ -2785,8 +2785,9 @@ def make_quest_output(quest):
             output = quest["shortname"]
         else:
             # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-            if quest_list.index(quest["name"]) == 0:
-                output = quest["chapter"] + " " + quest["place"] not in ordeal_call_dual_quest_place
+            # ただしオーディールコールの場合は常にクエスト名を出力
+            if quest_list.index(quest["name"]) == 0 and quest["place"] not in ordeal_call_dual_quest_place:
+                output = quest["chapter"] + " " + quest["place"]
             else:
                 output = quest["chapter"] + " " + quest["name"]
     return output
