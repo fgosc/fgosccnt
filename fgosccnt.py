@@ -2784,10 +2784,21 @@ def make_quest_output(quest):
         elif (math.floor(quest["id"]/100000)*100000 == ID_EVNET and quest["id"] not in ordeal_call_quest_list) or quest["id"] == ID_WEST_AMERICA_AREA:
             output = quest["shortname"]
         else:
-            # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-            # ただしオーディールコールの場合は常にクエスト名を出力
-            if quest_list.index(quest["name"]) == 0 and quest["place"] not in ordeal_call_dual_quest_place:
-                output = quest["chapter"] + " " + quest["place"]
+            if "category" in quest.keys():
+                if quest["category"] in ["フリクエ1部", "フリクエ1.5部", "フリクエ2部", "カルデアゲート"]:
+                    # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
+                    if quest_list.index(quest["name"]) == 0 and quest["id"] not in ordeal_call_dual_quest_place:
+                        output = quest["chapter"] + " " + quest["place"]
+                    else:
+                        output = quest["chapter"] + " " + quest["name"]
+                elif quest["category"] == "奏章" and quest["chapter"] in ["オーディール・コール", "ペーパームーン"]:
+                        # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
+                        if quest_list.index(quest["name"]) == 0 and quest["id"] not in ordeal_call_dual_quest_place:
+                            output = quest["chapter"] + " " + quest["place"]
+                        else:
+                            output = quest["chapter"] + " " + quest["name"]
+                else:
+                    output = quest["chapter"] + " " + quest["name"]
             else:
                 output = quest["chapter"] + " " + quest["name"]
     return output
