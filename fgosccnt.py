@@ -2770,7 +2770,7 @@ def change_value(args, line):
 
 def make_quest_output(quest):
     output = ""
-    ordeal_call_quest_list = [94086601, 94086602, 94089601, 94089602, 94090701, 94090702, 94093201, 94093202]
+    ordeal_call_quest_list = [94086601, 94086602, 94089601, 94089602, 94090701, 94090702, 94093201, 94093202, 94095302, 94095301]
     ordeal_call_dual_quest_place = [94093201, 94093202]
     if quest != "":
         quest_list = [q["name"] for q in freequest
