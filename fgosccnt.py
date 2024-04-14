@@ -2770,37 +2770,20 @@ def change_value(args, line):
 
 def make_quest_output(quest):
     output = ""
-    ordeal_call_quest_list = [94086601, 94086602, 94089601, 94089602, 94090701, 94090702, 94093201, 94093202, 94095302, 94095301]
-    ordeal_call_dual_quest_place = [94093201, 94093202]
     if quest != "":
-        quest_list = [q["name"] for q in freequest
-                      if q["place"] == quest["place"]]
-        if math.floor(quest["id"]/100)*100 == ID_NORTH_AMERICA:
+        if math.floor(quest["id"] / 100) * 100 == ID_NORTH_AMERICA:
             output = quest["place"] + " " + quest["name"]
-        elif math.floor(quest["id"]/100)*100 == ID_SYURENJYO:
+        elif math.floor(quest["id"] / 100) * 100 == ID_SYURENJYO:
             output = quest["chapter"] + " " + quest["place"]
-        elif math.floor(quest["id"]/100)*100 == ID_SYURENJYO_TMP:
+        elif math.floor(quest["id"] / 100) * 100 == ID_SYURENJYO_TMP:
+            # 2022/01/01 修練場極級追加につき平常時のIDが未搭載のため臨時に追加
             output = quest["chapter"] + " " + quest["place"]
-        elif (math.floor(quest["id"]/100000)*100000 == ID_EVNET and quest["id"] not in ordeal_call_quest_list) or quest["id"] == ID_WEST_AMERICA_AREA:
+        elif "scName" in quest.keys():
+            output = quest["chapter"] + " " + quest["scName"]
+        elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET:
             output = quest["shortname"]
         else:
-            if "category" in quest.keys():
-                if quest["category"] in ["フリクエ1部", "フリクエ1.5部", "フリクエ2部", "カルデアゲート"]:
-                    # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-                    if quest_list.index(quest["name"]) == 0 and quest["id"] not in ordeal_call_dual_quest_place:
-                        output = quest["chapter"] + " " + quest["place"]
-                    else:
-                        output = quest["chapter"] + " " + quest["name"]
-                elif quest["category"] == "奏章" and quest["chapter"] in ["オーディール・コール", "ペーパームーン"]:
-                        # クエストが0番目のときは場所を出力、それ以外はクエスト名を出力
-                        if quest_list.index(quest["name"]) == 0 and quest["id"] not in ordeal_call_dual_quest_place:
-                            output = quest["chapter"] + " " + quest["place"]
-                        else:
-                            output = quest["chapter"] + " " + quest["name"]
-                else:
-                    output = quest["chapter"] + " " + quest["name"]
-            else:
-                output = quest["chapter"] + " " + quest["name"]
+            output = quest["chapter"] + " " + quest["name"]
     return output
 
 
