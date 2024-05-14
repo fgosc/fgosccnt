@@ -1039,7 +1039,7 @@ class ScreenShot:
         オフセットを反映
         """
         scroll_limit_uppler = 110
-        scroll_limit_lower = 285
+        scroll_limit_lower = 284
 
         if len(pts) == 0:
             return std_pts
