@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 ROW_ITEM_START = 4
 MAX_WARNING_COUNT = 5  # 警告の最大文字数
 
+
 @dataclass
 class MaterialLine:
     material: str
@@ -68,17 +69,20 @@ class QuestReport:
             "証",  # 8100
         ]
 
+        boosted_appearance_added = False
         for line in self.lines:
-            boosted_appearance_rate = (
-                "追加出現率 %\n" if line.material in boosted_appearance_items else ""
-            )
-            self.note += boosted_appearance_rate
+            if (
+                line.material in boosted_appearance_items
+                and not boosted_appearance_added
+            ):
+                self.note += "追加出現率 %\n"
+                boosted_appearance_added = True
 
+        additional_drop_added = False
         for line in self.lines:
-            additional_drop_rate = (
-                "追加ドロップ率 %\n" if line.material in additional_drop_items else ""
-            )
-            self.note += additional_drop_rate
+            if line.material in additional_drop_items and not additional_drop_added:
+                self.note += "追加ドロップ率 %\n"
+                additional_drop_added = True
 
         for line in self.lines:
             enhanced_drop_rate = (
