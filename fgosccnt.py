@@ -2783,7 +2783,10 @@ def make_quest_output(quest):
         elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET:
             output = quest["shortname"]
         else:
-            output = quest["chapter"] + " " + quest["name"]
+            if quest["chapter"] == "":
+                output = quest["name"]
+            else:
+                output = quest["chapter"] + " " + quest["name"]
     return output
 
 
