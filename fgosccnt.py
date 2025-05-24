@@ -219,6 +219,10 @@ class JpAug2021(JpNov2020):
         self.max_qp = 2000000000
         logger.debug("2,000,000,000")
 
+class JpMay2025(JpAug2021):
+    def set_max_qp(self):
+        self.max_qp = 9999999999
+        logger.debug("9,999,999,999")
 
 class NaState(State):
     def set_char_position(self):
@@ -236,6 +240,7 @@ class NaOct2022(NaState):
 
 class Context:
     def __init__(self):
+        self.jp_may_2025 = JpMay2025()
         self.jp_aug_2021 = JpAug2021()
         self.jp_nov_2020 = JpNov2020()
         self.jp = State()
@@ -249,7 +254,7 @@ class Context:
 
     def change_state(self, mode):
         if mode == "jp":
-            self.state = self.jp_aug_2021
+            self.state = self.jp_may_2025
         elif mode == "na":
             self.state = self.na_oct2022
         else:
