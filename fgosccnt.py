@@ -2124,7 +2124,6 @@ class Item:
                 else:
                     if d <= 20:
                         ids[dist_item[i]] = d
-
             if len(ids) > 0:
                 ids = sorted(ids.items(), key=lambda x: x[1])
                 id_tupple = next(iter(ids))
@@ -2252,6 +2251,25 @@ class Item:
             itemfiles = sorted(itemfiles.items(), key=lambda x: x[1])
             item = next(iter(itemfiles))
 
+            id = item[0]
+            if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
+                if currnet_dropPriority >= PRIORITY_SECRET_GEM_MIN:
+                    id = self.gem_img2id(img, dist_secret_gem)
+                    return id
+                else:
+                    return ""
+            elif ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
+                if currnet_dropPriority >= PRIORITY_MAGIC_GEM_MIN:
+                    id = self.gem_img2id(img, dist_magic_gem)
+                    return id
+                else:
+                    return ""
+            elif ID_GEM_MIN <= id <= ID_GEM_MAX:
+                if currnet_dropPriority >= PRIORITY_GEM_MIN:
+                    id = self.gem_img2id(img, dist_gem)
+                    return id
+                else:
+                    return ""
             if item[0] == ID_YELLOW_TEA or item[0] == ID_GREEN_TEA or item[0] == ID_RED_TEA:
                 return self.classify_tea(img)
 
