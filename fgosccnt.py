@@ -2129,17 +2129,18 @@ class Item:
                 id_tupple = next(iter(ids))
                 id = id_tupple[0]
                 if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
-                    if currnet_dropPriority >= PRIORITY_SECRET_GEM_MIN:
+                    if currnet_dropPriority == PRIORITY_ITEM or currnet_dropPriority >= PRIORITY_SECRET_GEM_MIN:
                         id = self.gem_img2id(img, dist_secret_gem)
                     else:
+                        logger.info("Secret Gem not found")
                         return ""
                 elif ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
-                    if currnet_dropPriority >= PRIORITY_MAGIC_GEM_MIN:
+                    if currnet_dropPriority == PRIORITY_ITEM or currnet_dropPriority >= PRIORITY_MAGIC_GEM_MIN:
                         id = self.gem_img2id(img, dist_magic_gem)
                     else:
                         return ""
                 elif ID_GEM_MIN <= id <= ID_GEM_MAX:
-                    if currnet_dropPriority >= PRIORITY_GEM_MIN:
+                    if currnet_dropPriority == PRIORITY_ITEM or currnet_dropPriority >= PRIORITY_GEM_MIN:
                         id = self.gem_img2id(img, dist_gem)
                     else:
                         return ""
