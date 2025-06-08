@@ -61,6 +61,7 @@ train_item = basedir / Path("item.xml")  # item stack & bonus
 train_chest = basedir / Path("chest.xml")  # drop_coount (Old UI)
 train_dcnt = basedir / Path("dcnt.xml")  # drop_coount (New UI)
 train_card = basedir / Path("card.xml")  # card name
+train_exp_class = basedir / Path("exp_class.xml")  # exp class
 drop_file = basedir / Path("fgoscdata/hash_drop.json")
 eventquest_dir = basedir / Path("fgoscdata/data/json/")
 items_img = basedir / Path("data/misc/items_img.png")
@@ -382,7 +383,7 @@ class ScreenShot:
     戦利品スクリーンショットを表すクラス
     """
 
-    def __init__(self, args, img_rgb, svm, svm_chest, svm_dcnt, svm_card,
+    def __init__(self, args, img_rgb, svm, svm_chest, svm_dcnt, svm_card, svm_exp_class,
                  fileextention, exLogger, reward_only=False):
         self.exLogger = exLogger
         threshold = 80
@@ -483,7 +484,7 @@ class ScreenShot:
             if logger.isEnabledFor(logging.DEBUG):
                 cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
             dropitem = Item(args, i, prev_item, item_img_rgb, item_img_gray,
-                            svm, svm_card, fileextention,
+                            svm, svm_card, svm_exp_class, fileextention,
                             self.current_dropPriority, self.exLogger, mode)
             if dropitem.id == -1:
                 break
@@ -502,7 +503,7 @@ class ScreenShot:
             item_img_gray = self.img_gray[item_pts[14][1]: item_pts[14][3],
                                         item_pts[14][0] + lx: item_pts[14][2] + lx]
             dropitem = Item(args, i, prev_item, item_img_rgb, item_img_gray,
-                            svm, svm_card, fileextention,
+                            svm, svm_card, svm_exp_class, fileextention,
                             self.current_dropPriority, self.exLogger, mode)
             self.items.append(dropitem)
 
@@ -1189,7 +1190,7 @@ def generate_booty_pts(criteria_left, criteria_top, item_width, item_height,
 
 
 class Item:
-    def __init__(self, args, pos, prev_item, img_rgb, img_gray, svm, svm_card,
+    def __init__(self, args, pos, prev_item, img_rgb, img_gray, svm, svm_card, svm_exp_class,
                  fileextention, current_dropPriority, exLogger, mode='jp'):
         self.position = pos
         self.prev_item = prev_item
@@ -1205,7 +1206,7 @@ class Item:
 
         self.height, self.width = img_rgb.shape[:2]
         logger.debug("pos: %d", pos)
-        self.identify_item(args, prev_item, svm_card,
+        self.identify_item(args, prev_item, svm_card, svm_exp_class,
                            current_dropPriority)
         if self.id == -1:
             return
@@ -1224,7 +1225,7 @@ class Item:
         logger.debug("Bonus: %s", self.bonus)
         logger.debug("Stack: %s", self.dropnum)
 
-    def identify_item(self, args, prev_item, svm_card,
+    def identify_item(self, args, prev_item, svm_card, svm_exp_class,
                       current_dropPriority):
         self.background = classify_background(self.img_rgb)
         self.hash_item = compute_hash(self.img_rgb)  # 画像の距離
@@ -1246,7 +1247,7 @@ class Item:
                     self.name = prev_item.name
                     return
         self.category = self.classify_category(svm_card)
-        self.id = self.classify_card(self.img_rgb, current_dropPriority)
+        self.id = self.classify_card(self.img_rgb, svm_exp_class, current_dropPriority)
         if args.lang == "jpn":
             self.name = item_name[self.id]
         else:
@@ -2278,7 +2279,7 @@ class Item:
 
         return ""
 
-    def classify_exp(self, img):
+    def classify_exp(self, img, svm_exp_class):
         hash_item = self.compute_exp_rarity_hash(img)  # 画像の距離
         exps = {}
         for i in dist_exp_rarity.keys():
@@ -2289,16 +2290,9 @@ class Item:
         if len(exps) > 0:
             exp = next(iter(exps))
 
-            hash_exp_class = self.compute_exp_class_hash(img)
-            exp_classes = {}
-            for j in dist_exp_class.keys():
-                dtc = hasher.compare(hash_exp_class, hex2hash(j))
-                exp_classes[j] = dtc
-            exp_classes = sorted(exp_classes.items(), key=lambda x: x[1])
-            exp_class = next(iter(exp_classes))
+            exp_class = self.classify_exp_class(img, svm_exp_class)
 
-            return int(str(dist_exp_class[exp_class[0]])[:4]
-                       + str(dist_exp_rarity[exp[0]])[4] + "00")
+            return int(str(exp_class) + str(dist_exp_rarity[exp[0]])[4] + "00")
 
         return ""
 
@@ -2373,7 +2367,7 @@ class Item:
 
         return carddic[pred[1][0][0]]
 
-    def classify_card(self, img, currnet_dropPriority):
+    def classify_card(self, img, svm_exp_class, currnet_dropPriority):
         """
         アイテム判別器
         """
@@ -2392,7 +2386,7 @@ class Item:
                                         PRIORITY_CE, self.category)
             return id
         elif self.category == "Exp. UP":
-            return self.classify_exp(img)
+            return self.classify_exp(img, svm_exp_class)
         elif self.category == "Item":
             id = self.classify_item(img, currnet_dropPriority)
             if id == "":
@@ -2404,7 +2398,7 @@ class Item:
             id = self.classify_point_and_item(img, currnet_dropPriority)
             if id != "":
                 return id
-            id = self.classify_exp(img)
+            id = self.classify_exp(img, svm_exp_class)
             if id != "":
                 return id
         if id == "":
@@ -2422,15 +2416,29 @@ class Item:
 
         return hasher.compute(img)
 
-    def compute_exp_class_hash(self, img_rgb):
+    def classify_exp_class(self, img_rgb, svm_exp_class):
         """
         種火クラス判別器
-        左上のクラスマークぎりぎりのハッシュを取る
-        記述した比率はiPhone6S画像の実測値
         """
-        img = img_rgb[int((5+9)/135*self.height):int((30+2)/135*self.height),
+        # Hog特徴のパラメータ
+        win_size = (120, 60)
+        block_size = (16, 16)
+        block_stride = (4, 4)
+        cell_size = (4, 4)
+        bins = 9
+        test = []
+
+        tmpimg = img_rgb[int((5+9)/135*self.height):int((30+2)/135*self.height),
                       int(5/135*self.width):int((30+6)/135*self.width)]
-        return hasher.compute(img)
+
+        tmpimg = cv2.resize(tmpimg, (win_size))
+        hog = cv2.HOGDescriptor(win_size, block_size, block_stride,
+                                cell_size, bins)
+        test.append(hog.compute(tmpimg))  # 特徴量の格納
+        test = np.array(test)
+        pred = svm_exp_class.predict(test)
+
+        return int(pred[1][0][0])
 
     def compute_gem_hash(self, img_rgb):
         """
@@ -2635,10 +2643,15 @@ def get_output(filenames, args):
         logger.critical("card.xml is not found")
         logger.critical("Try to run 'python makecard.py'")
         sys.exit(1)
+    if train_exp_class.exists() is False:
+        logger.critical("exp_class.xml is not found")
+        logger.critical("Try to run 'python makeexp.py'")
+        sys.exit(1)
     svm = cv2.ml.SVM_load(str(train_item))
     svm_chest = cv2.ml.SVM_load(str(train_chest))
     svm_dcnt = cv2.ml.SVM_load(str(train_dcnt))
     svm_card = cv2.ml.SVM_load(str(train_card))
+    svm_exp_class = cv2.ml.SVM_load(str(train_exp_class))
 
     fileoutput = []  # 出力
     output = {}
@@ -2671,7 +2684,7 @@ def get_output(filenames, args):
 
             try:
                 sc = ScreenShot(args, img_rgb,
-                                svm, svm_chest, svm_dcnt, svm_card,
+                                svm, svm_chest, svm_dcnt, svm_card, svm_exp_class,
                                 fileextention, exLogger)
                 if sc.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
                     logger.warning(
