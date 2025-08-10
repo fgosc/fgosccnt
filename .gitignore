@@ -207,3 +207,9 @@ item/
 *.csv
 # for fgosccnt_env
 REV
+*.png
+*.jpg
+*.jpeg
+*.zip
+.vscode/
+*test.py
