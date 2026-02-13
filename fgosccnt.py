@@ -660,6 +660,8 @@ class ScreenShot:
             return False
         if (self.pagenum == 1 and self.pages == 1 and self.lines == 0) and self.chestnum > 20:
             return False
+        if self.pages == 1 and self.chestnum > 20:
+            return False
         elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
             return False
         elif self.Bunyan and self.chestnum != -1 and self.pagenum != 1 \
