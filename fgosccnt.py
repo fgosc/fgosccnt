@@ -1,29 +1,27 @@
 #!/usr/bin/env python3
-import sys
-import re
 import argparse
-from pathlib import Path
-from collections import Counter
 import csv
-from enum import Enum
+import datetime
+import io
 import itertools
 import json
-from operator import itemgetter
-import math
-import datetime
 import logging
-from typing import Tuple, Union
-import io
+import math
+import re
+import sys
+from collections import Counter
+from enum import Enum
+from operator import itemgetter
+from pathlib import Path
 
 import cv2
-from numpy import ndarray
 import numpy as np
 import pytesseract
+from numpy import ndarray
 from PIL import Image
 from PIL.ExifTags import TAGS
 
 import pageinfo
-
 
 PROGNAME = "FGOスクショカウント"
 VERSION = "0.4.0"
@@ -33,21 +31,20 @@ logger = logging.getLogger(__name__)
 
 
 class CustomAdapter(logging.LoggerAdapter):
-    """
-    この adapter を通した場合、自動的にログ出力文字列の先頭に [target] が挿入される。
+    """この adapter を通した場合、自動的にログ出力文字列の先頭に [target] が挿入される。
     target は adapter インスタンス生成時に確定させること。
     """
+
     def process(self, msg, kwargs):
         return f"[{self.extra['target']}] {msg}", kwargs
 
 
 class Ordering(Enum):
-    """
-    ファイルの処理順序を示す定数
-    """
-    NOTSPECIFIED = 'notspecified'   # 指定なし
-    FILENAME = 'filename'           # ファイル名
-    TIMESTAMP = 'timestamp'         # 作成日時
+    """ファイルの処理順序を示す定数"""
+
+    NOTSPECIFIED = "notspecified"  # 指定なし
+    FILENAME = "filename"  # ファイル名
+    TIMESTAMP = "timestamp"  # 作成日時
 
     def __str__(self):
         return str(self.value)
@@ -109,6 +106,7 @@ ID_WEST_AMERICA_AREA = 93040104
 TIMEOUT = 15
 QP_UNKNOWN = -1
 
+
 class FgosccntError(Exception):
     pass
 
@@ -117,66 +115,93 @@ class GainedQPandDropMissMatchError(FgosccntError):
     pass
 
 
-with open(drop_file, encoding='UTF-8') as f:
+with open(drop_file, encoding="UTF-8") as f:
     drop_item = json.load(f)
 
 # JSONファイルから各辞書を作成
 item_name = {item["id"]: item["name"] for item in drop_item}
-item_name_eng = {item["id"]: item["name_eng"] for item in drop_item
-                 if "name_eng" in item.keys()}
-item_shortname = {item["id"]: item["shortname"] for item in drop_item
-                  if "shortname" in item.keys()}
+item_name_eng = {
+    item["id"]: item["name_eng"] for item in drop_item if "name_eng" in item.keys()
+}
+item_shortname = {
+    item["id"]: item["shortname"] for item in drop_item if "shortname" in item.keys()
+}
 item_dropPriority = {item["id"]: item["dropPriority"] for item in drop_item}
-item_background = {item["id"]: item["background"] for item in drop_item
-                   if "background" in item.keys()}
+item_background = {
+    item["id"]: item["background"] for item in drop_item if "background" in item.keys()
+}
 item_type = {item["id"]: item["type"] for item in drop_item}
-dist_item = {item["phash_battle"]: item["id"] for item in drop_item
-             if item["type"] == "Item" and "phash_battle" in item.keys()}
-dist_ce = {item["phash"]: item["id"] for item in drop_item
-           if item["type"] == "Craft Essence"}
-dist_ce_narrow = {item["phash_narrow"]: item["id"] for item in drop_item
-                  if item["type"] == "Craft Essence"}
-dist_secret_gem = {item["id"]: item["phash_class"] for item in drop_item
-                   if 6200 < item["id"] < 6208
-                   and "phash_class" in item.keys()}
-dist_magic_gem = {item["id"]: item["phash_class"] for item in drop_item
-                  if 6100 < item["id"] < 6108 and "phash_class" in item.keys()}
-dist_gem = {item["id"]: item["phash_class"] for item in drop_item
-            if 6000 < item["id"] < 6008 and "phash_class" in item.keys()}
-dist_exp_rarity = {item["phash_rarity"]: item["id"] for item in drop_item
-                   if item["type"] == "Exp. UP"
-                   and "phash_rarity" in item.keys()}
-dist_exp_rarity_sold = {item["phash_rarity_sold"]: item["id"] for item
-                        in drop_item if item["type"] == "Exp. UP"
-                        and "phash_rarity_sold" in item.keys()}
+dist_item = {
+    item["phash_battle"]: item["id"]
+    for item in drop_item
+    if item["type"] == "Item" and "phash_battle" in item.keys()
+}
+dist_ce = {
+    item["phash"]: item["id"] for item in drop_item if item["type"] == "Craft Essence"
+}
+dist_ce_narrow = {
+    item["phash_narrow"]: item["id"]
+    for item in drop_item
+    if item["type"] == "Craft Essence"
+}
+dist_secret_gem = {
+    item["id"]: item["phash_class"]
+    for item in drop_item
+    if 6200 < item["id"] < 6208 and "phash_class" in item.keys()
+}
+dist_magic_gem = {
+    item["id"]: item["phash_class"]
+    for item in drop_item
+    if 6100 < item["id"] < 6108 and "phash_class" in item.keys()
+}
+dist_gem = {
+    item["id"]: item["phash_class"]
+    for item in drop_item
+    if 6000 < item["id"] < 6008 and "phash_class" in item.keys()
+}
+dist_exp_rarity = {
+    item["phash_rarity"]: item["id"]
+    for item in drop_item
+    if item["type"] == "Exp. UP" and "phash_rarity" in item.keys()
+}
+dist_exp_rarity_sold = {
+    item["phash_rarity_sold"]: item["id"]
+    for item in drop_item
+    if item["type"] == "Exp. UP" and "phash_rarity_sold" in item.keys()
+}
 dist_exp_rarity.update(dist_exp_rarity_sold)
 dist_exp_rarity["1fe03fe0517fa0bf"] = 9701200  # fix #368
-dist_exp_class = {item["phash_class"]: item["id"] for item in drop_item
-                  if item["type"] == "Exp. UP"
-                  and "phash_class" in item.keys()}
-dist_exp_class_sold = {item["phash_class_sold"]: item["id"]
-                       for item in drop_item
-                       if item["type"] == "Exp. UP" and "phash_class_sold"
-                       in item.keys()}
+dist_exp_class = {
+    item["phash_class"]: item["id"]
+    for item in drop_item
+    if item["type"] == "Exp. UP" and "phash_class" in item.keys()
+}
+dist_exp_class_sold = {
+    item["phash_class_sold"]: item["id"]
+    for item in drop_item
+    if item["type"] == "Exp. UP" and "phash_class_sold" in item.keys()
+}
 dist_exp_class.update(dist_exp_class_sold)
-dist_point = {item["phash_battle"]: item["id"]
-              for item in drop_item
-              if item["type"] == "Point" and "phash_battle" in item.keys()}
+dist_point = {
+    item["phash_battle"]: item["id"]
+    for item in drop_item
+    if item["type"] == "Point" and "phash_battle" in item.keys()
+}
 
-with open(drop_file, encoding='UTF-8') as f:
+with open(drop_file, encoding="UTF-8") as f:
     drop_item = json.load(f)
 
 freequest = []
-evnetfiles = eventquest_dir.glob('**/*.json')
+evnetfiles = eventquest_dir.glob("**/*.json")
 for evnetfile in evnetfiles:
     try:
-        with open(evnetfile, encoding='UTF-8') as f:
+        with open(evnetfile, encoding="UTF-8") as f:
             event = json.load(f)
             freequest = freequest + event
     except (OSError, UnicodeEncodeError) as e:
         logger.exception(e)
 
-npz = np.load(basedir / Path('background.npz'))
+npz = np.load(basedir / Path("background.npz"))
 hist_zero = npz["hist_zero"]
 hist_gold = npz["hist_gold"]
 hist_silver = npz["hist_silver"]
@@ -184,15 +209,13 @@ hist_bronze = npz["hist_bronze"]
 
 
 def has_intersect(a, b):
-    """
-    二つの矩形の当たり判定
+    """二つの矩形の当たり判定
     隣接するのはOKとする
     """
-    return max(a[0], b[0]) < min(a[2], b[2]) \
-        and max(a[1], b[1]) < min(a[3], b[3])
+    return max(a[0], b[0]) < min(a[2], b[2]) and max(a[1], b[1]) < min(a[3], b[3])
 
 
-class State():
+class State:
     def set_screen(self):
         self.screen_type = "normal"
 
@@ -220,10 +243,12 @@ class JpAug2021(JpNov2020):
         self.max_qp = 2000000000
         logger.debug("2,000,000,000")
 
+
 class JpMay2025(JpAug2021):
     def set_max_qp(self):
         self.max_qp = 9999999999
         logger.debug("9,999,999,999")
+
 
 class NaState(State):
     def set_char_position(self):
@@ -278,20 +303,21 @@ class Context:
         self.state.set_max_qp()
 
 
-def get_coodinates(img: ndarray,
-                   display: bool = False) -> Tuple[Tuple[int, int],
-                                                   Tuple[int, int]]:
+def get_coodinates(
+    img: ndarray,
+    display: bool = False,
+) -> tuple[tuple[int, int], tuple[int, int]]:
     threshold: int = 30
 
     height, width = img.shape[:2]
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     if display:
-        cv2.imshow('image', img_gray)
+        cv2.imshow("image", img_gray)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     _, inv = cv2.threshold(img_gray, threshold, 255, cv2.THRESH_BINARY_INV)
     if display:
-        cv2.imshow('image', inv)
+        cv2.imshow("image", inv)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     contours, _ = cv2.findContours(inv, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
@@ -299,7 +325,11 @@ def get_coodinates(img: ndarray,
     for cnt in contours:
         _, _, w, h = cv2.boundingRect(cnt)
         area = cv2.contourArea(cnt)
-        if 1.81 < w/h < 1.83 and area > height / 2 * width / 2 and height/h > 1080/910:
+        if (
+            1.81 < w / h < 1.83
+            and area > height / 2 * width / 2
+            and height / h > 1080 / 910
+        ):
             contours2.append(cnt)
     if len(contours2) == 0:
         raise ValueError("Game screen not found.")
@@ -308,8 +338,10 @@ def get_coodinates(img: ndarray,
     return ((x, y), (x + width, y + height))
 
 
-def standardize_size(frame_img: ndarray,
-                     display: bool = False) -> Tuple[ndarray, float]:
+def standardize_size(
+    frame_img: ndarray,
+    display: bool = False,
+) -> tuple[ndarray, float]:
     TRAINING_WIDTH: int = 1754
 
     height, width = frame_img.shape[:2]
@@ -322,24 +354,30 @@ def standardize_size(frame_img: ndarray,
     logger.debug("resize_scale: %f", resize_scale)
 
     if resize_scale > 1:
-        frame_img = cv2.resize(frame_img, (0, 0),
-                               fx=resize_scale, fy=resize_scale,
-                               interpolation=cv2.INTER_CUBIC)
+        frame_img = cv2.resize(
+            frame_img,
+            (0, 0),
+            fx=resize_scale,
+            fy=resize_scale,
+            interpolation=cv2.INTER_CUBIC,
+        )
     elif resize_scale < 1:
-        frame_img = cv2.resize(frame_img, (0, 0),
-                               fx=resize_scale, fy=resize_scale,
-                               interpolation=cv2.INTER_AREA)
+        frame_img = cv2.resize(
+            frame_img,
+            (0, 0),
+            fx=resize_scale,
+            fy=resize_scale,
+            interpolation=cv2.INTER_AREA,
+        )
     if display:
-        cv2.imshow('image', frame_img)
+        cv2.imshow("image", frame_img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     return frame_img, resize_scale
 
 
-def area_decision(frame_img: ndarray,
-                  display: bool = False) -> str:
-    """
-    FGOアプリの地域を選択
+def area_decision(frame_img: ndarray, display: bool = False) -> str:
+    """FGOアプリの地域を選択
     "na", 'jp'に対応
 
     'items_img.png' とのオブジェクトマッチングで判定
@@ -347,23 +385,29 @@ def area_decision(frame_img: ndarray,
     img = frame_img[0:100, 0:500]
     img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     if display:
-        cv2.imshow('image', img_gray)
+        cv2.imshow("image", img_gray)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     template = imread(items_img, 0)
     res = cv2.matchTemplate(
-                            img_gray,
-                            template,
-                            cv2.TM_CCOEFF_NORMED
-                            )
+        img_gray,
+        template,
+        cv2.TM_CCOEFF_NORMED,
+    )
     threshold = 0.9
     loc = np.where(res >= threshold)
-    for pt in zip(*loc[::-1]):
+    for pt in zip(*loc[::-1], strict=False):
         return "na"
-    return 'jp'
+    return "jp"
 
 
-def check_page_mismatch(page_items: int, chestnum: int, pagenum: int, pages: int, lines: int) -> bool:
+def check_page_mismatch(
+    page_items: int,
+    chestnum: int,
+    pagenum: int,
+    pages: int,
+    lines: int,
+) -> bool:
     if pages == 1:
         if chestnum + 1 != page_items:
             return False
@@ -379,28 +423,41 @@ def check_page_mismatch(page_items: int, chestnum: int, pagenum: int, pages: int
 
 
 class ScreenShot:
-    """
-    戦利品スクリーンショットを表すクラス
-    """
+    """戦利品スクリーンショットを表すクラス"""
 
-    def __init__(self, args, img_rgb, svm, svm_chest, svm_dcnt, svm_card, svm_exp_class,
-                 fileextention, exLogger, reward_only=False):
+    def __init__(
+        self,
+        args,
+        img_rgb,
+        svm,
+        svm_chest,
+        svm_dcnt,
+        svm_card,
+        svm_exp_class,
+        fileextention,
+        exLogger,
+        reward_only=False,
+    ):
         self.exLogger = exLogger
         threshold = 80
         self.img_rgb_orig = img_rgb
         img_blue, img_green, img_red = cv2.split(img_rgb)
-        if (img_blue==img_green).all() & (img_green==img_red ).all():
+        if (img_blue == img_green).all() & (img_green == img_red).all():
             raise ValueError("Input image is grayscale")
         self.img_gray_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2GRAY)
         self.img_hsv_orig = cv2.cvtColor(img_rgb, cv2.COLOR_BGR2HSV)
-        _, self.img_th_orig = cv2.threshold(self.img_gray_orig,
-                                            threshold, 255, cv2.THRESH_BINARY)
+        _, self.img_th_orig = cv2.threshold(
+            self.img_gray_orig,
+            threshold,
+            255,
+            cv2.THRESH_BINARY,
+        )
 
         ((self.x1, self.y1), (self.x2, self.y2)) = get_coodinates(self.img_rgb_orig)
         # Remove the extra notch by centering
-        center = int((self.x2 - self.x1)/2 + self.x1)
+        center = int((self.x2 - self.x1) / 2 + self.x1)
         half_width = min(center, img_rgb.shape[1] - center)
-        img_rgb_tmp = img_rgb[:, center - half_width:center + half_width]
+        img_rgb_tmp = img_rgb[:, center - half_width : center + half_width]
         try:
             self.pagenum, self.pages, self.lines = pageinfo.guess_pageinfo(img_rgb_tmp)
             if self.lines / self.pages > 3:
@@ -408,7 +465,7 @@ class ScreenShot:
                 self.lines = self.pages * 3
         except pageinfo.TooManyAreasDetectedError:
             self.pagenum, self.pages, self.lines = (-1, -1, -1)
-        frame_img: ndarray = self.img_rgb_orig[self.y1: self.y2, self.x1: self.x2]
+        frame_img: ndarray = self.img_rgb_orig[self.y1 : self.y2, self.x1 : self.x2]
         img_resize, resize_scale = standardize_size(frame_img)
         self.img_rgb = img_resize
         mode = area_decision(img_resize)
@@ -421,16 +478,15 @@ class ScreenShot:
         dcnt_old, dcnt_new = self.drop_count_area(self.img_rgb_orig, resize_scale, sc)
 
         if logger.isEnabledFor(logging.DEBUG):
-            cv2.imwrite('frame_img.png', img_resize)
+            cv2.imwrite("frame_img.png", img_resize)
 
         if logger.isEnabledFor(logging.DEBUG):
             if self.screen_type == "normal":
-                cv2.imwrite('dcnt_old.png', dcnt_old)
-            cv2.imwrite('dcnt_new.png', dcnt_new)
+                cv2.imwrite("dcnt_old.png", dcnt_old)
+            cv2.imwrite("dcnt_new.png", dcnt_new)
 
         self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
-        _, self.img_th = cv2.threshold(self.img_gray,
-                                       threshold, 255, cv2.THRESH_BINARY)
+        _, self.img_th = cv2.threshold(self.img_gray, threshold, 255, cv2.THRESH_BINARY)
         self.svm = svm
         self.svm_chest = svm_chest
         self.svm_dcnt = svm_dcnt
@@ -457,54 +513,87 @@ class ScreenShot:
 
         # まんわか用イベント判定
         template1 = cv2.imread(str(bunyan1_img), 0)
-        item15th = self.img_gray[item_pts[15][1]:item_pts[15][3], item_pts[15][0]:item_pts[15][2]]
+        item15th = self.img_gray[
+            item_pts[15][1] : item_pts[15][3],
+            item_pts[15][0] : item_pts[15][2],
+        ]
 
         res = cv2.matchTemplate(item15th, template1, cv2.TM_CCOEFF_NORMED)
         threshold = 0.80
         loc = np.where(res >= threshold)
         self.Bunyan = False
-        for pt in zip(*loc[::-1]):
+        for pt in zip(*loc[::-1], strict=False):
             self.Bunyan = True
             break
 
         for i, pt in enumerate(item_pts):
             if self.Bunyan and i == 14:
                 break
-            lx, _ = self.find_edge(self.img_th[pt[1]: pt[3],
-                                               pt[0]: pt[2]], reverse=True)
+            lx, _ = self.find_edge(
+                self.img_th[pt[1] : pt[3], pt[0] : pt[2]],
+                reverse=True,
+            )
             logger.debug("lx: %d", lx)
-            item_img_th = self.img_th[pt[1] + 37: pt[3] - 60,
-                                      pt[0] + lx: pt[2] + lx]
+            item_img_th = self.img_th[pt[1] + 37 : pt[3] - 60, pt[0] + lx : pt[2] + lx]
             if self.is_empty_box(item_img_th):
                 break
-            item_img_rgb = self.img_rgb[pt[1]:  pt[3],
-                                        pt[0] + lx:  pt[2] + lx]
-            item_img_gray = self.img_gray[pt[1]: pt[3],
-                                          pt[0] + lx: pt[2] + lx]
+            item_img_rgb = self.img_rgb[pt[1] : pt[3], pt[0] + lx : pt[2] + lx]
+            item_img_gray = self.img_gray[pt[1] : pt[3], pt[0] + lx : pt[2] + lx]
             if logger.isEnabledFor(logging.DEBUG):
-                cv2.imwrite('item' + str(i) + '.png', item_img_rgb)
-            dropitem = Item(args, i, prev_item, item_img_rgb, item_img_gray,
-                            svm, svm_card, svm_exp_class, fileextention,
-                            self.current_dropPriority, self.exLogger, mode)
+                cv2.imwrite("item" + str(i) + ".png", item_img_rgb)
+            dropitem = Item(
+                args,
+                i,
+                prev_item,
+                item_img_rgb,
+                item_img_gray,
+                svm,
+                svm_card,
+                svm_exp_class,
+                fileextention,
+                self.current_dropPriority,
+                self.exLogger,
+                mode,
+            )
             if dropitem.id == -1:
                 break
             self.current_dropPriority = item_dropPriority[dropitem.id]
             if dropitem.id in [94069601, 94069602, 94069603]:
                 # まんわかイベントのバニヤンに隠されているドロップが問題を生じるので補正
-                dropitem.dropnum = 'x3'
+                dropitem.dropnum = "x3"
             self.items.append(dropitem)
             prev_item = dropitem
 
         if self.Bunyan:
-            lx, _ = self.find_edge(self.img_th[item_pts[14][1]: item_pts[14][3],
-                                            item_pts[14][0]: item_pts[14][2]], reverse=True)
-            item_img_rgb = self.img_rgb[item_pts[14][1]:  item_pts[14][3],
-                                        item_pts[14][0] + lx:  item_pts[14][2] + lx]
-            item_img_gray = self.img_gray[item_pts[14][1]: item_pts[14][3],
-                                        item_pts[14][0] + lx: item_pts[14][2] + lx]
-            dropitem = Item(args, i, prev_item, item_img_rgb, item_img_gray,
-                            svm, svm_card, svm_exp_class, fileextention,
-                            self.current_dropPriority, self.exLogger, mode)
+            lx, _ = self.find_edge(
+                self.img_th[
+                    item_pts[14][1] : item_pts[14][3],
+                    item_pts[14][0] : item_pts[14][2],
+                ],
+                reverse=True,
+            )
+            item_img_rgb = self.img_rgb[
+                item_pts[14][1] : item_pts[14][3],
+                item_pts[14][0] + lx : item_pts[14][2] + lx,
+            ]
+            item_img_gray = self.img_gray[
+                item_pts[14][1] : item_pts[14][3],
+                item_pts[14][0] + lx : item_pts[14][2] + lx,
+            ]
+            dropitem = Item(
+                args,
+                i,
+                prev_item,
+                item_img_rgb,
+                item_img_gray,
+                svm,
+                svm_card,
+                svm_exp_class,
+                fileextention,
+                self.current_dropPriority,
+                self.exLogger,
+                mode,
+            )
             self.items.append(dropitem)
 
         self.itemlist = self.makeitemlist()
@@ -518,15 +607,19 @@ class ScreenShot:
             logger.exception(e)
         if self.qp_gained > 0 and len(self.itemlist) == 0:
             raise GainedQPandDropMissMatchError
-        logger.debug(f'pagenum(pageninfo) pagenum: {self.pagenum}, pages: {self.pages}, lines: {self.lines}')
+        logger.debug(
+            f"pagenum(pageninfo) pagenum: {self.pagenum}, pages: {self.pages}, lines: {self.lines}",
+        )
         self.pagenum, self.pages, self.lines = self.correct_pageinfo()
-        logger.debug(f'pagenum(coreected) pagenum: {self.pagenum}, pages: {self.pages}, lines: {self.lines}')
+        logger.debug(
+            f"pagenum(coreected) pagenum: {self.pagenum}, pages: {self.pages}, lines: {self.lines}",
+        )
         if not reward_only:
             self.check_page_mismatch()
 
     def check_page_mismatch(self):
         if self.Bunyan:
-            num_items = len(self.itemlist) -1
+            num_items = len(self.itemlist) - 1
         else:
             num_items = len(self.itemlist)
         valid = check_page_mismatch(
@@ -542,15 +635,13 @@ class ScreenShot:
             self.exLogger.warning("drops_found = %d", len(self.itemlist))
 
     def find_notch(self):
-        """
-        直線検出で検出されなかったフチ幅を検出
-        """
+        """直線検出で検出されなかったフチ幅を検出"""
         edge_width = 200
 
         height, width = self.img_hsv_orig.shape[:2]
         target_color = 0
         for lx in range(edge_width):
-            img_hsv_x = self.img_hsv_orig[:, lx: lx + 1]
+            img_hsv_x = self.img_hsv_orig[:, lx : lx + 1]
             # ヒストグラムを計算
             hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
@@ -559,7 +650,7 @@ class ScreenShot:
                 break
 
         for rx in range(edge_width):
-            img_hsv_x = self.img_hsv_orig[:, width - rx - 1: width - rx]
+            img_hsv_x = self.img_hsv_orig[:, width - rx - 1 : width - rx]
             # ヒストグラムを計算
             hist = cv2.calcHist([img_hsv_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
@@ -569,49 +660,64 @@ class ScreenShot:
 
         return lx, rx
 
-    def drop_count_area(self, img: ndarray,
-                        resize_scale,
-                        sc,
-                        display: bool = False) -> Tuple[Union[ndarray, None], ndarray]:
+    def drop_count_area(
+        self,
+        img: ndarray,
+        resize_scale,
+        sc,
+        display: bool = False,
+    ) -> tuple[ndarray | None, ndarray]:
         # widescreenかどうかで挙動を変える
         if resize_scale > 1:
-            img = cv2.resize(img, (0, 0),
-                             fx=resize_scale, fy=resize_scale,
-                             interpolation=cv2.INTER_CUBIC)
+            img = cv2.resize(
+                img,
+                (0, 0),
+                fx=resize_scale,
+                fy=resize_scale,
+                interpolation=cv2.INTER_CUBIC,
+            )
         elif resize_scale < 1:
-            img = cv2.resize(img, (0, 0),
-                             fx=resize_scale, fy=resize_scale,
-                             interpolation=cv2.INTER_AREA)
+            img = cv2.resize(
+                img,
+                (0, 0),
+                fx=resize_scale,
+                fy=resize_scale,
+                interpolation=cv2.INTER_AREA,
+            )
         # ((x1, y1), (_, _)) = get_coodinates(img)
         # 相対座標(旧UI)
         dcnt_old = None
         if sc.state.screen_type == "normal":
-            dcnt_old = img[int(self.y1*resize_scale) - 81: int(self.y1*resize_scale) - 44,
-                           int(self.x1*resize_scale) + 1446: int(self.x1*resize_scale) + 1505]
+            dcnt_old = img[
+                int(self.y1 * resize_scale) - 81 : int(self.y1 * resize_scale) - 44,
+                int(self.x1 * resize_scale) + 1446 : int(self.x1 * resize_scale) + 1505,
+            ]
             if display:
-                cv2.imshow('image', dcnt_old)
+                cv2.imshow("image", dcnt_old)
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
         # 相対座標(新UI)
         lx, rx = self.find_notch()
         height, width = img.shape[:2]
-        if (width - lx - rx)/height > 16/8.96:  # Issue #317
+        if (width - lx - rx) / height > 16 / 8.96:  # Issue #317
             # Widescreen
-            dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 13,
-                           width - 495 - rx: width - 415 - int(rx*resize_scale)]
+            dcnt_new = img[
+                int(self.y1 * resize_scale) - 20 : int(self.y1 * resize_scale) + 13,
+                width - 495 - rx : width - 415 - int(rx * resize_scale),
+            ]
         else:
-            dcnt_new = img[int(self.y1*resize_scale) - 20: int(self.y1*resize_scale) + 13,
-                           width - 430 : width - 340]
+            dcnt_new = img[
+                int(self.y1 * resize_scale) - 20 : int(self.y1 * resize_scale) + 13,
+                width - 430 : width - 340,
+            ]
         if display:
-            cv2.imshow('image', dcnt_new)
+            cv2.imshow("image", dcnt_new)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
         return dcnt_old, dcnt_new
 
     def detect_scroll_bar(self):
-        '''
-        Modified from determine_scroll_position()
-        '''
+        """Modified from determine_scroll_position()"""
         width = self.img_rgb.shape[1]
         topleft = (width - 90, 81)
         bottomright = (width, 2 + 753)
@@ -622,17 +728,17 @@ class ScreenShot:
             cv2.imwrite("./scroll_bar_selected2.jpg", img_copy)
 
         gray_image = self.img_gray[
-                                   topleft[1]: bottomright[1],
-                                   topleft[0]: bottomright[0]
-                                   ]
+            topleft[1] : bottomright[1],
+            topleft[0] : bottomright[0],
+        ]
         _, binary = cv2.threshold(gray_image, 200, 255, cv2.THRESH_BINARY)
         if logger.isEnabledFor(logging.DEBUG):
             cv2.imwrite("scroll_bar_binary2.png", binary)
         contours = cv2.findContours(
-                                    binary,
-                                    cv2.RETR_LIST,
-                                    cv2.CHAIN_APPROX_NONE
-                                    )[0]
+            binary,
+            cv2.RETR_LIST,
+            cv2.CHAIN_APPROX_NONE,
+        )[0]
         pts = []
         for cnt in contours:
             ret = cv2.boundingRect(cnt)
@@ -642,7 +748,7 @@ class ScreenShot:
         if len(pts) == 0:
             logger.debug("Can't find scroll bar")
             return -1, -1
-        elif len(pts) > 1:
+        if len(pts) > 1:
             max_cnt = max(contours, key=lambda x: cv2.contourArea(x))
             ret = cv2.boundingRect(max_cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
@@ -651,24 +757,29 @@ class ScreenShot:
                 return -1, -1
         return pt[1], pt[3] - pt[1]
 
-
     def valid_pageinfo(self):
-        '''
-        Checking the content of pageinfo and correcting it when it fails
-        '''
+        """Checking the content of pageinfo and correcting it when it fails"""
         if self.pagenum == -1 or self.pages == -1 or self.lines == -1:
             return False
-        if (self.pagenum == 1 and self.pages == 1 and self.lines == 0) and self.chestnum > 20:
+        if (
+            self.pagenum == 1 and self.pages == 1 and self.lines == 0
+        ) and self.chestnum > 20:
             return False
-        if self.pages == 1 and self.chestnum > 20:
+        if (self.pages == 1 and self.chestnum > 20) or (
+            self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1
+        ):
             return False
-        elif self.itemlist[0]["id"] != ID_REWARD_QP and self.pagenum == 1:
-            return False
-        elif self.Bunyan and self.chestnum != -1 and self.pagenum != 1 \
-                and self.lines != int(self.chestnum/7) + 2:
-            return False
-        elif self.Bunyan is False and self.chestnum != -1 and self.pagenum != 1 \
-                and self.lines != int(self.chestnum/7) + 1:
+        if (
+            self.Bunyan
+            and self.chestnum != -1
+            and self.pagenum != 1
+            and self.lines != int(self.chestnum / 7) + 2
+        ) or (
+            self.Bunyan is False
+            and self.chestnum != -1
+            and self.pagenum != 1
+            and self.lines != int(self.chestnum / 7) + 1
+        ):
             return False
         return True
 
@@ -680,12 +791,17 @@ class ScreenShot:
             entire_height = 645
             esr_y = 17
             cap_height = 14  # 正規化後の im.height を 1155 であると仮定して計算した値
-            pagenum = pageinfo.guess_pagenum(self.asr_y, esr_y, self.actual_height, entire_height, cap_height)
+            pagenum = pageinfo.guess_pagenum(
+                self.asr_y,
+                esr_y,
+                self.actual_height,
+                entire_height,
+                cap_height,
+            )
             pages = pageinfo.guess_pages(self.actual_height, entire_height, cap_height)
             lines = pageinfo.guess_lines(self.actual_height, entire_height, cap_height)
             return pagenum, pages, lines
-        else:
-            return self.pagenum, self.pages, self.lines
+        return self.pagenum, self.pages, self.lines
 
     def calc_black_whiteArea(self, bw_image):
         image_size = bw_image.size
@@ -696,17 +812,13 @@ class ScreenShot:
         return whiteAreaRatio
 
     def is_empty_box(self, img_th):
-        """
-        アイテムボックスにアイテムが無いことを判別する
-        """
+        """アイテムボックスにアイテムが無いことを判別する"""
         if self.calc_black_whiteArea(img_th) < 1:
             return True
         return False
 
     def get_qp_from_text(self, text):
-        """
-        capy-drop-parser から流用
-        """
+        """capy-drop-parser から流用"""
         qp = 0
         power = 1
         # re matches left to right so reverse the list
@@ -718,9 +830,7 @@ class ScreenShot:
         return qp
 
     def extract_text_from_image(self, image):
-        """
-        capy-drop-parser から流用
-        """
+        """capy-drop-parser から流用"""
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         _, qp_image = cv2.threshold(gray, 65, 255, cv2.THRESH_BINARY_INV)
 
@@ -730,20 +840,19 @@ class ScreenShot:
         )
 
     def get_qp(self, mode):
-        """
-        capy-drop-parser から流用
+        """capy-drop-parser から流用
         tesseract-OCR is quite slow and changed to use SVM
         """
         use_tesseract = False
         pt = pageinfo.detect_qp_region(self.img_rgb_orig, mode)
-        logger.debug('pt from pageinfo: %s', pt)
+        logger.debug("pt from pageinfo: %s", pt)
         if pt is None:
             use_tesseract = True
 
         qp_total = -1
         if use_tesseract is False:  # use SVM
             im_th = cv2.bitwise_not(
-                self.img_th_orig[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
+                self.img_th_orig[pt[0][1] : pt[1][1], pt[0][0] : pt[1][0]],
             )
             qp_total = self.ocr_text(im_th)
         if use_tesseract or qp_total == -1:
@@ -751,17 +860,18 @@ class ScreenShot:
                 pt = ((288, 948), (838, 1024))
             else:
                 pt = ((288, 838), (838, 914))
-            logger.debug('Use tesseract')
+            logger.debug("Use tesseract")
             qp_total_text = self.extract_text_from_image(
-                self.img_rgb[pt[0][1]: pt[1][1], pt[0][0]: pt[1][0]]
+                self.img_rgb[pt[0][1] : pt[1][1], pt[0][0] : pt[1][0]],
             )
-            logger.debug('qp_total_text from text: %s', qp_total_text)
+            logger.debug("qp_total_text from text: %s", qp_total_text)
             qp_total = self.get_qp_from_text(qp_total_text)
 
-        logger.debug('qp_total from text: %s', qp_total)
+        logger.debug("qp_total from text: %s", qp_total)
         if qp_total > self.max_qp:
             self.exLogger.warning(
-                "qp_total exceeds the system's maximum: %s", qp_total
+                "qp_total exceeds the system's maximum: %s",
+                qp_total,
             )
         if qp_total == 0:
             return QP_UNKNOWN
@@ -785,11 +895,11 @@ class ScreenShot:
             # each other.
             (topleft, bottomright) = bounds
             height = bottomright[1] - topleft[1]
-            topleft = (topleft[0], topleft[1] - height + int(height*0.12))
+            topleft = (topleft[0], topleft[1] - height + int(height * 0.12))
             bottomright = (bottomright[0], bottomright[1] - height)
             bounds = (topleft, bottomright)
 
-        logger.debug('Gained QP bounds: %s', bounds)
+        logger.debug("Gained QP bounds: %s", bounds)
         if logger.isEnabledFor(logging.DEBUG):
             img_copy = self.img_rgb.copy()
             cv2.rectangle(img_copy, bounds[0], bounds[1], (0, 0, 255), 3)
@@ -798,33 +908,32 @@ class ScreenShot:
         qp_gain = -1
         if use_tesseract is False:
             im_th = cv2.bitwise_not(
-                self.img_th_orig[topleft[1]: bottomright[1],
-                                 topleft[0]: bottomright[0]]
+                self.img_th_orig[
+                    topleft[1] : bottomright[1],
+                    topleft[0] : bottomright[0],
+                ],
             )
             qp_gain = self.ocr_text(im_th)
         if use_tesseract or qp_gain == -1:
-            logger.debug('Use tesseract')
+            logger.debug("Use tesseract")
             (topleft, bottomright) = bounds
             qp_gain_text = self.extract_text_from_image(
-                self.img_rgb[topleft[1]: bottomright[1],
-                             topleft[0]: bottomright[0]]
+                self.img_rgb[topleft[1] : bottomright[1], topleft[0] : bottomright[0]],
             )
             qp_gain = self.get_qp_from_text(qp_gain_text)
-        logger.debug('qp from text: %s', qp_gain)
+        logger.debug("qp from text: %s", qp_gain)
         if qp_gain == 0:
             qp_gain = QP_UNKNOWN
 
         return qp_gain
 
     def find_edge(self, img_th, reverse=False):
-        """
-        直線検出で検出されなかったフチ幅を検出
-        """
+        """直線検出で検出されなかったフチ幅を検出"""
         edge_width = 4
         _, width = img_th.shape[:2]
         target_color = 255 if reverse else 0
         for i in range(edge_width):
-            img_th_x = img_th[:, i:i + 1]
+            img_th_x = img_th[:, i : i + 1]
             # ヒストグラムを計算
             hist = cv2.calcHist([img_th_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
@@ -833,7 +942,7 @@ class ScreenShot:
                 break
         lx = i
         for j in range(edge_width):
-            img_th_x = img_th[:, width - j - 1: width - j]
+            img_th_x = img_th[:, width - j - 1 : width - j]
             # ヒストグラムを計算
             hist = cv2.calcHist([img_th_x], [0], None, [256], [0, 256])
             # 最小値・最大値・最小値の位置・最大値の位置を取得
@@ -845,18 +954,16 @@ class ScreenShot:
         return lx, rx
 
     def makeitemlist(self):
-        """
-        アイテムを出力
-        """
+        """アイテムを出力"""
         itemlist = []
         for item in self.items:
             tmp = {}
-            tmp['id'] = item.id
-            tmp['name'] = item.name
-            tmp['dropPriority'] = item_dropPriority[item.id]
-            tmp['dropnum'] = int(item.dropnum[1:])
-            tmp['bonus'] = item.bonus
-            tmp['category'] = item.category
+            tmp["id"] = item.id
+            tmp["name"] = item.name
+            tmp["dropPriority"] = item_dropPriority[item.id]
+            tmp["dropnum"] = int(item.dropnum[1:])
+            tmp["bonus"] = item.bonus
+            tmp["category"] = item.category
             itemlist.append(tmp)
         return itemlist
 
@@ -864,22 +971,27 @@ class ScreenShot:
         h, w = im_th.shape[:2]
         # 物体検出
         im_th = cv2.bitwise_not(im_th)
-        contours = cv2.findContours(im_th,
-                                    cv2.RETR_EXTERNAL,
-                                    cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours = cv2.findContours(im_th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[
+            0
+        ]
         item_pts = []
         for cnt in contours:
             ret = cv2.boundingRect(cnt)
             area = cv2.contourArea(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
-            if ret[2] < int(w/2) and area > 80 and ret[1] < h/2 \
-                    and 0.3 < ret[2]/ret[3] < 0.85 and ret[3] > h * 0.45:
+            if (
+                ret[2] < int(w / 2)
+                and area > 80
+                and ret[1] < h / 2
+                and 0.3 < ret[2] / ret[3] < 0.85
+                and ret[3] > h * 0.45
+            ):
                 flag = False
                 for p in item_pts:
                     if has_intersect(p, pt):
                         # どちらかを消す
-                        p_area = (p[2]-p[0])*(p[3]-p[1])
-                        pt_area = ret[2]*ret[3]
+                        p_area = (p[2] - p[0]) * (p[3] - p[1])
+                        pt_area = ret[2] * ret[3]
                         if p_area < pt_area:
                             item_pts.remove(p)
                         else:
@@ -894,7 +1006,7 @@ class ScreenShot:
         item_pts.sort()
         if len(item_pts) > len(str(self.max_qp)):
             # QP may be misrecognizing the 10th digit or more, so cut it
-            item_pts = item_pts[len(item_pts) - len(str(self.max_qp)):]
+            item_pts = item_pts[len(item_pts) - len(str(self.max_qp)) :]
         logger.debug("ocr item_pts: %s", item_pts)
         logger.debug("ドロップ桁数(OCR): %d", len(item_pts))
 
@@ -910,12 +1022,11 @@ class ScreenShot:
             test = []
 
             if pt[0] == 0:
-                tmpimg = im_th[pt[1]:pt[3], pt[0]:pt[2]+1]
+                tmpimg = im_th[pt[1] : pt[3], pt[0] : pt[2] + 1]
             else:
-                tmpimg = im_th[pt[1]:pt[3], pt[0]-1:pt[2]+1]
+                tmpimg = im_th[pt[1] : pt[3], pt[0] - 1 : pt[2] + 1]
             tmpimg = cv2.resize(tmpimg, (win_size))
-            hog = cv2.HOGDescriptor(win_size, block_size,
-                                    block_stride, cell_size, bins)
+            hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
             test.append(hog.compute(tmpimg))  # 特徴量の格納
             test = np.array(test)
 
@@ -925,13 +1036,10 @@ class ScreenShot:
         return int(res)
 
     def ocr_tresurechest(self, drop_count_img):
-        """
-        宝箱数をOCRする関数
-        """
+        """宝箱数をOCRする関数"""
         threshold = 80
         img_gray = cv2.cvtColor(drop_count_img, cv2.COLOR_BGR2GRAY)
-        _, img_num = cv2.threshold(img_gray,
-                                   threshold, 255, cv2.THRESH_BINARY)
+        _, img_num = cv2.threshold(img_gray, threshold, 255, cv2.THRESH_BINARY)
         im_th = cv2.bitwise_not(img_num)
         h, w = im_th.shape[:2]
 
@@ -943,9 +1051,7 @@ class ScreenShot:
         return self.ocr_text(im_th)
 
     def pred_dcnt(self, img):
-        """
-        for JP new UI
-        """
+        """For JP new UI"""
         # Hog特徴のパラメータ
         win_size = (120, 60)
         block_size = (16, 16)
@@ -955,8 +1061,7 @@ class ScreenShot:
         char = []
 
         tmpimg = cv2.resize(img, (win_size))
-        hog = cv2.HOGDescriptor(win_size, block_size,
-                                block_stride, cell_size, bins)
+        hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
         char.append(hog.compute(tmpimg))  # 特徴量の格納
         char = np.array(char)
 
@@ -966,25 +1071,25 @@ class ScreenShot:
         return int(res)
 
     def img2num(self, img, img_th, pts, char_w, end):
-        """実際より小さく切り抜かれた数字画像を補正して認識させる
-
-        """
+        """実際より小さく切り抜かれた数字画像を補正して認識させる"""
         height, width = img.shape[:2]
-        c_center = int(pts[0] + (pts[2] - pts[0])/2)
+        c_center = int(pts[0] + (pts[2] - pts[0]) / 2)
         # newimg = img[:, item_pts[-1][0]-1:item_pts[-1][2]+1]
-        newimg = img[:, max(int(c_center - char_w/2), 0):min(int(c_center + char_w/2), width)]
+        newimg = img[
+            :,
+            max(int(c_center - char_w / 2), 0) : min(int(c_center + char_w / 2), width),
+        ]
 
         threshold2 = 10
-        ret, newimg_th = cv2.threshold(newimg,
-                                       threshold2,
-                                       255,
-                                       cv2.THRESH_BINARY)
+        ret, newimg_th = cv2.threshold(newimg, threshold2, 255, cv2.THRESH_BINARY)
         # 上部はもとのやつを上書き
         # for w in range(item_pts[-1][2] - item_pts[-1][0] + 2):
-        for w in range(min(int(c_center + char_w/2), width) - max(int(c_center - char_w/2), 0)):
+        for w in range(
+            min(int(c_center + char_w / 2), width) - max(int(c_center - char_w / 2), 0),
+        ):
             for h in range(end):
-                newimg_th[h, w] = img_th[h, w + int(c_center - char_w/2)]
-        #        newimg_th[h, w] = img_th[h, w + item_pts[-1][0]]
+                newimg_th[h, w] = img_th[h, w + int(c_center - char_w / 2)]
+            #        newimg_th[h, w] = img_th[h, w + item_pts[-1][0]]
             newimg_th[height - 1, w] = 0
             newimg_th[height - 2, w] = 0
             newimg_th[height - 3, w] = 0
@@ -993,9 +1098,7 @@ class ScreenShot:
         return res
 
     def ocr_dcnt(self, drop_count_img):
-        """
-        ocr drop_count (for New UI)
-        """
+        """Ocr drop_count (for New UI)"""
         char_w = 28
         threshold = 80
         kernel = np.ones((4, 4), np.uint8)
@@ -1015,15 +1118,20 @@ class ScreenShot:
             for k in range(end - start):
                 img_th[start + k, j] = 0
 
-        contours = cv2.findContours(img_th,
-                                    cv2.RETR_EXTERNAL,
-                                    cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours = cv2.findContours(img_th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[
+            0
+        ]
         item_pts = []
         for cnt in contours:
             ret = cv2.boundingRect(cnt)
             pt = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
-            if ret[1] > 0 and ret[3] > 8 and ret[1] + ret[3] == start \
-               and 12 < ret[2] < char_w + 4 and ret[0] + ret[2] != width:
+            if (
+                ret[1] > 0
+                and ret[3] > 8
+                and ret[1] + ret[3] == start
+                and 12 < ret[2] < char_w + 4
+                and ret[0] + ret[2] != width
+            ):
                 item_pts.append(pt)
 
         if len(item_pts) == 0:
@@ -1043,9 +1151,7 @@ class ScreenShot:
         return res
 
     def calc_offset(self, pts, std_pts, margin_x):
-        """
-        オフセットを反映
-        """
+        """オフセットを反映"""
         scroll_limit_uppler = 110
         scroll_limit_lower = 284
 
@@ -1062,7 +1168,7 @@ class ScreenShot:
         # Offsetを算出
         offset_x = pts[0][0] - margin_x
         offset_y = pts[0][1] - std_pts[0][1]
-        if offset_y > (std_pts[7][3] - std_pts[7][1])*2:
+        if offset_y > (std_pts[7][3] - std_pts[7][1]) * 2:
             # これ以上になったら三行目の座標と判断
             offset_y = pts[0][1] - std_pts[14][1]
         elif offset_y > 30:
@@ -1081,9 +1187,7 @@ class ScreenShot:
         return item_pts
 
     def img2points(self, mode):
-        """
-        戦利品左一列のY座標を求めて標準座標とのずれを補正して座標を出力する
-        """
+        """戦利品左一列のY座標を求めて標準座標とのずれを補正して座標を出力する"""
         height_limit_first_item = 87
         std_pts = self.booty_pts()
 
@@ -1091,9 +1195,10 @@ class ScreenShot:
         col_size = 3  # アイテム表示最大行
         margin_x = 15
         area_size_lower = 37000  # アイテム枠の面積の最小値
-        img_1strow = self.img_th[0:self.height,
-                                 std_pts[0][0] - margin_x:
-                                 std_pts[0][2] + margin_x]
+        img_1strow = self.img_th[
+            0 : self.height,
+            std_pts[0][0] - margin_x : std_pts[0][2] + margin_x,
+        ]
 
         SCROLLBAR_WIDTH4ONEPAGE = 610
         POSITION_TOP = 16
@@ -1102,48 +1207,54 @@ class ScreenShot:
         SCROLL_OFFSET = 28
 
         # 輪郭を抽出
-        contours = cv2.findContours(img_1strow, cv2.RETR_TREE,
-                                    cv2.CHAIN_APPROX_SIMPLE)[0]
+        contours = cv2.findContours(img_1strow, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)[
+            0
+        ]
 
         leftcell_pts = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area > area_size_lower \
-               and area < self.height * self.width / (row_size * col_size):
-                epsilon = 0.01*cv2.arcLength(cnt, True)
+            if area > area_size_lower and area < self.height * self.width / (
+                row_size * col_size
+            ):
+                epsilon = 0.01 * cv2.arcLength(cnt, True)
                 approx = cv2.approxPolyDP(cnt, epsilon, True)
                 if 4 <= len(approx) <= 6:  # 六角形のみ認識
                     ret = cv2.boundingRect(cnt)
-                    if ret[1] > height_limit_first_item \
-                       and ret[1] + ret[3] < self.height * 0.76 - 101:
+                    if (
+                        ret[1] > height_limit_first_item
+                        and ret[1] + ret[3] < self.height * 0.76 - 101
+                    ):
                         # 小数の数値はだいたいの実測
-                        pts = [ret[0], ret[1],
-                               ret[0] + ret[2], ret[1] + ret[3]]
+                        pts = [ret[0], ret[1], ret[0] + ret[2], ret[1] + ret[3]]
                         leftcell_pts.append(pts)
         if len(leftcell_pts) != 0:
             item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
             logger.debug("leftcell_pts: %s", leftcell_pts)
-        else:
-            if (self.asr_y == POSITION_TOP and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE) or self.actual_height == -1:
-                # case: normal
-                if mode == "na":
-                    leftcell_pts = [[25, 109, 214, 315]]
-                else:
-                    leftcell_pts = [[14, 97, 202, 303]]
-                item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
-            elif POSITION_BOTTOM_JP <= self.asr_y <= POSITION_BOTTOM_NA and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE:
-                # case: scrolling down by mistake
-                if mode == "na":
-                    leftcell_pts = [[25, 299, 214, 504]]
-                else:
-                    leftcell_pts = [[14, 97 - SCROLL_OFFSET, 202, 303 - SCROLL_OFFSET]]
-                item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
+        elif (
+            self.asr_y == POSITION_TOP and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE
+        ) or self.actual_height == -1:
+            # case: normal
+            if mode == "na":
+                leftcell_pts = [[25, 109, 214, 315]]
+            else:
+                leftcell_pts = [[14, 97, 202, 303]]
+            item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
+        elif (
+            POSITION_BOTTOM_JP <= self.asr_y <= POSITION_BOTTOM_NA
+            and self.actual_height == SCROLLBAR_WIDTH4ONEPAGE
+        ):
+            # case: scrolling down by mistake
+            if mode == "na":
+                leftcell_pts = [[25, 299, 214, 504]]
+            else:
+                leftcell_pts = [[14, 97 - SCROLL_OFFSET, 202, 303 - SCROLL_OFFSET]]
+            item_pts = self.calc_offset(leftcell_pts, std_pts, margin_x)
 
         return item_pts
 
     def booty_pts(self):
-        """
-        戦利品が出現する21の座標 [left, top, right, bottom]
+        """戦利品が出現する21の座標 [left, top, right, bottom]
         解像度別に設定
         """
         criteria_left = 102
@@ -1152,48 +1263,78 @@ class ScreenShot:
         item_height = 206
         margin_width = 32
         margin_height = 21
-        pts = generate_booty_pts(criteria_left, criteria_top,
-                                 item_width, item_height,
-                                 margin_width, margin_height)
+        pts = generate_booty_pts(
+            criteria_left,
+            criteria_top,
+            item_width,
+            item_height,
+            margin_width,
+            margin_height,
+        )
         return pts
 
 
-def generate_booty_pts(criteria_left, criteria_top, item_width, item_height,
-                       margin_width, margin_height):
-    """
-        ScreenShot#booty_pts() が返すべき座標リストを生成する。
-        全戦利品画像が等間隔に並んでいることを仮定している。
+def generate_booty_pts(
+    criteria_left,
+    criteria_top,
+    item_width,
+    item_height,
+    margin_width,
+    margin_height,
+):
+    """ScreenShot#booty_pts() が返すべき座標リストを生成する。
+    全戦利品画像が等間隔に並んでいることを仮定している。
 
-        criteria_left ... 左上にある戦利品の left 座標
-        criteria_top ... 左上にある戦利品の top 座標
-        item_width ... 戦利品画像の width
-        item_height ... 戦利品画像の height
-        margin_width ... 戦利品画像間の width
-        margin_height ... 戦利品画像間の height
+    criteria_left ... 左上にある戦利品の left 座標
+    criteria_top ... 左上にある戦利品の top 座標
+    item_width ... 戦利品画像の width
+    item_height ... 戦利品画像の height
+    margin_width ... 戦利品画像間の width
+    margin_height ... 戦利品画像間の height
     """
     pts = []
-    current = (criteria_left, criteria_top, criteria_left + item_width,
-               criteria_top + item_height)
+    current = (
+        criteria_left,
+        criteria_top,
+        criteria_left + item_width,
+        criteria_top + item_height,
+    )
     for j in range(3):
         # top, bottom の y座標を計算
         current_top = criteria_top + (item_height + margin_height) * j
         current_bottom = current_top + item_height
         # x座標を左端に固定
-        current = (criteria_left, current_top,
-                   criteria_left + item_width, current_bottom)
+        current = (
+            criteria_left,
+            current_top,
+            criteria_left + item_width,
+            current_bottom,
+        )
         for i in range(7):
             # y座標を固定したままx座標をスライドさせていく
             current_left = criteria_left + (item_width + margin_width) * i
             current_right = current_left + item_width
-            current = (current_left, current_top,
-                       current_right, current_bottom)
+            current = (current_left, current_top, current_right, current_bottom)
             pts.append(current)
     return pts
 
 
 class Item:
-    def __init__(self, args, pos, prev_item, img_rgb, img_gray, svm, svm_card, svm_exp_class,
-                 fileextention, current_dropPriority, exLogger, mode='jp'):
+    def __init__(
+        self,
+        args,
+        pos,
+        prev_item,
+        img_rgb,
+        img_gray,
+        svm,
+        svm_card,
+        svm_exp_class,
+        fileextention,
+        current_dropPriority,
+        exLogger,
+        mode="jp",
+    ):
         self.position = pos
         self.prev_item = prev_item
         self.img_rgb = img_rgb
@@ -1208,8 +1349,13 @@ class Item:
 
         self.height, self.width = img_rgb.shape[:2]
         logger.debug("pos: %d", pos)
-        self.identify_item(args, prev_item, svm_card, svm_exp_class,
-                           current_dropPriority)
+        self.identify_item(
+            args,
+            prev_item,
+            svm_card,
+            svm_exp_class,
+            current_dropPriority,
+        )
         if self.id == -1:
             return
         logger.debug("id: %d", self.id)
@@ -1220,15 +1366,22 @@ class Item:
 
         self.svm = svm
         self.bonus = ""
-        if self.category != "Craft Essence" and self.category != "Exp. UP":
+        # if self.category != "Craft Essence" and self.category != "Exp. UP":
+        if self.category != "Craft Essence":
             self.ocr_digit(mode)
         else:
             self.dropnum = "x1"
         logger.debug("Bonus: %s", self.bonus)
         logger.debug("Stack: %s", self.dropnum)
 
-    def identify_item(self, args, prev_item, svm_card, svm_exp_class,
-                      current_dropPriority):
+    def identify_item(
+        self,
+        args,
+        prev_item,
+        svm_card,
+        svm_exp_class,
+        current_dropPriority,
+    ):
         self.background = classify_background(self.img_rgb)
         self.hash_item = compute_hash(self.img_rgb)  # 画像の距離
         if prev_item is not None:
@@ -1236,12 +1389,16 @@ class Item:
             # 1. previous item is not a reward QP.
             # 2. Same background as the previous item
             # 3. Not (similarity is close) dice, gem or EXP
-            if prev_item.id != ID_REWARD_QP \
-                and prev_item.background == self.background \
-                and not (ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX or
-                         ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE or
-                         ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX or
-                         ID_GREEN_TEA <= prev_item.id <= ID_RED_TEA):
+            if (
+                prev_item.id != ID_REWARD_QP
+                and prev_item.background == self.background
+                and not (
+                    ID_GEM_MIN <= prev_item.id <= ID_SECRET_GEM_MAX
+                    or ID_2ZORO_DICE <= prev_item.id <= ID_3ZORO_DICE
+                    or ID_EXP_MIN <= prev_item.id <= ID_EXP_MAX
+                    or ID_GREEN_TEA <= prev_item.id <= ID_RED_TEA
+                )
+            ):
                 d = hasher.compare(self.hash_item, prev_item.hash_item)
                 if d <= 4:
                     self.category = prev_item.category
@@ -1252,11 +1409,10 @@ class Item:
         self.id = self.classify_card(self.img_rgb, svm_exp_class, current_dropPriority)
         if args.lang == "jpn":
             self.name = item_name[self.id]
+        elif self.id in item_name_eng:
+            self.name = item_name_eng[self.id]
         else:
-            if self.id in item_name_eng.keys():
-                self.name = item_name_eng[self.id]
-            else:
-                self.name = item_name[self.id]
+            self.name = item_name[self.id]
 
         if self.category == "":
             if self.id in item_type:
@@ -1265,15 +1421,13 @@ class Item:
                 self.category = "Item"
 
     def conflictcheck(self, pts, pt):
-        """
-        pt が ptsのどれかと衝突していたら面積に応じて入れ替える
-        """
+        """Pt が ptsのどれかと衝突していたら面積に応じて入れ替える"""
         flag = False
         for p in list(pts):
             if has_intersect(p, pt):
                 # どちらかを消す
-                p_area = (p[2]-p[0])*(p[3]-p[1])
-                pt_area = (pt[2]-pt[0])*(pt[3]-pt[1])
+                p_area = (p[2] - p[0]) * (p[3] - p[1])
+                pt_area = (pt[2] - pt[0]) * (pt[3] - pt[1])
                 if p_area < pt_area:
                     pts.remove(p)
                 else:
@@ -1284,9 +1438,7 @@ class Item:
         return pts
 
     def extension(self, pts):
-        """
-        文字エリアを1pixcel微修正
-        """
+        """文字エリアを1pixcel微修正"""
         new_pts = []
         for pt in pts:
             if pt[0] == 0 and pt[1] == 0:
@@ -1301,16 +1453,12 @@ class Item:
         return new_pts
 
     def extension_straighten(self, pts):
-        """
-        Y軸を最大値にそろえつつ文字エリアを1pixcel微修正
-        """
+        """Y軸を最大値にそろえつつ文字エリアを1pixcel微修正"""
         base_top = 6  # 強制的に高さを確保
         base_bottom = 10
         for pt in pts:
-            if base_top > pt[1]:
-                base_top = pt[1]
-            if base_bottom < pt[3]:
-                base_bottom = pt[3]
+            base_top = min(base_top, pt[1])
+            base_bottom = max(base_bottom, pt[3])
 
         # 5桁目がおかしくなる対策
         new_pts = []
@@ -1325,8 +1473,7 @@ class Item:
         return new_pts
 
     def detect_bonus_char4jpg(self, mode="jp"):
-        """
-        [JP]Ver.2.37.0以前の仕様
+        """[JP]Ver.2.37.0以前の仕様
         戦利品数OCRで下段の黄文字の座標を抽出する
         PNGではない画像の認識用
 
@@ -1378,17 +1525,15 @@ class Item:
         if m_tiny:
             logger.debug("Font Size: %d", font_size)
             return line, pts, font_size
-        else:
-            font_size = FONTSIZE_UNDEFINED
-            logger.debug("Font Size: %d", font_size)
-            line = ""
-            pts = []
+        font_size = FONTSIZE_UNDEFINED
+        logger.debug("Font Size: %d", font_size)
+        line = ""
+        pts = []
 
         return line, pts, font_size
 
     def detect_bonus_char4jpg2(self, mode):
-        """
-        [JP]Ver.2.37.0以降の仕様
+        """[JP]Ver.2.37.0以降の仕様
         戦利品数OCRで下段の黄文字の座標を抽出する
         PNGではない画像の認識用
 
@@ -1410,7 +1555,12 @@ class Item:
         # 1-5桁の読み込み
         cut_width = 21
         comma_width = 5
-        line, pts = self.get_number4jpg2(base_line, margin_right, cut_width, comma_width)
+        line, pts = self.get_number4jpg2(
+            base_line,
+            margin_right,
+            cut_width,
+            comma_width,
+        )
         logger.debug("Read BONUS NORMAL: %s", line)
         m_normal = re.match(pattern_normal, line)
         if m_normal:
@@ -1420,7 +1570,12 @@ class Item:
         cut_width = 19
         comma_width = 5
 
-        line, pts = self.get_number4jpg2(base_line, margin_right, cut_width, comma_width)
+        line, pts = self.get_number4jpg2(
+            base_line,
+            margin_right,
+            cut_width,
+            comma_width,
+        )
         logger.debug("Read BONUS SMALL: %s", line)
         m_small = re.match(pattern_small, line)
         if m_small:
@@ -1430,17 +1585,21 @@ class Item:
         cut_width = 18
         comma_width = 5
 
-        line, pts = self.get_number4jpg2(base_line, margin_right, cut_width, comma_width)
+        line, pts = self.get_number4jpg2(
+            base_line,
+            margin_right,
+            cut_width,
+            comma_width,
+        )
         logger.debug("Read BONUS TINY: %s", line)
         m_tiny = re.match(pattern_tiny, line)
         if m_tiny:
             logger.debug("Font Size: %d", font_size)
             return line, pts, font_size
-        else:
-            font_size = FONTSIZE_UNDEFINED
-            logger.debug("Font Size: %d", font_size)
-            line = ""
-            pts = []
+        font_size = FONTSIZE_UNDEFINED
+        logger.debug("Font Size: %d", font_size)
+        line = ""
+        pts = []
 
         return line, pts, font_size
 
@@ -1486,15 +1645,12 @@ class Item:
         return cut_width, cut_height, comma_width
 
     def get_number4jpg(self, base_line, margin_right, font_size, mode="jp"):
-        """[JP]Ver.2.37.0以前の仕様
-        """
+        """[JP]Ver.2.37.0以前の仕様"""
         cut_width, cut_height, comma_width = self.define_fontsize(font_size, mode)
         top_y = base_line - cut_height
         # まず、+, xの位置が何桁目か調査する
         pts = []
-        if font_size == FONTSIZE_TINY:
-            max_digits = 8
-        elif font_size == FONTSIZE_SMALL:
+        if font_size == FONTSIZE_TINY or font_size == FONTSIZE_SMALL:
             max_digits = 8
         else:
             max_digits = 7
@@ -1502,58 +1658,67 @@ class Item:
         for i in range(max_digits):
             if i == 0:
                 continue
-            pt = [self.width - margin_right - cut_width * (i + 1)
-                  - comma_width * int((i - 1)/3),
-                  top_y,
-                  self.width - margin_right - cut_width * i
-                  - comma_width * int((i - 1)/3),
-                  base_line]
+            pt = [
+                self.width
+                - margin_right
+                - cut_width * (i + 1)
+                - comma_width * int((i - 1) / 3),
+                top_y,
+                self.width
+                - margin_right
+                - cut_width * i
+                - comma_width * int((i - 1) / 3),
+                base_line,
+            ]
             result = self.read_char(pt)
             if i == 1 and ord(result) == 0:
                 # アイテム数 x1 とならず表記無し場合のエラー処理
                 return "", pts
-            if result in ['x', '+']:
+            if result in ["x", "+"]:
                 break
         # 決まった位置まで出力する
         line = ""
         for j in range(i):
-            pt = [self.width - margin_right - cut_width * (j + 1)
-                  - comma_width * int(j/3),
-                  top_y,
-                  self.width - margin_right - cut_width * j
-                  - comma_width * int(j/3),
-                  base_line]
+            pt = [
+                self.width
+                - margin_right
+                - cut_width * (j + 1)
+                - comma_width * int(j / 3),
+                top_y,
+                self.width - margin_right - cut_width * j - comma_width * int(j / 3),
+                base_line,
+            ]
             c = self.read_char(pt)
             if ord(c) == 0:  # Null文字対策
-                line = line + '?'
+                line = line + "?"
                 break
             line = line + c
             pts.append(pt)
         j = j + 1
-        pt = [self.width - margin_right - cut_width * (j + 1)
-              - comma_width * int((j - 1)/3),
-              top_y,
-              self.width - margin_right - cut_width * j
-              - comma_width * int((j - 1)/3),
-              base_line]
+        pt = [
+            self.width
+            - margin_right
+            - cut_width * (j + 1)
+            - comma_width * int((j - 1) / 3),
+            top_y,
+            self.width - margin_right - cut_width * j - comma_width * int((j - 1) / 3),
+            base_line,
+        ]
         c = self.read_char(pt)
         if ord(c) == 0:  # Null文字対策
-            c = '?'
+            c = "?"
         line = line + c
         line = "(" + line[::-1] + ")"
         pts.append(pt)
         pts.sort()
         # PNGのマスク法との差を埋める補正
-        new_pts = [[pts[0][0]-10, pts[0][1],
-                    pts[0][0]-1, pts[0][3]]]  # "(" に対応
+        new_pts = [[pts[0][0] - 10, pts[0][1], pts[0][0] - 1, pts[0][3]]]  # "(" に対応
         new_pts.append("")  # ")" に対応
 
         return line, new_pts
 
     def get_number4jpg2(self, base_line, margin_right, cut_width, comma_width):
-        """[JP]Ver.2.37.0以降の仕様
-
-        """
+        """[JP]Ver.2.37.0以降の仕様"""
         cut_height = 30
         top_y = base_line - cut_height
         # まず、+, xの位置が何桁目か調査する
@@ -1563,83 +1728,98 @@ class Item:
         for i in range(max_digits):
             if i == 0:
                 continue
-            pt = [self.width - margin_right - cut_width * (i + 1)
-                  - comma_width * int((i - 1)/3),
-                  top_y,
-                  self.width - margin_right - cut_width * i
-                  - comma_width * int((i - 1)/3),
-                  base_line]
+            pt = [
+                self.width
+                - margin_right
+                - cut_width * (i + 1)
+                - comma_width * int((i - 1) / 3),
+                top_y,
+                self.width
+                - margin_right
+                - cut_width * i
+                - comma_width * int((i - 1) / 3),
+                base_line,
+            ]
             result = self.read_char(pt)
             if i == 1 and ord(result) == 0:
                 # アイテム数 x1 とならず表記無し場合のエラー処理
                 return "", pts
-            if result in ['x', '+']:
+            if result in ["x", "+"]:
                 break
         # 決まった位置まで出力する
         line = ""
         for j in range(i):
-            pt = [self.width - margin_right - cut_width * (j + 1)
-                  - comma_width * int(j/3),
-                  top_y,
-                  self.width - margin_right - cut_width * j
-                  - comma_width * int(j/3),
-                  base_line]
+            pt = [
+                self.width
+                - margin_right
+                - cut_width * (j + 1)
+                - comma_width * int(j / 3),
+                top_y,
+                self.width - margin_right - cut_width * j - comma_width * int(j / 3),
+                base_line,
+            ]
             c = self.read_char(pt)
             if ord(c) == 0:  # Null文字対策
-                line = line + '?'
+                line = line + "?"
                 break
             line = line + c
             pts.append(pt)
         j = j + 1
-        pt = [self.width - margin_right - cut_width * (j + 1)
-              - comma_width * int((j - 1)/3),
-              top_y,
-              self.width - margin_right - cut_width * j
-              - comma_width * int((j - 1)/3),
-              base_line]
+        pt = [
+            self.width
+            - margin_right
+            - cut_width * (j + 1)
+            - comma_width * int((j - 1) / 3),
+            top_y,
+            self.width - margin_right - cut_width * j - comma_width * int((j - 1) / 3),
+            base_line,
+        ]
         c = self.read_char(pt)
         if ord(c) == 0:  # Null文字対策
-            c = '?'
+            c = "?"
         line = line + c
         line = "(" + line[::-1] + ")"
         pts.append(pt)
         pts.sort()
         # PNGのマスク法との差を埋める補正
-        new_pts = [[pts[0][0]-10, pts[0][1],
-                    pts[0][0]-1, pts[0][3]]]  # "(" に対応
+        new_pts = [[pts[0][0] - 10, pts[0][1], pts[0][0] - 1, pts[0][3]]]  # "(" に対応
         new_pts.append("")  # ")" に対応
 
         return line, new_pts
 
     def get_number(self, base_line, margin_right, font_size, mode):
-        """[JP]Ver.2.37.0以前の仕様
-        """
+        """[JP]Ver.2.37.0以前の仕様"""
         cut_width, cut_height, comma_width = self.define_fontsize(font_size, mode)
         top_y = base_line - cut_height
         # まず、+, xの位置が何桁目か調査する
         for i in range(8):  # 8桁以上は無い
             if i == 0:
                 continue
-            elif (self.id == ID_REWARD_QP
-                  or self.category in ["Point"]) and i <= 2:
+            if (self.id == ID_REWARD_QP or self.category in ["Point"]) and i <= 2:
                 # 報酬QPとPointは3桁以上
                 continue
-            elif self.name == "QP" and i <= 3:
+            if self.name == "QP" and i <= 3:
                 # QPは4桁以上
                 continue
-            pt = [self.width - margin_right - cut_width * (i + 1)
-                  - comma_width * int((i - 1)/3),
-                  top_y,
-                  self.width - margin_right - cut_width * i
-                  - comma_width * int((i - 1)/3),
-                  base_line]
+            pt = [
+                self.width
+                - margin_right
+                - cut_width * (i + 1)
+                - comma_width * int((i - 1) / 3),
+                top_y,
+                self.width
+                - margin_right
+                - cut_width * i
+                - comma_width * int((i - 1) / 3),
+                base_line,
+            ]
             if pt[0] < 0:
                 break
             result = self.read_char(pt)
             if i == 1 and ord(result) == 0:
                 # アイテム数 x1 とならず表記無し場合のエラー処理
                 return ""
-            if result in ['x', '+']:
+            if result in ["x", "+"]:
                 self.margin_left = pt[0]
                 break
         # 決まった位置まで出力する
@@ -1647,39 +1827,44 @@ class Item:
         for j in range(i):
             if (self.name == "QP" or self.category in ["Point"]) and j < 2:
                 # QPとPointは下二桁は00
-                line += '0'
+                line += "0"
                 continue
-            pt = [self.width - margin_right - cut_width * (j + 1)
-                  - comma_width * int(j/3),
-                  top_y,
-                  self.width - margin_right - cut_width * j
-                  - comma_width * int(j/3),
-                  base_line]
+            pt = [
+                self.width
+                - margin_right
+                - cut_width * (j + 1)
+                - comma_width * int(j / 3),
+                top_y,
+                self.width - margin_right - cut_width * j - comma_width * int(j / 3),
+                base_line,
+            ]
             if pt[0] < 0:
                 break
             c = self.read_char(pt)
             if ord(c) == 0:  # Null文字対策
-                c = '?'
+                c = "?"
             line = line + c
         j = j + 1
-        pt = [self.width - margin_right - cut_width * (j + 1)
-              - comma_width * int((j - 1)/3),
-              top_y,
-              self.width - margin_right - cut_width * j
-              - comma_width * int((j - 1)/3),
-              base_line]
+        pt = [
+            self.width
+            - margin_right
+            - cut_width * (j + 1)
+            - comma_width * int((j - 1) / 3),
+            top_y,
+            self.width - margin_right - cut_width * j - comma_width * int((j - 1) / 3),
+            base_line,
+        ]
         if pt[0] > 0:
             c = self.read_char(pt)
             if ord(c) == 0:  # Null文字対策
-                c = '?'
+                c = "?"
             line = line + c
         line = line[::-1]
 
         return line
 
     def get_number2(self, cut_width, comma_width, base_line=147, margin_right=15):
-        """[JP]Ver.2.37.0以降の仕様
-        """
+        """[JP]Ver.2.37.0以降の仕様"""
         cut_height = 26
         # base_line = 147
         # margin_right = 15
@@ -1688,26 +1873,31 @@ class Item:
         for i in range(8):  # 8桁以上は無い
             if i == 0:
                 continue
-            elif (self.id == ID_REWARD_QP
-                  or self.category in ["Point"]) and i <= 2:
+            if (self.id == ID_REWARD_QP or self.category in ["Point"]) and i <= 2:
                 # 報酬QPとPointは3桁以上
                 continue
-            elif self.name == "QP" and i <= 3:
+            if self.name == "QP" and i <= 3:
                 # QPは4桁以上
                 continue
-            pt = [self.width - margin_right - cut_width * (i + 1)
-                  - comma_width * int((i - 1)/3),
-                  top_y,
-                  self.width - margin_right - cut_width * i
-                  - comma_width * int((i - 1)/3),
-                  base_line]
+            pt = [
+                self.width
+                - margin_right
+                - cut_width * (i + 1)
+                - comma_width * int((i - 1) / 3),
+                top_y,
+                self.width
+                - margin_right
+                - cut_width * i
+                - comma_width * int((i - 1) / 3),
+                base_line,
+            ]
             if pt[0] < 0:
                 break
             result = self.read_char(pt)
             if i == 1 and ord(result) == 0:
                 # アイテム数 x1 とならず表記無し場合のエラー処理
                 return ""
-            if result in ['x', '+']:
+            if result in ["x", "+"]:
                 self.margin_left = pt[0]
                 break
         # 決まった位置まで出力する
@@ -1715,39 +1905,44 @@ class Item:
         for j in range(i):
             if (self.name == "QP" or self.category in ["Point"]) and j < 2:
                 # QPとPointは下二桁は00
-                line += '0'
+                line += "0"
                 continue
-            pt = [self.width - margin_right - cut_width * (j + 1)
-                  - comma_width * int(j/3),
-                  top_y,
-                  self.width - margin_right - cut_width * j
-                  - comma_width * int(j/3),
-                  base_line]
+            pt = [
+                self.width
+                - margin_right
+                - cut_width * (j + 1)
+                - comma_width * int(j / 3),
+                top_y,
+                self.width - margin_right - cut_width * j - comma_width * int(j / 3),
+                base_line,
+            ]
             if pt[0] < 0:
                 break
             c = self.read_char(pt)
             if ord(c) == 0:  # Null文字対策
-                c = '?'
+                c = "?"
             line = line + c
         j = j + 1
-        pt = [self.width - margin_right - cut_width * (j + 1)
-              - comma_width * int((j - 1)/3),
-              top_y,
-              self.width - margin_right - cut_width * j
-              - comma_width * int((j - 1)/3),
-              base_line]
+        pt = [
+            self.width
+            - margin_right
+            - cut_width * (j + 1)
+            - comma_width * int((j - 1) / 3),
+            top_y,
+            self.width - margin_right - cut_width * j - comma_width * int((j - 1) / 3),
+            base_line,
+        ]
         if pt[0] > 0:
             c = self.read_char(pt)
             if ord(c) == 0:  # Null文字対策
-                c = '?'
+                c = "?"
             line = line + c
         line = line[::-1]
 
         return line
 
     def detect_white_char(self, base_line, margin_right, mode="jp"):
-        """
-        上段と下段の白文字を見つける機能を一つに統合
+        """上段と下段の白文字を見つける機能を一つに統合
         [JP]Ver.2.37.0からボーナスがある場合の表示の仕様変更有り
         """
         pattern_tiny = r"^[\+x][1-9]\d{4}00$"
@@ -1757,8 +1952,8 @@ class Item:
         pattern_normal = r"^[\+x][1-9]\d{0,5}$"
         pattern_normal_qp = r"^\+[1-9]\d{0,4}0$"
         logger.debug("base_line: %d", base_line)
-#        if mode == "jp" and base_line < 170:
-        if base_line < 170:
+        #        if mode == "jp" and base_line < 170:
+        if base_line < 170 and self.category != "Exp. UP":
             # JP Ver.2.37.0以降の新仕様
             # 1-6桁の読み込み
             font_size = FONTSIZE_NEWSTYLE
@@ -1801,63 +1996,61 @@ class Item:
         elif self.id not in [ID_QP, ID_REWARD_QP] and self.category != "Point":
             cut_width = 21
             comma_width = 5
-            line = self.get_number2(cut_width, comma_width, base_line=base_line, margin_right=margin_right)
+            line = self.get_number2(
+                cut_width,
+                comma_width,
+                base_line=base_line,
+                margin_right=margin_right,
+            )
             logger.debug("line: %s", line)
-            if len(line) <= 1:
+            if len(line) <= 1 or not line[1:].isdigit():
                 return ""
-            elif not line[1:].isdigit():
+            return line
+        # JP Ver.2.37.0以前の旧仕様
+        elif self.font_size != FONTSIZE_UNDEFINED:
+            line = self.get_number(base_line, margin_right, self.font_size, mode)
+            logger.debug("line: %s", line)
+            if len(line) <= 1 or not line[1:].isdigit():
                 return ""
             return line
         else:
-            # JP Ver.2.37.0以前の旧仕様
-            if self.font_size != FONTSIZE_UNDEFINED:
-                line = self.get_number(base_line, margin_right, self.font_size, mode)
-                logger.debug("line: %s", line)
-                if len(line) <= 1:
-                    return ""
-                elif not line[1:].isdigit():
-                    return ""
+            # 1-6桁の読み込み
+            font_size = FONTSIZE_NORMAL
+            line = self.get_number(base_line, margin_right, font_size, mode)
+            logger.debug("Read NORMAL: %s", line)
+            if self.id == ID_QP or self.category == "Point":
+                pattern_normal = pattern_normal_qp
+            m_normal = re.match(pattern_normal, line)
+            if m_normal:
+                logger.debug("Font Size: %d", font_size)
+                self.font_size = font_size
                 return line
-            else:
-                # 1-6桁の読み込み
-                font_size = FONTSIZE_NORMAL
-                line = self.get_number(base_line, margin_right, font_size, mode)
-                logger.debug("Read NORMAL: %s", line)
-                if self.id == ID_QP or self.category == "Point":
-                    pattern_normal = pattern_normal_qp
-                m_normal = re.match(pattern_normal, line)
-                if m_normal:
-                    logger.debug("Font Size: %d", font_size)
-                    self.font_size = font_size
-                    return line
-                # 6桁の読み込み
-                font_size = FONTSIZE_SMALL
-                line = self.get_number(base_line, margin_right, font_size, mode)
-                logger.debug("Read SMALL: %s", line)
-                if self.id == ID_QP or self.category == "Point":
-                    pattern_small = pattern_small_qp
-                m_small = re.match(pattern_small, line)
-                if m_small:
-                    logger.debug("Font Size: %d", font_size)
-                    self.font_size = font_size
-                    return line
-                # 7桁読み込み
-                font_size = FONTSIZE_TINY
-                line = self.get_number(base_line, margin_right, font_size, mode)
-                logger.debug("Read TINY: %s", line)
-                if self.id == ID_QP or self.category == "Point":
-                    pattern_tiny = pattern_tiny_qp
-                m_tiny = re.match(pattern_tiny, line)
-                if m_tiny:
-                    logger.debug("Font Size: %d", font_size)
-                    self.font_size = font_size
-                    return line
+            # 6桁の読み込み
+            font_size = FONTSIZE_SMALL
+            line = self.get_number(base_line, margin_right, font_size, mode)
+            logger.debug("Read SMALL: %s", line)
+            if self.id == ID_QP or self.category == "Point":
+                pattern_small = pattern_small_qp
+            m_small = re.match(pattern_small, line)
+            if m_small:
+                logger.debug("Font Size: %d", font_size)
+                self.font_size = font_size
+                return line
+            # 7桁読み込み
+            font_size = FONTSIZE_TINY
+            line = self.get_number(base_line, margin_right, font_size, mode)
+            logger.debug("Read TINY: %s", line)
+            if self.id == ID_QP or self.category == "Point":
+                pattern_tiny = pattern_tiny_qp
+            m_tiny = re.match(pattern_tiny, line)
+            if m_tiny:
+                logger.debug("Font Size: %d", font_size)
+                self.font_size = font_size
+                return line
         return ""
 
     def read_item(self, pts):
-        """
-        ボーナスの数値をOCRする(エラー訂正有)
-        """
+        """ボーナスの数値をOCRする(エラー訂正有)"""
         win_size = (120, 60)
         block_size = (16, 16)
         block_stride = (4, 4)
@@ -1867,10 +2060,9 @@ class Item:
 
         for pt in pts:
             char = []
-            tmpimg = self.img_gray[pt[1]:pt[3], pt[0]:pt[2]]
+            tmpimg = self.img_gray[pt[1] : pt[3], pt[0] : pt[2]]
             tmpimg = cv2.resize(tmpimg, (win_size))
-            hog = cv2.HOGDescriptor(win_size, block_size, block_stride,
-                                    cell_size, bins)
+            hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
             char.append(hog.compute(tmpimg))
             char = np.array(char)
             pred = self.svm.predict(char)
@@ -1882,7 +2074,7 @@ class Item:
         if not lines.endswith(")"):
             lines = lines[:-1] + ")"
         if not lines.startswith("(+") and not lines.startswith("(x"):
-            if lines[0] in ["+", 'x']:
+            if lines[0] in ["+", "x"]:
                 lines = "(" + lines
             elif lines.startswith("("):
                 lines = lines.replace("(", "(+")
@@ -1906,13 +2098,15 @@ class Item:
         if lines.isdigit():
             if int(lines) == 0:
                 lines = "xErr"
-            elif self.name == "QP" or self.name == "クエストクリア報酬QP" or self.name == "フレンドポイント":
-                lines = '+' + lines
+            elif (
+                self.name == "QP"
+                or self.name == "クエストクリア報酬QP"
+                or self.name == "フレンドポイント"
+                or int(lines) >= 100
+            ):
+                lines = "+" + lines
             else:
-                if int(lines) >= 100:
-                    lines = '+' + lines
-                else:
-                    lines = 'x' + lines
+                lines = "x" + lines
 
         if len(lines) == 1:
             lines = "xErr"
@@ -1920,8 +2114,7 @@ class Item:
         return lines
 
     def read_char(self, pt):
-        """
-        戦利品の数値1文字をOCRする
+        """戦利品の数値1文字をOCRする
         白文字検出で使用
         """
         win_size = (120, 60)
@@ -1930,21 +2123,17 @@ class Item:
         cell_size = (4, 4)
         bins = 9
         char = []
-        tmpimg = self.img_gray[pt[1]:pt[3], pt[0]:pt[2]]
-
+        tmpimg = self.img_gray[pt[1] : pt[3], pt[0] : pt[2]]
         tmpimg = cv2.resize(tmpimg, (win_size))
-        hog = cv2.HOGDescriptor(win_size, block_size, block_stride,
-                                cell_size, bins)
+        hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
         char.append(hog.compute(tmpimg))
         char = np.array(char)
         pred = self.svm.predict(char)
         result = int(pred[1][0][0])
         return chr(result)
 
-    def ocr_digit(self, mode='jp'):
-        """
-        戦利品OCR
-        """
+    def ocr_digit(self, mode="jp"):
+        """戦利品OCR"""
         self.font_size = FONTSIZE_UNDEFINED
 
         if self.prev_item is None:
@@ -1956,21 +2145,25 @@ class Item:
         logger.debug("prev_id: %d", prev_id)
         if prev_id == self.id:
             self.dropnum_cache = self.prev_item.dropnum_cache
-        if prev_id == self.id \
-                and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX) and not (ID_GREEN_TEA <= self.id <= ID_RED_TEA):
+        if (
+            prev_id == self.id
+            and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX)
+            and not (ID_GREEN_TEA <= self.id <= ID_RED_TEA)
+        ):
             # もしキャッシュ画像と一致したらOCRスキップ
             # logger.debug("dropnum_cache: %s", self.prev_item.dropnum_cache)
             for dropnum_cache in self.prev_item.dropnum_cache:
                 pts = dropnum_cache["pts"]
-                img_gray = self.img_gray[pts[0][1]-2:pts[1][1]+2,
-                                         pts[0][0]-2:pts[1][0]+2]
+                img_gray = self.img_gray[
+                    pts[0][1] - 2 : pts[1][1] + 2,
+                    pts[0][0] - 2 : pts[1][0] + 2,
+                ]
                 template = dropnum_cache["img"]
-                res = cv2.matchTemplate(img_gray, template,
-                                        cv2.TM_CCOEFF_NORMED)
+                res = cv2.matchTemplate(img_gray, template, cv2.TM_CCOEFF_NORMED)
                 threshold = 0.97
                 loc = np.where(res >= threshold)
                 find_match = False
-                for pt in zip(*loc[::-1]):
+                for pt in zip(*loc[::-1], strict=False):
                     find_match = True
                     break
                 if find_match:
@@ -1981,32 +2174,38 @@ class Item:
                     return
             logger.debug("not find_match")
 
-        if ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX:
+        if ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX or self.category in "Exp. UP":
             # ボーナスが無いアイテム
             self.bonus_pts = []
             self.bonus = ""
             self.font_size = FONTSIZE_NORMAL
-        elif prev_id == self.id \
-                and self.category != "Point" and self.name != "QP":
+        elif prev_id == self.id and self.category != "Point" and self.name != "QP":
             self.bonus_pts = self.prev_item.bonus_pts
             self.bonus = self.prev_item.bonus
             self.font_size = self.prev_item.font_size
         else:
-            self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg2(mode)
+            self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg2(
+                mode,
+            )
             # if mode == "jp":
             #     self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg2(mode)
             # else:
             #     self.bonus, self.bonus_pts, self.font_size = self.detect_bonus_char4jpg(mode)
         logger.debug("Bonus Font Size: %s", self.font_size)
+        logger.debug("Bonus: %s", self.bonus)
+        logger.debug("Bonus Pts: %s", self.bonus_pts)
 
         # 実際の(ボーナス無し)ドロップ数が上段にあるか下段にあるか決定
         offset_y = 0
-        if (self.category in ["Quest Reward", "Point"] or self.name == "QP") \
-           and len(self.bonus) >= 5:  # ボーナスは"(+*0)"なので
+        if (self.category in ["Quest Reward", "Point"] or self.name == "QP") and len(
+            self.bonus,
+        ) >= 5:  # ボーナスは"(+*0)"なので
             # 1桁目の上部からの距離を設定
             base_line = self.bonus_pts[-2][1] - 3 + offset_y
+        elif self.category == "Exp. UP":
+            base_line = int(152 / 206 * self.height)
         else:
-            base_line = int(180/206*self.height)
+            base_line = int(180 / 206 * self.height)
 
         # 実際の(ボーナス無し)ドロップ数の右端の位置を決定
         # offset_x = -7 if mode == "na" else 0
@@ -2015,6 +2214,8 @@ class Item:
             margin_right = 15 + offset_x
         elif len(self.bonus_pts) > 0:
             margin_right = self.width - self.bonus_pts[0][0] + 2
+        elif self.category == "Exp. UP":
+            margin_right = 12 + offset_x
         else:
             margin_right = 15 + offset_x
         logger.debug("margin_right: %d", margin_right)
@@ -2022,8 +2223,7 @@ class Item:
         logger.debug("self.dropnum: %s", self.dropnum)
         if len(self.dropnum) == 0:
             self.dropnum = "x1"
-        if self.id != ID_REWARD_QP \
-                and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
+        if self.id != ID_REWARD_QP and not (ID_GEM_MAX <= self.id <= ID_MONUMENT_MAX):
             dropnum_found = False
             for cache_item in self.dropnum_cache:
                 if cache_item["dropnum"] == self.dropnum:
@@ -2036,10 +2236,11 @@ class Item:
                 logger.debug("base_line: %d", base_line)
                 logger.debug("cut_height: %d", cut_height)
                 logger.debug("margin_right: %d", margin_right)
-                pts = ((self.margin_left, base_line - cut_height),
-                       (width - margin_right, base_line))
-                cached_img = self.img_gray[pts[0][1]:pts[1][1],
-                                           pts[0][0]:pts[1][0]]
+                pts = (
+                    (self.margin_left, base_line - cut_height),
+                    (width - margin_right, base_line),
+                )
+                cached_img = self.img_gray[pts[0][1] : pts[1][1], pts[0][0] : pts[1][0]]
                 tmp = {}
                 tmp["dropnum"] = self.dropnum
                 tmp["img"] = cached_img
@@ -2062,7 +2263,13 @@ class Item:
     def classify_tea(self, img):
         def calc_hist(img):
             # ヒストグラムを計算する。
-            hist = cv2.calcHist([img], channels=[0], mask=None, histSize=[256], ranges=[0, 256])
+            hist = cv2.calcHist(
+                [img],
+                channels=[0],
+                mask=None,
+                histSize=[256],
+                ranges=[0, 256],
+            )
             # ヒストグラムを正規化する。
             hist = cv2.normalize(hist, hist, 0, 255, cv2.NORM_MINMAX)
             # (n_bins, 1) -> (n_bins,)
@@ -2080,8 +2287,8 @@ class Item:
 
             return hist
 
-        red_tea_file = Path(__file__).resolve().parent / 'data/misc/red_tea.png'
-        yellow_tea_file = Path(__file__).resolve().parent / 'data/misc/yellow_tea.png'
+        red_tea_file = Path(__file__).resolve().parent / "data/misc/red_tea.png"
+        yellow_tea_file = Path(__file__).resolve().parent / "data/misc/yellow_tea.png"
         img_red = imread(red_tea_file)
         img_yellow = imread(yellow_tea_file)
         hist_red = calc_hue_hist(img_red[81:124, 56:132])
@@ -2106,17 +2313,19 @@ class Item:
         if logger.isEnabledFor(logging.DEBUG):
             hex = ""
             for h in hash_item[0]:
-                hex = hex + "{:02x}".format(h)
+                hex = hex + f"{h:02x}"
             logger.debug("phash: %s", hex)
 
         def compare_distance(hash_item, background=True):
             ids = {}
             # 既存のアイテムとの距離を比較
-            for i in dist_item.keys():
+            for i in dist_item:
                 itemid = dist_item[i]
                 item_bg = item_background[itemid]
                 d = hasher.compare(hash_item, hex2hash(i))
-                if (d <= 20 and dist_item[i] == 1) or (d <= 30 and self.background == "zero"):
+                if (d <= 20 and dist_item[i] == 1) or (
+                    d <= 30 and self.background == "zero"
+                ):
                     # QPの背景が誤認識することがあるので背景チェックを回避
                     ids[dist_item[i]] = d
                 elif background:
@@ -2124,26 +2333,34 @@ class Item:
                         # ポイントと種の距離が8という例有り(IMG_0274)→16に
                         # バーガーと脂の距離が10という例有り(IMG_2354)→14に
                         ids[dist_item[i]] = d
-                else:
-                    if d <= 20:
-                        ids[dist_item[i]] = d
+                elif d <= 20:
+                    ids[dist_item[i]] = d
             if len(ids) > 0:
                 ids = sorted(ids.items(), key=lambda x: x[1])
                 id_tupple = next(iter(ids))
                 id = id_tupple[0]
                 if ID_SECRET_GEM_MIN <= id <= ID_SECRET_GEM_MAX:
-                    if currnet_dropPriority == PRIORITY_ITEM or currnet_dropPriority >= PRIORITY_SECRET_GEM_MIN:
+                    if (
+                        currnet_dropPriority == PRIORITY_ITEM
+                        or currnet_dropPriority >= PRIORITY_SECRET_GEM_MIN
+                    ):
                         id = self.gem_img2id(img, dist_secret_gem)
                     else:
                         logger.info("Secret Gem not found")
                         return ""
                 elif ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
-                    if currnet_dropPriority == PRIORITY_ITEM or currnet_dropPriority >= PRIORITY_MAGIC_GEM_MIN:
+                    if (
+                        currnet_dropPriority == PRIORITY_ITEM
+                        or currnet_dropPriority >= PRIORITY_MAGIC_GEM_MIN
+                    ):
                         id = self.gem_img2id(img, dist_magic_gem)
                     else:
                         return ""
                 elif ID_GEM_MIN <= id <= ID_GEM_MAX:
-                    if currnet_dropPriority == PRIORITY_ITEM or currnet_dropPriority >= PRIORITY_GEM_MIN:
+                    if (
+                        currnet_dropPriority == PRIORITY_ITEM
+                        or currnet_dropPriority >= PRIORITY_GEM_MIN
+                    ):
                         id = self.gem_img2id(img, dist_gem)
                     else:
                         return ""
@@ -2164,6 +2381,7 @@ class Item:
                 return id
 
             return ""
+
         id = compare_distance(hash_item, background=True)
         if id == "":
             id = compare_distance(hash_item, background=False)
@@ -2171,15 +2389,13 @@ class Item:
         return id
 
     def classify_ce_sub(self, img, hasher_prog, dist_dic, threshold):
-        """
-        imgとの距離を比較して近いアイテムを求める
-        """
+        """imgとの距離を比較して近いアイテムを求める"""
         hash_item = hasher_prog(img)  # 画像の距離
         itemfiles = {}
         if logger.isEnabledFor(logging.DEBUG):
             hex = ""
             for h in hash_item[0]:
-                hex = hex + "{:02x}".format(h)
+                hex = hex + f"{h:02x}"
         # 既存のアイテムとの距離を比較
         for i in dist_dic.keys():
             d = hasher.compare(hash_item, hex2hash(i))
@@ -2199,23 +2415,24 @@ class Item:
         if itemid == "":
             logger.debug("use narrow image")
             itemid = self.classify_ce_sub(
-                        img, compute_hash_ce_narrow, dist_ce_narrow, 20
-                        )
+                img,
+                compute_hash_ce_narrow,
+                dist_ce_narrow,
+                20,
+            )
         return itemid
 
     def classify_point(self, img):
-        """
-        imgとの距離を比較して近いアイテムを求める
-        """
+        """imgとの距離を比較して近いアイテムを求める"""
         hash_item = compute_hash(img)  # 画像の距離
         itemfiles = {}
         if logger.isEnabledFor(logging.DEBUG):
             hex = ""
             for h in hash_item[0]:
-                hex = hex + "{:02x}".format(h)
+                hex = hex + f"{h:02x}"
             logger.debug("phash: %s", hex)
         # 既存のアイテムとの距離を比較
-        for i in dist_point.keys():
+        for i in dist_point:
             itemid = dist_point[i]
             item_bg = item_background[itemid]
             d = hasher.compare(hash_item, hex2hash(i))
@@ -2230,19 +2447,17 @@ class Item:
         return ""
 
     def classify_point_and_item(self, img, currnet_dropPriority):
-        """
-        imgとの距離を比較して近いアイテムを求める
-        """
+        """imgとの距離を比較して近いアイテムを求める"""
         hash_item = compute_hash(img)  # 画像の距離
         itemfiles = {}
         if logger.isEnabledFor(logging.DEBUG):
             hex = ""
             for h in hash_item[0]:
-                hex = hex + "{:02x}".format(h)
+                hex = hex + f"{h:02x}"
             logger.debug("phash: %s", hex)
         # 既存のアイテムとの距離を比較
-        dist_item_and_point = dict(**dist_point, **dist_item) 
-        for i in dist_item_and_point.keys():
+        dist_item_and_point = dict(**dist_point, **dist_item)
+        for i in dist_item_and_point:
             itemid = dist_item_and_point[i]
             item_bg = item_background[itemid]
             d = hasher.compare(hash_item, hex2hash(i))
@@ -2260,21 +2475,22 @@ class Item:
                 if currnet_dropPriority >= PRIORITY_SECRET_GEM_MIN:
                     id = self.gem_img2id(img, dist_secret_gem)
                     return id
-                else:
-                    return ""
-            elif ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
+                return ""
+            if ID_MAGIC_GEM_MIN <= id <= ID_MAGIC_GEM_MAX:
                 if currnet_dropPriority >= PRIORITY_MAGIC_GEM_MIN:
                     id = self.gem_img2id(img, dist_magic_gem)
                     return id
-                else:
-                    return ""
-            elif ID_GEM_MIN <= id <= ID_GEM_MAX:
+                return ""
+            if ID_GEM_MIN <= id <= ID_GEM_MAX:
                 if currnet_dropPriority >= PRIORITY_GEM_MIN:
                     id = self.gem_img2id(img, dist_gem)
                     return id
-                else:
-                    return ""
-            if item[0] == ID_YELLOW_TEA or item[0] == ID_GREEN_TEA or item[0] == ID_RED_TEA:
+                return ""
+            if (
+                item[0] == ID_YELLOW_TEA
+                or item[0] == ID_GREEN_TEA
+                or item[0] == ID_RED_TEA
+            ):
                 return self.classify_tea(img)
 
             return item[0]
@@ -2284,7 +2500,7 @@ class Item:
     def classify_exp(self, img, svm_exp_class):
         hash_item = self.compute_exp_rarity_hash(img)  # 画像の距離
         exps = {}
-        for i in dist_exp_rarity.keys():
+        for i in dist_exp_rarity:
             dt = hasher.compare(hash_item, hex2hash(i))
             if dt <= 15:  # IMG_1833で11 IMG_1837で15
                 exps[i] = dt
@@ -2299,48 +2515,43 @@ class Item:
         return ""
 
     def make_new_file(self, img, search_dir, dist_dic, dropPriority, category):
-        """
-        ファイル名候補を探す
-        """
+        """ファイル名候補を探す"""
         i_dic = {"Item": "item", "Craft Essence": "ce", "Point": "point"}
         initial = i_dic[category]
         for i in range(999):
-            itemfile = search_dir / (initial + '{:0=3}'.format(i + 1) + '.png')
+            itemfile = search_dir / (initial + f"{i + 1:0=3}" + ".png")
             if itemfile.is_file():
                 continue
-            else:
-                cv2.imwrite(itemfile.as_posix(), img)
-                # id 候補を決める
-                for j in range(99999):
-                    id = j + ID_START
-                    if id in item_name.keys():
-                        continue
-                    break
-                if category == "Craft Essence":
-                    hash = compute_hash_ce(img)
-                else:
-                    hash = compute_hash(img)
-                hash_hex = ""
-                for h in hash[0]:
-                    hash_hex = hash_hex + "{:02x}".format(h)
-                dist_dic[hash_hex] = id
-                if category == "Craft Essence":
-                    hash_narrow = compute_hash_ce_narrow(img)
-                    hash_hex_narrow = ""
-                    for h in hash_narrow[0]:
-                        hash_narrow = hash_narrow + "{:02x}".format(h)
-                    dist_ce_narrow[hash_hex_narrow] = id
-                item_name[id] = itemfile.stem
-                item_background[id] = classify_background(img)
-                item_dropPriority[id] = dropPriority
-                item_type[id] = category
+            cv2.imwrite(itemfile.as_posix(), img)
+            # id 候補を決める
+            for j in range(99999):
+                id = j + ID_START
+                if id in item_name:
+                    continue
                 break
+            if category == "Craft Essence":
+                hash = compute_hash_ce(img)
+            else:
+                hash = compute_hash(img)
+            hash_hex = ""
+            for h in hash[0]:
+                hash_hex = hash_hex + f"{h:02x}"
+            dist_dic[hash_hex] = id
+            if category == "Craft Essence":
+                hash_narrow = compute_hash_ce_narrow(img)
+                hash_hex_narrow = ""
+                for h in hash_narrow[0]:
+                    hash_narrow = hash_narrow + f"{h:02x}"
+                dist_ce_narrow[hash_hex_narrow] = id
+            item_name[id] = itemfile.stem
+            item_background[id] = classify_background(img)
+            item_dropPriority[id] = dropPriority
+            item_type[id] = category
+            break
         return id
 
     def classify_category(self, svm_card):
-        """
-        カード判別器
-       """
+        """カード判別器"""
         """
         カード判別器
         この場合は画像全域のハッシュをとる
@@ -2352,17 +2563,22 @@ class Item:
         cell_size = (4, 4)
         bins = 9
         test = []
-        carddic = {0: 'Quest Reward', 1: 'Item', 2: 'Point',
-                   3: 'Craft Essence', 4: 'Exp. UP', 99: ""}
+        carddic = {
+            0: "Quest Reward",
+            1: "Item",
+            2: "Point",
+            3: "Craft Essence",
+            4: "Exp. UP",
+            99: "",
+        }
 
-        tmpimg = self.img_rgb[int(189/206*self.height):
-                              int(201/206*self.height),
-                              int(78/188*self.width):
-                              int(115/188*self.width)]
+        tmpimg = self.img_rgb[
+            int(189 / 206 * self.height) : int(201 / 206 * self.height),
+            int(78 / 188 * self.width) : int(115 / 188 * self.width),
+        ]
 
         tmpimg = cv2.resize(tmpimg, (win_size))
-        hog = cv2.HOGDescriptor(win_size, block_size, block_stride,
-                                cell_size, bins)
+        hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
         test.append(hog.compute(tmpimg))  # 特徴量の格納
         test = np.array(test)
         pred = svm_card.predict(test)
@@ -2370,30 +2586,43 @@ class Item:
         return carddic[pred[1][0][0]]
 
     def classify_card(self, img, svm_exp_class, currnet_dropPriority):
-        """
-        アイテム判別器
-        """
+        """アイテム判別器"""
         if self.category == "Point":
             id = self.classify_point(img)
             if id == "":
-                id = self.make_new_file(img, Point_dir, dist_point,
-                                        PRIORITY_POINT, self.category)
+                id = self.make_new_file(
+                    img,
+                    Point_dir,
+                    dist_point,
+                    PRIORITY_POINT,
+                    self.category,
+                )
             return id
-        elif self.category == "Quest Reward":
+        if self.category == "Quest Reward":
             return 5
-        elif self.category == "Craft Essence":
+        if self.category == "Craft Essence":
             id = self.classify_ce(img)
             if id == "":
-                id = self.make_new_file(img, CE_dir, dist_ce,
-                                        PRIORITY_CE, self.category)
+                id = self.make_new_file(
+                    img,
+                    CE_dir,
+                    dist_ce,
+                    PRIORITY_CE,
+                    self.category,
+                )
             return id
-        elif self.category == "Exp. UP":
+        if self.category == "Exp. UP":
             return self.classify_exp(img, svm_exp_class)
-        elif self.category == "Item":
+        if self.category == "Item":
             id = self.classify_item(img, currnet_dropPriority)
             if id == "":
-                id = self.make_new_file(img, Item_dir, dist_item,
-                                        PRIORITY_ITEM, self.category)
+                id = self.make_new_file(
+                    img,
+                    Item_dir,
+                    dist_item,
+                    PRIORITY_ITEM,
+                    self.category,
+                )
         else:
             # ここで category が判別できないのは三行目かつ
             # スクロール位置の関係で下部表示が消えている場合
@@ -2404,24 +2633,22 @@ class Item:
             if id != "":
                 return id
         if id == "":
-            id = self.make_new_file(img, Item_dir, dist_item,
-                                    PRIORITY_ITEM, "Item")
+            id = self.make_new_file(img, Item_dir, dist_item, PRIORITY_ITEM, "Item")
         return id
 
     def compute_exp_rarity_hash(self, img_rgb):
-        """
-        種火レアリティ判別器
+        """種火レアリティ判別器
         この場合は画像全域のハッシュをとる
         """
-        img = img_rgb[int(53/189*self.height):int(136/189*self.height),
-                      int(37/206*self.width):int(149/206*self.width)]
+        img = img_rgb[
+            int(53 / 189 * self.height) : int(136 / 189 * self.height),
+            int(37 / 206 * self.width) : int(149 / 206 * self.width),
+        ]
 
         return hasher.compute(img)
 
     def classify_exp_class(self, img_rgb, svm_exp_class):
-        """
-        種火クラス判別器
-        """
+        """種火クラス判別器"""
         # Hog特徴のパラメータ
         win_size = (120, 60)
         block_size = (16, 16)
@@ -2430,12 +2657,13 @@ class Item:
         bins = 9
         test = []
 
-        tmpimg = img_rgb[int((5+9)/135*self.height):int((30+2)/135*self.height),
-                      int(5/135*self.width):int((30+6)/135*self.width)]
+        tmpimg = img_rgb[
+            int((5 + 9) / 135 * self.height) : int((30 + 2) / 135 * self.height),
+            int(5 / 135 * self.width) : int((30 + 6) / 135 * self.width),
+        ]
 
         tmpimg = cv2.resize(tmpimg, (win_size))
-        hog = cv2.HOGDescriptor(win_size, block_size, block_stride,
-                                cell_size, bins)
+        hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, bins)
         test.append(hog.compute(tmpimg))  # 特徴量の格納
         test = np.array(test)
         pred = svm_exp_class.predict(test)
@@ -2443,27 +2671,28 @@ class Item:
         return int(pred[1][0][0])
 
     def compute_gem_hash(self, img_rgb):
-        """
-        スキル石クラス判別器
+        """スキル石クラス判別器
         中央のクラスマークぎりぎりのハッシュを取る
         記述した比率はiPhone6S画像の実測値
         """
         height, width = img_rgb.shape[:2]
 
-        img = img_rgb[int((145-16-60*0.8)/2/145*height)+2:
-                      int((145-16+60*0.8)/2/145*height)+2,
-                      int((132-52*0.8)/2/132*width):
-                      int((132+52*0.8)/2/132*width)]
+        img = img_rgb[
+            int((145 - 16 - 60 * 0.8) / 2 / 145 * height)
+            + 2 : int((145 - 16 + 60 * 0.8) / 2 / 145 * height)
+            + 2,
+            int((132 - 52 * 0.8) / 2 / 132 * width) : int(
+                (132 + 52 * 0.8) / 2 / 132 * width,
+            ),
+        ]
 
         return hasher.compute(img)
 
 
 def classify_background(img_rgb):
-    """
-    背景判別
-    """
+    """背景判別"""
     _, width = img_rgb.shape[:2]
-    img = img_rgb[30:119, width - 25:width - 7]
+    img = img_rgb[30:119, width - 25 : width - 7]
     target_hist = img_hist(img)
     bg_score = []
     score_z = calc_hist_score(target_hist, hist_zero)
@@ -2475,28 +2704,26 @@ def classify_background(img_rgb):
     score_b = calc_hist_score(target_hist, hist_bronze)
     bg_score.append({"background": "bronze", "dist": score_b})
 
-    bg_score = sorted(bg_score, key=lambda x: x['dist'])
+    bg_score = sorted(bg_score, key=lambda x: x["dist"])
     # logger.debug("background dist: %s", bg_score)
-    return (bg_score[0]["background"])
+    return bg_score[0]["background"]
 
 
 def compute_hash(img_rgb):
-    """
-    判別器
+    """判別器
     この判別器は下部のドロップ数を除いた部分を比較するもの
     記述した比率はiPhone6S画像の実測値
     """
     height, width = img_rgb.shape[:2]
-    img = img_rgb[int(23/135*height):
-                  int(77/135*height),
-                  int(23/135*width):
-                  int(112/135*width)]
+    img = img_rgb[
+        int(23 / 135 * height) : int(77 / 135 * height),
+        int(23 / 135 * width) : int(112 / 135 * width),
+    ]
     return hasher.compute(img)
 
 
 def compute_hash_ce(img_rgb):
-    """
-    判別器
+    """判別器
     この判別器は下部のドロップ数を除いた部分を比較するもの
     記述した比率はiPpd2018画像の実測値
     """
@@ -2505,20 +2732,18 @@ def compute_hash_ce(img_rgb):
 
 
 def compute_hash_ce_narrow(img_rgb):
-    """
-    CE Identifier for scrolled down screenshot
-    """
+    """CE Identifier for scrolled down screenshot"""
     height, width = img_rgb.shape[:2]
-    img = img_rgb[int(30/206*height):int(155/206*height),
-                  int(5/188*width):int(183/188*width)]
+    img = img_rgb[
+        int(30 / 206 * height) : int(155 / 206 * height),
+        int(5 / 188 * width) : int(183 / 188 * width),
+    ]
     return hasher.compute(img)
 
 
 def search_file(search_dir, dist_dic, dropPriority, category):
-    """
-    Item, Craft Essence, Pointの各ファイルを探す
-    """
-    files = search_dir.glob('**/*.png')
+    """Item, Craft Essence, Pointの各ファイルを探す"""
+    files = search_dir.glob("**/*.png")
     for fname in files:
         img = imread(fname)
         # id 候補を決める
@@ -2530,10 +2755,10 @@ def search_file(search_dir, dist_dic, dropPriority, category):
         else:
             for j in range(99999):
                 id = j + ID_START
-                if id in item_name.keys():
+                if id in item_name:
                     continue
                 break
-        # priotiry は固定
+            # priotiry は固定
             item_name[id] = fname.stem
             item_dropPriority[id] = dropPriority
             item_type[id] = category
@@ -2543,7 +2768,7 @@ def search_file(search_dir, dist_dic, dropPriority, category):
             hash = compute_hash(img)
         hash_hex = ""
         for h in hash[0]:
-            hash_hex = hash_hex + "{:02x}".format(h)
+            hash_hex = hash_hex + f"{h:02x}"
         dist_dic[hash_hex] = id
         if category == "Item" or category == "Point":
             item_background[id] = classify_background(img)
@@ -2551,13 +2776,13 @@ def search_file(search_dir, dist_dic, dropPriority, category):
             hash_narrow = compute_hash_ce_narrow(img)
             hash_hex_narrow = ""
             for h in hash_narrow[0]:
-                hash_hex_narrow = hash_hex_narrow + "{:02x}".format(h)
+                hash_hex_narrow = hash_hex_narrow + f"{h:02x}"
             dist_ce_narrow[hash_hex_narrow] = id
 
 
 def calc_hist_score(hist1, hist2):
     scores = []
-    for channel1, channel2 in zip(hist1, hist2):
+    for channel1, channel2 in zip(hist1, hist2, strict=False):
         score = cv2.compareHist(channel1, channel2, cv2.HISTCMP_BHATTACHARYYA)
         scores.append(score)
     return np.mean(scores)
@@ -2573,9 +2798,7 @@ def img_hist(src_img):
 
 
 def calc_dist_local():
-    """
-    既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持
-    """
+    """既所持のアイテム画像の距離(一次元配列)の辞書を作成して保持"""
     search_file(Item_dir, dist_item, PRIORITY_ITEM, "Item")
     search_file(CE_dir, dist_ce, PRIORITY_CE, "Craft Essence")
     search_file(Point_dir, dist_point, PRIORITY_POINT, "Point")
@@ -2584,15 +2807,15 @@ def calc_dist_local():
 def hex2hash(hexstr):
     hashlist = []
     for i in range(8):
-        hashlist.append(int('0x' + hexstr[i*2:i*2+2], 0))
-    return np.array([hashlist], dtype='uint8')
+        hashlist.append(int("0x" + hexstr[i * 2 : i * 2 + 2], 0))
+    return np.array([hashlist], dtype="uint8")
 
 
 def out_name(args, id):
     if args.lang == "eng":
-        if id in item_name_eng.keys():
+        if id in item_name_eng:
             return item_name_eng[id]
-    if id in item_shortname.keys():
+    if id in item_shortname:
         name = item_shortname[id]
     else:
         name = item_name[id]
@@ -2600,9 +2823,7 @@ def out_name(args, id):
 
 
 def imread(filename, flags=cv2.IMREAD_COLOR, dtype=np.uint8):
-    """
-    OpenCVのimreadが日本語ファイル名が読めない対策
-    """
+    """OpenCVのimreadが日本語ファイル名が読めない対策"""
     try:
         n = np.fromfile(filename, dtype)
         img = cv2.imdecode(n, flags)
@@ -2618,16 +2839,14 @@ def get_exif(img):
         for id, val in exif.items():
             tg = TAGS.get(id, id)
             if tg == "DateTimeOriginal":
-                return datetime.datetime.strptime(val, '%Y:%m:%d %H:%M:%S')
+                return datetime.datetime.strptime(val, "%Y:%m:%d %H:%M:%S")
     except AttributeError:
         return "NON"
     return "NON"
 
 
 def get_output(filenames, args):
-    """
-    出力内容を作成
-    """
+    """出力内容を作成"""
     calc_dist_local()
     if train_item.exists() is False:
         logger.critical("item.xml is not found")
@@ -2673,26 +2892,34 @@ def get_output(filenames, args):
         f = Path(filename)
 
         if f.exists() is False:
-            output = {'filename': str(filename) + ': not found'}
+            output = {"filename": str(filename) + ": not found"}
             all_list.append([])
         elif f.is_dir():  # for ZIP file from MacOS
             continue
-        elif f.suffix.upper() not in ['.PNG', '.JPG', '.JPEG']:
-            output = {'filename': str(filename) + ': Not Supported'}
+        elif f.suffix.upper() not in [".PNG", ".JPG", ".JPEG"]:
+            output = {"filename": str(filename) + ": Not Supported"}
             all_list.append([])
         else:
             img_rgb = imread(filename)
             fileextention = Path(filename).suffix
 
             try:
-                sc = ScreenShot(args, img_rgb,
-                                svm, svm_chest, svm_dcnt, svm_card, svm_exp_class,
-                                fileextention, exLogger)
+                sc = ScreenShot(
+                    args,
+                    img_rgb,
+                    svm,
+                    svm_chest,
+                    svm_dcnt,
+                    svm_card,
+                    svm_exp_class,
+                    fileextention,
+                    exLogger,
+                )
                 if sc.itemlist[0]["id"] != ID_REWARD_QP and sc.pagenum == 1:
                     logger.warning(
-                                   "Page count recognition is failing: %s",
-                                   filename
-                                   )
+                        "Page count recognition is failing: %s",
+                        filename,
+                    )
                 # ドロップ内容が同じで下記のとき、重複除外
                 # QPカンストじゃない時、QPが前と一緒
                 # QPカンストの時、Exif内のファイル作成時間が15秒未満
@@ -2708,15 +2935,18 @@ def get_output(filenames, args):
                     elif sc.lines % 3 == 1:
                         sc.itemlist = sc.itemlist[-1:]
                     else:
-                        sc.itemlist = sc.itemlist[7-(sc.lines+1) % 3*7:]
-                else:
-                    if sc.pages - sc.pagenum == 0:
-                        sc.itemlist = sc.itemlist[14-(sc.lines+2) % 3*7:]
+                        sc.itemlist = sc.itemlist[7 - (sc.lines + 1) % 3 * 7 :]
+                elif sc.pages - sc.pagenum == 0:
+                    sc.itemlist = sc.itemlist[14 - (sc.lines + 2) % 3 * 7 :]
                 if prev_itemlist == sc.itemlist:
-                    if (sc.total_qp != -1 and sc.total_qp != 2000000000
-                        and sc.total_qp == prev_total_qp) \
-                        or ((sc.total_qp == -1 or sc.total_qp == 2000000000)
-                            and td.total_seconds() < args.timeout):
+                    if (
+                        sc.total_qp != -1
+                        and sc.total_qp != 2000000000
+                        and sc.total_qp == prev_total_qp
+                    ) or (
+                        (sc.total_qp == -1 or sc.total_qp == 2000000000)
+                        and td.total_seconds() < args.timeout
+                    ):
                         logger.debug("args.timeout: %s", args.timeout)
                         logger.debug("filename: %s", filename)
                         logger.debug("prev_itemlist: %s", prev_itemlist)
@@ -2726,8 +2956,7 @@ def get_output(filenames, args):
                         logger.debug("datetime: %s", dt)
                         logger.debug("prev_datetime: %s", prev_datetime)
                         logger.debug("td.total_second: %s", td.total_seconds())
-                        fileoutput.append(
-                            {'filename': str(filename) + ': duplicate'})
+                        fileoutput.append({"filename": str(filename) + ": duplicate"})
                         all_list.append([])
                         continue
 
@@ -2736,15 +2965,14 @@ def get_output(filenames, args):
                 # または前頁が最終頁なのに1頁じゃない
                 # 2. 前頁の続き頁なのに獲得QPが違う
                 if (
-                    prev_pages - prev_pagenum > 0
-                    and sc.pagenum - prev_pagenum != 1) \
-                    or (prev_pages - prev_pagenum == 0
-                        and sc.pagenum != 1) \
-                    or sc.pagenum != 1 \
-                        and sc.pagenum - prev_pagenum == 1 \
-                        and (
-                                prev_qp_gained != sc.qp_gained
-                            ):
+                    (prev_pages - prev_pagenum > 0 and sc.pagenum - prev_pagenum != 1)
+                    or (prev_pages - prev_pagenum == 0 and sc.pagenum != 1)
+                    or (
+                        sc.pagenum != 1
+                        and sc.pagenum - prev_pagenum == 1
+                        and (prev_qp_gained != sc.qp_gained)
+                    )
+                ):
                     logger.debug("prev_pages: %s", prev_pages)
                     logger.debug("prev_pagenum: %s", prev_pagenum)
                     logger.debug("sc.pagenum: %s", sc.pagenum)
@@ -2752,7 +2980,7 @@ def get_output(filenames, args):
                     logger.debug("sc.qp_gained: %s", sc.qp_gained)
                     logger.debug("prev_chestnum: %s", prev_chestnum)
                     logger.debug("sc.chestnum: %s", sc.chestnum)
-                    fileoutput.append({'filename': 'missing'})
+                    fileoutput.append({"filename": "missing"})
                     all_list.append([])
 
                 all_list.append(sc.itemlist)
@@ -2765,8 +2993,7 @@ def get_output(filenames, args):
                 prev_qp_gained = sc.qp_gained
                 prev_chestnum = sc.chestnum
 
-                sumdrop = len([d for d in sc.itemlist
-                               if d["id"] != ID_REWARD_QP])
+                sumdrop = len([d for d in sc.itemlist if d["id"] != ID_REWARD_QP])
                 if args.lang == "jpn":
                     drop_count = "ドロ数"
                     item_count = "アイテム数"
@@ -2775,12 +3002,17 @@ def get_output(filenames, args):
                     drop_count = "item_count"
                     item_count = "item_count"
                     gained_qp = "gained_qp"
-                output = {'filename': str(filename), drop_count: sc.chestnum, item_count: sumdrop, gained_qp: sc.qp_gained}
+                output = {
+                    "filename": str(filename),
+                    drop_count: sc.chestnum,
+                    item_count: sumdrop,
+                    gained_qp: sc.qp_gained,
+                }
 
             except Exception as e:
                 logger.error(filename)
                 logger.error(e, exc_info=True)
-                output = ({'filename': str(filename) + ': not valid'})
+                output = {"filename": str(filename) + ": not valid"}
                 all_list.append([])
         fileoutput.append(output)
     return fileoutput, all_list
@@ -2789,21 +3021,21 @@ def get_output(filenames, args):
 def sort_files(files, ordering):
     if ordering == Ordering.NOTSPECIFIED:
         return files
-    elif ordering == Ordering.FILENAME:
+    if ordering == Ordering.FILENAME:
         return sorted(files)
-    elif ordering == Ordering.TIMESTAMP:
+    if ordering == Ordering.TIMESTAMP:
         return sorted(files, key=lambda f: Path(f).stat().st_ctime)
-    raise ValueError(f'Unsupported ordering: {ordering}')
+    raise ValueError(f"Unsupported ordering: {ordering}")
 
 
 def change_value(args, line):
-    if args.lang == 'jpn':
-        line = re.sub('000000$', "百万", str(line))
-        line = re.sub('0000$', "万", str(line))
-        line = re.sub('000$', "千", str(line))
+    if args.lang == "jpn":
+        line = re.sub("000000$", "百万", str(line))
+        line = re.sub("0000$", "万", str(line))
+        line = re.sub("000$", "千", str(line))
     else:
-        line = re.sub('000000$', "M", str(line))
-        line = re.sub('000$', "K", str(line))
+        line = re.sub("000000$", "M", str(line))
+        line = re.sub("000$", "K", str(line))
     return line
 
 
@@ -2821,11 +3053,10 @@ def make_quest_output(quest):
             output = quest["chapter"] + " " + quest["scName"]
         elif math.floor(quest["id"] / 100000) * 100000 == ID_EVNET:
             output = quest["shortname"]
+        elif quest["chapter"] == "":
+            output = quest["name"]
         else:
-            if quest["chapter"] == "":
-                output = quest["name"]
-            else:
-                output = quest["chapter"] + " " + quest["name"]
+            output = quest["chapter"] + " " + quest["name"]
     return output
 
 
@@ -2876,66 +3107,79 @@ def deside_tresure_valut_quest(item_list):
     for item in item_list:
         if item["id"] == ID_REWARD_QP:
             continue
-        elif item["id"] != ID_QP:
+        if item["id"] != ID_QP:
             quest_candidate = ""
             break
-        else:
-            item_set.add(item["dropnum"])
+        item_set.add(item["dropnum"])
 
     if quest_type == NOVICE and item_set == {10000, 15000, 30000, 45000}:
         quest_candidate = {
-                           "id": 94061636,
-                           "name": "宝物庫の扉を開け 初級",
-                           "place": "",
-                           "chapter": "",
-                           "qp": 1400,
-                           "shortname": "宝物庫 初級",
-                           }
-    elif quest_type == INTERMEDIATE and item_set == {10000, 15000, 30000, 45000, 90000, 135000}:
+            "id": 94061636,
+            "name": "宝物庫の扉を開け 初級",
+            "place": "",
+            "chapter": "",
+            "qp": 1400,
+            "shortname": "宝物庫 初級",
+        }
+    elif quest_type == INTERMEDIATE and item_set == {
+        10000,
+        15000,
+        30000,
+        45000,
+        90000,
+        135000,
+    }:
         quest_candidate = {
-                           "id": 94061637,
-                           "name": "宝物庫の扉を開け 中級",
-                           "place": "",
-                           "chapter": "",
-                           "qp": 2900,
-                           "shortname": "宝物庫 中級",
-                           }
-    elif quest_type == ADVANCED and item_set == {30000, 45000, 90000, 135000, 270000, 405000}:
+            "id": 94061637,
+            "name": "宝物庫の扉を開け 中級",
+            "place": "",
+            "chapter": "",
+            "qp": 2900,
+            "shortname": "宝物庫 中級",
+        }
+    elif quest_type == ADVANCED and item_set == {
+        30000,
+        45000,
+        90000,
+        135000,
+        270000,
+        405000,
+    }:
         quest_candidate = {
-                           "id": 94061638,
-                           "name": "宝物庫の扉を開け 上級",
-                           "place": "",
-                           "chapter": "",
-                           "qp": 4400,
-                           "shortname": "宝物庫 上級",
-                           }
+            "id": 94061638,
+            "name": "宝物庫の扉を開け 上級",
+            "place": "",
+            "chapter": "",
+            "qp": 4400,
+            "shortname": "宝物庫 上級",
+        }
     elif quest_type == EXPERT and item_set == {90000, 135000, 270000, 405000}:
         quest_candidate = {
-                           "id": 94061639,
-                           "name": "宝物庫の扉を開け 超級",
-                           "place": "",
-                           "chapter": "",
-                           "qp": 7400,
-                           "shortname": "宝物庫 超級",
-                           }
+            "id": 94061639,
+            "name": "宝物庫の扉を開け 超級",
+            "place": "",
+            "chapter": "",
+            "qp": 7400,
+            "shortname": "宝物庫 超級",
+        }
     elif quest_type == MASTER and item_set == {270000, 405000, 1500000}:
         quest_candidate = {
-                           "id": 94061640,
-                           "name": "宝物庫の扉を開け 極級",
-                           "place": "",
-                           "chapter": "",
-                           "qp": 7400,
-                           "shortname": "宝物庫 極級",
-                           }
+            "id": 94061640,
+            "name": "宝物庫の扉を開け 極級",
+            "place": "",
+            "chapter": "",
+            "qp": 7400,
+            "shortname": "宝物庫 極級",
+        }
     elif quest_type == ORDEAL_CALL and item_set == {270000, 405000, 1500000}:
         quest_candidate = {
-                           "id": ID_WEST_AMERICA_AREA,
-                           "name": "荒野の歓楽",
-                           "place": "アメリカ西部エリア",
-                           "chapter": "オーディール・コール",
-                           "qp": 270720,
-                           "shortname": "オーディール・コール アメリカ西部エリア",
-                           }
+            "id": ID_WEST_AMERICA_AREA,
+            "name": "荒野の歓楽",
+            "place": "アメリカ西部エリア",
+            "chapter": "オーディール・コール",
+            "qp": 270720,
+            "shortname": "オーディール・コール アメリカ西部エリア",
+        }
     else:
         quest_candidate = ""
 
@@ -2951,19 +3195,21 @@ def deside_quest(item_list):
     for item in item_list:
         if item["id"] == ID_REWARD_QP:
             item_set.add("QP(+" + str(item["dropnum"]) + ")")
-        elif item["id"] == ID_FP:
-            continue
-        elif item["id"] == 1 \
-            or item["category"] == "Craft Essence" \
-            or (9700 <= math.floor(item["id"]/1000) <= 9707
-                and str(item["id"])[4] not in ["4", "5"]):
+        elif (
+            item["id"] == ID_FP
+            or item["id"] == 1
+            or item["category"] == "Craft Essence"
+            or (
+                9700 <= math.floor(item["id"] / 1000) <= 9707
+                and str(item["id"])[4] not in ["4", "5"]
+            )
+        ):
             continue
         else:
             item_set.add(item["name"])
     quest_candidate = ""
     for quest in reversed(freequest):
-        dropset = {i["name"] for i in quest["drop"]
-                   if i["type"] != "Craft Essence"}
+        dropset = {i["name"] for i in quest["drop"] if i["type"] != "Craft Essence"}
         dropset.add("QP(+" + str(quest["qp"]) + ")")
         if dropset == item_set:
             quest_candidate = quest
@@ -2979,6 +3225,7 @@ def quest_name_recognition(item_list):
 
     Returns:
         [type]: [description]
+
     """
     reward_qp = 0
     item_set = set()
@@ -2986,12 +3233,15 @@ def quest_name_recognition(item_list):
         if item["id"] == ID_REWARD_QP:
             item_set.add("QP(+" + str(item["dropnum"]) + ")")
             reward_qp = item["dropnum"]
-        elif item["id"] == ID_FP:
-            continue
-        elif item["id"] == 1 \
-            or item["category"] == "Craft Essence" \
-            or (9700 <= math.floor(item["id"]/1000) <= 9707
-                and str(item["id"])[4] not in ["4", "5"]):
+        elif (
+            item["id"] == ID_FP
+            or item["id"] == 1
+            or item["category"] == "Craft Essence"
+            or (
+                9700 <= math.floor(item["id"] / 1000) <= 9707
+                and str(item["id"])[4] not in ["4", "5"]
+            )
+        ):
             continue
         else:
             item_set.add(item["name"])
@@ -3007,8 +3257,7 @@ def quest_name_recognition(item_list):
     quest_candidate2 = []
     missing_items = []
     for quest in quest_candidate:
-        dropset = {i["name"] for i in quest["drop"]
-                   if i["type"] != "Craft Essence"}
+        dropset = {i["name"] for i in quest["drop"] if i["type"] != "Craft Essence"}
         dropset.add("QP(+" + str(quest["qp"]) + ")")
         diff = item_set - dropset
         if len(diff) == 0:
@@ -3023,58 +3272,63 @@ def quest_name_recognition(item_list):
             missing_items.append(tmp_items)
     if len(quest_candidate2) == 1:
         return quest_candidate2[0], missing_items[0]
-    else:
-        return "", []
+    return "", []
 
 
 def make_csv_header(args, item_list):
-    """
-    CSVのヘッダ情報を作成
+    """CSVのヘッダ情報を作成
     礼装のドロップが無いかつ恒常以外のアイテムが有るとき礼装0をつける
     """
-    if args.lang == 'jpn':
-        drop_count = 'ドロ数'
-        item_count = 'アイテム数'
-        gained_qp = '獲得QP合計'
-        ce_str = '礼装'
+    if args.lang == "jpn":
+        drop_count = "ドロ数"
+        item_count = "アイテム数"
+        gained_qp = "獲得QP合計"
+        ce_str = "礼装"
     else:
-        drop_count = 'drop_count'
-        item_count = 'item_count'
-        gained_qp = 'gained_qp'
-        ce_str = 'CE'
+        drop_count = "drop_count"
+        item_count = "item_count"
+        gained_qp = "gained_qp"
+        ce_str = "CE"
     sum_files = 0
     for item in item_list:
         sum_files += len(item)
     if sum_files == 0:
-        return ['filename', drop_count, item_count, gained_qp], False, ""
+        return ["filename", drop_count, item_count, gained_qp], False, ""
     # リストを一次元に
     flat_list = list(itertools.chain.from_iterable(item_list))
     # 余計な要素を除く
-    short_list = [{"id": a["id"], "name": a["name"], "category": a["category"],
-                   "dropPriority": a["dropPriority"], "dropnum": a["dropnum"]}
-                  for a in flat_list]
+    short_list = [
+        {
+            "id": a["id"],
+            "name": a["name"],
+            "category": a["category"],
+            "dropPriority": a["dropPriority"],
+            "dropnum": a["dropnum"],
+        }
+        for a in flat_list
+    ]
     # 概念礼装のカテゴリのアイテムが無くかつイベントアイテム(>ID_EXM_MAX)がある
-    if args.lang == 'jpn':
+    if args.lang == "jpn":
         no_ce_exp_list = [
-                          k for k in flat_list
-                          if not k["name"].startswith("概念礼装EXPカード：")
-                          ]
+            k for k in flat_list if not k["name"].startswith("概念礼装EXPカード：")
+        ]
     else:
         no_ce_exp_list = [
-                          k for k in flat_list
-                          if not k["name"].startswith("CE EXP Card:")
-                          ]
-    ce0_flag = ("Craft Essence"
-                not in [
-                        d.get('category') for d in no_ce_exp_list
-                       ]
-                ) and (
-                       max([d.get("id") for d in flat_list]) > ID_EXP_MAX
-                )
+            k for k in flat_list if not k["name"].startswith("CE EXP Card:")
+        ]
+    ce0_flag = (
+        "Craft Essence" not in [d.get("category") for d in no_ce_exp_list]
+    ) and (max([d.get("id") for d in flat_list]) > ID_EXP_MAX)
     if ce0_flag:
-        short_list.append({"id": 99999990, "name": ce_str,
-                           "category": "Craft Essence",
-                           "dropPriority": 9005, "dropnum": 0})
+        short_list.append(
+            {
+                "id": 99999990,
+                "name": ce_str,
+                "category": "Craft Essence",
+                "dropPriority": 9005,
+                "dropnum": 0,
+            },
+        )
     # 重複する要素を除く
     unique_list = list(map(json.loads, set(map(json.dumps, short_list))))
 
@@ -3086,24 +3340,45 @@ def make_csv_header(args, item_list):
     quest_output = make_quest_output(quest)
 
     # ソート
-    new_list = sorted(sorted(sorted(unique_list, key=itemgetter('dropnum')),
-                             key=itemgetter('id'), reverse=True),
-                      key=itemgetter('dropPriority'), reverse=True)
+    new_list = sorted(
+        sorted(
+            sorted(unique_list, key=itemgetter("dropnum")),
+            key=itemgetter("id"),
+            reverse=True,
+        ),
+        key=itemgetter("dropPriority"),
+        reverse=True,
+    )
     header = []
     for nlist in new_list:
-        if nlist['category'] in ['Quest Reward', 'Point'] \
-           or nlist["name"] == "QP" or nlist["name"] == "フレンドポイント":
-            tmp = out_name(args, nlist['id']) \
-                  + "(+" + change_value(args, nlist["dropnum"]) + ")"
+        if (
+            nlist["category"] in ["Quest Reward", "Point"]
+            or nlist["name"] == "QP"
+            or nlist["name"] == "フレンドポイント"
+        ):
+            tmp = (
+                out_name(args, nlist["id"])
+                + "(+"
+                + change_value(args, nlist["dropnum"])
+                + ")"
+            )
         elif nlist["dropnum"] > 1:
-            tmp = out_name(args, nlist['id']) \
-                  + "(x" + change_value(args, nlist["dropnum"]) + ")"
+            tmp = (
+                out_name(args, nlist["id"])
+                + "(x"
+                + change_value(args, nlist["dropnum"])
+                + ")"
+            )
         elif nlist["name"] == ce_str:
             tmp = ce_str
         else:
-            tmp = out_name(args, nlist['id'])
+            tmp = out_name(args, nlist["id"])
         header.append(tmp)
-    return ['filename', drop_count, item_count, gained_qp] + header, ce0_flag, quest_output
+    return (
+        ["filename", drop_count, item_count, gained_qp] + header,
+        ce0_flag,
+        quest_output,
+    )
 
 
 def make_csv_data(args, sc_list, ce0_flag):
@@ -3114,23 +3389,34 @@ def make_csv_data(args, sc_list, ce0_flag):
     for sc in sc_list:
         tmp = []
         for item in sc:
-            if item['category'] in ['Quest Reward', 'Point'] \
-               or item["name"] == "QP" or item["name"] == "フレンドポイント":
-                tmp.append(out_name(args, item['id'])
-                           + "(+" + change_value(args, item["dropnum"]) + ")")
+            if (
+                item["category"] in ["Quest Reward", "Point"]
+                or item["name"] == "QP"
+                or item["name"] == "フレンドポイント"
+            ):
+                tmp.append(
+                    out_name(args, item["id"])
+                    + "(+"
+                    + change_value(args, item["dropnum"])
+                    + ")",
+                )
             elif item["dropnum"] > 1:
-                tmp.append(out_name(args, item['id'])
-                           + "(x" + change_value(args, item["dropnum"]) + ")")
+                tmp.append(
+                    out_name(args, item["id"])
+                    + "(x"
+                    + change_value(args, item["dropnum"])
+                    + ")",
+                )
             else:
-                tmp.append(out_name(args, item['id']))
+                tmp.append(out_name(args, item["id"]))
         allitem = allitem + tmp
         csv_data.append(dict(Counter(tmp)))
     csv_sum = dict(Counter(allitem))
     if ce0_flag:
-        if args.lang == 'jpn':
-            ce_str = '礼装'
+        if args.lang == "jpn":
+            ce_str = "礼装"
         else:
-            ce_str = 'CE'
+            ce_str = "CE"
         csv_sum.update({ce_str: 0})
     return csv_sum, csv_data
 
@@ -3142,33 +3428,44 @@ def list_to_dict(lst):
     return result
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # オプションの解析
     parser = argparse.ArgumentParser(
-                        description='Image Parse for FGO Battle Results'
-                        )
+        description="Image Parse for FGO Battle Results",
+    )
     # 3. parser.add_argumentで受け取る引数を追加していく
-    parser.add_argument('filenames',
-                        help='Input File(s)', nargs='*')    # 必須の引数を追加
-    parser.add_argument('--lang', default=DEFAULT_ITEM_LANG,
-                        choices=('jpn', 'eng'),
-                        help='Language to be used for output: Default '
-                             + DEFAULT_ITEM_LANG)
-    parser.add_argument('-f', '--folder', help='Specify by folder')
-    parser.add_argument('--ordering',
-                        help='The order in which files are processed ',
-                        type=Ordering,
-                        choices=list(Ordering), default=Ordering.NOTSPECIFIED)
-    text_timeout = 'Duplicate check interval at QP MAX (sec): Default '
-    parser.add_argument('-t', '--timeout', type=int, default=TIMEOUT,
-                        help=text_timeout + str(TIMEOUT) + ' sec')
-    parser.add_argument('--version', action='version',
-                        version=PROGNAME + " " + VERSION)
-    parser.add_argument('-l', '--loglevel',
-                        choices=('debug', 'info'), default='info')
+    parser.add_argument(
+        "filenames",
+        help="Input File(s)",
+        nargs="*",
+    )  # 必須の引数を追加
+    parser.add_argument(
+        "--lang",
+        default=DEFAULT_ITEM_LANG,
+        choices=("jpn", "eng"),
+        help="Language to be used for output: Default " + DEFAULT_ITEM_LANG,
+    )
+    parser.add_argument("-f", "--folder", help="Specify by folder")
+    parser.add_argument(
+        "--ordering",
+        help="The order in which files are processed ",
+        type=Ordering,
+        choices=list(Ordering),
+        default=Ordering.NOTSPECIFIED,
+    )
+    text_timeout = "Duplicate check interval at QP MAX (sec): Default "
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        type=int,
+        default=TIMEOUT,
+        help=text_timeout + str(TIMEOUT) + " sec",
+    )
+    parser.add_argument("--version", action="version", version=PROGNAME + " " + VERSION)
+    parser.add_argument("-l", "--loglevel", choices=("debug", "info"), default="info")
 
-    args = parser.parse_args()    # 引数を解析
-    lformat = '%(name)s <%(filename)s-L%(lineno)s> [%(levelname)s] %(message)s'
+    args = parser.parse_args()  # 引数を解析
+    lformat = "%(name)s <%(filename)s-L%(lineno)s> [%(levelname)s] %(message)s"
     logging.basicConfig(
         level=logging.INFO,
         format=lformat,
@@ -3184,7 +3481,7 @@ if __name__ == '__main__':
     else:
         inputs = args.filenames
 
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf_8_sig')
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf_8_sig")
 
     inputs = sort_files(inputs, args.ordering)
     fileoutput, all_new_list = get_output(inputs, args)
@@ -3197,29 +3494,28 @@ if __name__ == '__main__':
     csv_sum, csv_data = make_csv_data(args, all_new_list, ce0_flag)
     a = list_to_dict(csv_header)
 
-    writer = csv.DictWriter(sys.stdout, fieldnames=csv_header,
-                            lineterminator='\n')
+    writer = csv.DictWriter(sys.stdout, fieldnames=csv_header, lineterminator="\n")
     writer.writeheader()
-    if args.lang == 'jpn':
-        drop_count = 'ドロ数'
-        item_count = 'アイテム数'
-        gained_qp = '獲得QP合計'
+    if args.lang == "jpn":
+        drop_count = "ドロ数"
+        item_count = "アイテム数"
+        gained_qp = "獲得QP合計"
     else:
-        drop_count = 'drop_count'
-        item_count = 'item_count'
-        gained_qp = 'gained_qp'
+        drop_count = "drop_count"
+        item_count = "item_count"
+        gained_qp = "gained_qp"
     if len(all_new_list) > 0:
         if questname == "":
-            if args.lang == 'jpn':
+            if args.lang == "jpn":
                 questname = "合計"
             else:
                 questname = "SUM"
-        a.update({'filename': questname, drop_count: '', item_count: '', gained_qp: ''})
+        a.update({"filename": questname, drop_count: "", item_count: "", gained_qp: ""})
         a.update(csv_sum)
         writer.writerow(a)
-    for fo, cd in zip(fileoutput, csv_data):
+    for fo, cd in zip(fileoutput, csv_data, strict=False):
         fo.update(cd)
         writer.writerow(fo)
     if drop_count in fo.keys():  # issue: #55
-        if len(fileoutput) > 1 and str(fo[drop_count]).endswith('+'):
-            writer.writerow({'filename': 'missing'})
+        if len(fileoutput) > 1 and str(fo[drop_count]).endswith("+"):
+            writer.writerow({"filename": "missing"})
