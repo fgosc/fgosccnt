@@ -453,7 +453,7 @@ class ScreenShot:
             cv2.THRESH_BINARY,
         )
 
-        ((self.x1, self.y1), (self.x2, self.y2)) = get_coodinates(self.img_rgb_orig)
+        (self.x1, self.y1), (self.x2, self.y2) = get_coodinates(self.img_rgb_orig)
         # Remove the extra notch by centering
         center = int((self.x2 - self.x1) / 2 + self.x1)
         half_width = min(center, img_rgb.shape[1] - center)
@@ -697,7 +697,8 @@ class ScreenShot:
                 cv2.waitKey(0)
                 cv2.destroyAllWindows()
         # 相対座標(新UI)
-        lx, rx = self.find_notch()
+        # lx, rx = self.find_notch()
+        lx, rx = 0, 0  # ノッチが無くなったため
         height, width = img.shape[:2]
         if (width - lx - rx) / height > 16 / 8.96:  # Issue #317
             # Widescreen
@@ -893,7 +894,7 @@ class ScreenShot:
             # for the gain QP amount is hard. However, the 2 values have the same font and thus roughly
             # the same height (please NA...). You can consider them to be 2 same-sized boxes on top of
             # each other.
-            (topleft, bottomright) = bounds
+            topleft, bottomright = bounds
             height = bottomright[1] - topleft[1]
             topleft = (topleft[0], topleft[1] - height + int(height * 0.12))
             bottomright = (bottomright[0], bottomright[1] - height)
@@ -916,7 +917,7 @@ class ScreenShot:
             qp_gain = self.ocr_text(im_th)
         if use_tesseract or qp_gain == -1:
             logger.debug("Use tesseract")
-            (topleft, bottomright) = bounds
+            topleft, bottomright = bounds
             qp_gain_text = self.extract_text_from_image(
                 self.img_rgb[topleft[1] : bottomright[1], topleft[0] : bottomright[0]],
             )
