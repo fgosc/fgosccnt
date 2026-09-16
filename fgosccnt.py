@@ -63,6 +63,7 @@ drop_file = basedir / Path("fgoscdata/hash_drop.json")
 eventquest_dir = basedir / Path("fgoscdata/data/json/")
 items_img = basedir / Path("data/misc/items_img.png")
 bunyan1_img = basedir / Path("data/misc/bunyan1.png")
+daidalos1_img = basedir / Path("data/misc/daidalos1.png")
 
 hasher = cv2.img_hash.PHash_create()
 
@@ -513,6 +514,7 @@ class ScreenShot:
 
         # まんわか用イベント判定
         template1 = cv2.imread(str(bunyan1_img), 0)
+        template2 = cv2.imread(str(daidalos1_img), 0)
         item15th = self.img_gray[
             item_pts[15][1] : item_pts[15][3],
             item_pts[15][0] : item_pts[15][2],
@@ -522,6 +524,13 @@ class ScreenShot:
         threshold = 0.80
         loc = np.where(res >= threshold)
         self.Bunyan = False
+        for pt in zip(*loc[::-1], strict=False):
+            self.Bunyan = True
+            break
+        res = cv2.matchTemplate(item15th, template2, cv2.TM_CCOEFF_NORMED)
+        threshold = 0.80
+        loc = np.where(res >= threshold)
+        self.Daidalos = False
         for pt in zip(*loc[::-1], strict=False):
             self.Bunyan = True
             break
@@ -1369,7 +1378,12 @@ class Item:
         self.bonus = ""
         # if self.category != "Craft Essence" and self.category != "Exp. UP":
         if self.category != "Craft Essence":
-            self.ocr_digit(mode)
+            # ハロウィンイベントの ad hoc 対応
+            if self.name in ("けもみみクッキー", "首輪ドーナッツ", "三日月パイ"):
+                self.bonus = "+1"
+                self.dropnum = "x3"
+            else:
+                self.ocr_digit(mode)
         else:
             self.dropnum = "x1"
         logger.debug("Bonus: %s", self.bonus)
