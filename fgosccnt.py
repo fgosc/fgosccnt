@@ -567,7 +567,14 @@ class ScreenShot:
             if dropitem.id == -1:
                 break
             self.current_dropPriority = item_dropPriority[dropitem.id]
-            if dropitem.id in [94069601, 94069602, 94069603]:
+            if dropitem.id in [
+                94069601,
+                94069602,
+                94069603,
+                94160901,
+                94160902,
+                94160903,
+            ]:
                 # まんわかイベントのバニヤンに隠されているドロップが問題を生じるので補正
                 dropitem.dropnum = "x3"
             self.items.append(dropitem)
@@ -1378,12 +1385,7 @@ class Item:
         self.bonus = ""
         # if self.category != "Craft Essence" and self.category != "Exp. UP":
         if self.category != "Craft Essence":
-            # ハロウィンイベントの ad hoc 対応
-            if self.name in ("けもみみクッキー", "首輪ドーナッツ", "三日月パイ"):
-                self.bonus = "+1"
-                self.dropnum = "x3"
-            else:
-                self.ocr_digit(mode)
+            self.ocr_digit(mode)
         else:
             self.dropnum = "x1"
         logger.debug("Bonus: %s", self.bonus)
