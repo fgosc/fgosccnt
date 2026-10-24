@@ -104,6 +104,10 @@ ID_GREEN_TEA = 94074504
 ID_YELLOW_TEA = 94074505
 ID_RED_TEA = 94074506
 ID_WEST_AMERICA_AREA = 93040104
+ID_EXTRA1_CRYSTAL = 62
+ID_EXTRA2_CRYSTAL = 63
+ID_EXTRA1_FOOTPRINT = 2108
+ID_EXTRA2_FOOTPRINT = 2109
 TIMEOUT = 15
 QP_UNKNOWN = -1
 
@@ -536,6 +540,7 @@ class ScreenShot:
             break
 
         for i, pt in enumerate(item_pts):
+            # for i, pt in enumerate(item_pts[13:14]):
             if self.Bunyan and i == 14:
                 break
             lx, _ = self.find_edge(
@@ -2321,6 +2326,37 @@ class Item:
 
         return ID_GREEN_TEA
 
+    def classify_crystal(self, img):
+        hash_crystal = self.compute_crystal_hash(img)
+
+        crystal_dict = {
+            62: "ad6ef34c506c6ce7",
+            63: "9d4c6b20e1049c4f",
+        }
+        crystals = {}
+        for i in crystal_dict:
+            d2 = hasher.compare(hash_crystal, hex2hash(crystal_dict[i]))
+            if d2 <= 21:
+                crystals[i] = d2
+        crystals = sorted(crystals.items(), key=lambda x: x[1])
+        crystal = next(iter(crystals))
+        return crystal[0]
+
+    def classify_footprint(self, img):
+        hash_footprint = self.compute_crystal_hash(img)
+        footprint_dict = {
+            2108: "3565db6d384d3868",
+            2109: "dd4c2f6d216dc16d",
+        }
+        footprints = {}
+        for i in footprint_dict:
+            d2 = hasher.compare(hash_footprint, hex2hash(footprint_dict[i]))
+            if d2 <= 21:
+                footprints[i] = d2
+        footprints = sorted(footprints.items(), key=lambda x: x[1])
+        footprint = next(iter(footprints))
+        return footprint[0]
+
     def classify_item(self, img, currnet_dropPriority):
         """)
         imgとの距離を比較して近いアイテムを求める
@@ -2394,6 +2430,10 @@ class Item:
                     # logger.info(score)
                     # if score > 0.5:
                     #     return ID_RED_TEA
+                elif id == ID_EXTRA1_CRYSTAL or id == ID_EXTRA2_CRYSTAL:
+                    id = self.classify_crystal(img)
+                elif id == ID_EXTRA1_FOOTPRINT or id == ID_EXTRA2_FOOTPRINT:
+                    id = self.classify_footprint(img)
 
                 return id
 
@@ -2701,6 +2741,20 @@ class Item:
             int((132 - 52 * 0.8) / 2 / 132 * width) : int(
                 (132 + 52 * 0.8) / 2 / 132 * width,
             ),
+        ]
+
+        return hasher.compute(img)
+
+    def compute_crystal_hash(self, img_rgb):
+        """結晶クラス判別器
+        中央のクラスマークぎりぎりのハッシュを取る
+        記述した比率はiPhone6S画像の実測値
+        """
+        height, width = img_rgb.shape[:2]
+
+        img = img_rgb[
+            89:133,
+            100:132,
         ]
 
         return hasher.compute(img)
